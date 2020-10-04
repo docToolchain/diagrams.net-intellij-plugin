@@ -1,0 +1,146 @@
+<html style="margin:0px;overflow:hidden;"><head>
+    <script type="text/javascript">
+        var DRAW_IFRAME_URL = 'https://embed.diagrams.net/?embed=1';
+        var graph = null;
+        var xml = null;
+
+        /* CUSTOMCODE */
+
+        function mxClientOnLoad(stylesheet)
+        {
+            xml = loadIntelliJ();
+
+            // Removes all illegal control characters before parsing
+            var checked = [];
+
+            for (var i = 0; i < xml.length; i++)
+            {
+                var code = xml.charCodeAt(i);
+
+                // Removes all control chars except TAB, LF and CR
+                if (code >= 32 || code == 9 || code == 10 || code == 13)
+                {
+                    checked.push(xml.charAt(i));
+                }
+            }
+
+            xml = checked.join('');
+
+            var div = document.createElement('div');
+            div.style.width = '100%';
+            div.style.height = '100%';
+            div.style.position = 'relative';
+            document.body.appendChild(div);
+            graph = new mxGraph(div);
+
+            graph.resetViewOnRootChange = false;
+            graph.foldingEnabled = false;
+            // NOTE: Tooltips require CSS
+            graph.setTooltips(false);
+            graph.setEnabled(false);
+
+            // Loads the stylesheet
+            if (stylesheet != null)
+            {
+                var xmlDoc = mxUtils.parseXml(stylesheet);
+                var dec = new mxCodec(xmlDoc);
+                dec.decode(xmlDoc.documentElement, graph.getStylesheet());
+            }
+
+            var xmlDoc = mxUtils.parseXml(xml);
+            var codec = new mxCodec(xmlDoc);
+            codec.decode(codec.document.documentElement, graph.getModel());
+            graph.maxFitScale = 1;
+            graph.fit();
+            graph.center(true, false);
+
+            window.addEventListener('resize', function()
+            {
+                graph.fit();
+                graph.center(true, false);
+            });
+        }
+
+        function edit(url)
+        {
+            var border = 0;
+            var iframe = document.createElement('iframe');
+            iframe.style.zIndex = '9999';
+            iframe.style.position = 'absolute';
+            iframe.style.top = border + 'px';
+            iframe.style.left = border + 'px';
+
+            if (border == 0)
+            {
+                iframe.setAttribute('frameborder', '0');
+            }
+
+            var resize = function()
+            {
+                iframe.setAttribute('width', document.body.clientWidth - 2 * border);
+                iframe.setAttribute('height', document.body.clientHeight - 2 * border);
+            };
+
+            window.addEventListener('resize', resize);
+            resize();
+
+            var receive = function(evt)
+            {
+                if (evt.data == 'ready')
+                {
+                    iframe.contentWindow.postMessage(xml, '*');
+                    resize();
+                }
+                else
+                {
+                    if (evt.data.length > 0)
+                    {
+                        // Update the graph
+                        var xmlDoc = mxUtils.parseXml(evt.data);
+                        var codec = new mxCodec(xmlDoc);
+                        codec.decode(codec.document.documentElement, graph.getModel());
+                        graph.fit();
+                        graph.center(true, false);
+
+                        var data = encodeURIComponent(evt.data);
+                        var idx = doc.indexOf('<div ' + 'id="mxfile"');
+                        var newdoc = doc.substring(0, idx) + '\n<div ' + 'id="mxfile" style="display:none;">' +
+                            data + '</d' + 'iv>' +
+                            '\n<script type="text/javascript">\nvar doc = document.documentElement.outerHTML;\n</' + 'script>' +
+                            '\n<script type="text/javascript" src="https://www.draw.io/embed.js"></' + 'script></body></html>';
+
+                        save(newdoc, location.pathname.substring(location.pathname.lastIndexOf("/") + 1));
+                    }
+
+                    window.removeEventListener('resize', resize);
+                    window.removeEventListener('message', receive);
+                    document.body.removeChild(iframe);
+                }
+            };
+
+            window.addEventListener('message', receive);
+            iframe.setAttribute('src', DRAW_IFRAME_URL);
+            document.body.appendChild(iframe);
+        }
+
+        function save(data, filename)
+        {
+            try
+            {
+                saveIntelliJ(data);
+            }
+            catch (e)
+            {
+                console.log('error', e);
+                console.log('html', data);
+            }
+        };
+    </script>
+</head>
+<body style="margin:10px;overflow:hidden;">
+<button onclick="edit();" style="position:absolute;right:10px;z-index:1;"><img width="32" height="32" title="" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAC5UlEQVRYhb2XTUhUURTHf2NDWLQIkbBHSIsIsRKZA63KGiMCLaRFmwiloEW4inATIUREGykogiDow6JdixDL0nGyWgVHJMJSIkREwqJVSIhoi3eGbpc343x2NxfuPe/8/veccz9ejAo1EakCzgBHgHnghqrO+HaxCsLvA53O8E/gsKqOu7ZVlRAAHAROeWM1wLCIJComQERqRKRRVUeBbmBlLRFlEyAiATAGjIlIk6reyUdEOSNwHtgN1AKpPEVsX1cqVUQ2B0FQBbwCdgB7gI3AiSAIXqrqYBAEC0Ab/xb9BigxAiJSA6SAZ8B6oAt4YtP5RKKuaAEGHwYSQCvQoqrLBYp4UZQAEaklXHnCHJ5W1SER2QLE8xRxD+gv+CBy4E0OvF9E6oA0MAMcB5aBh8BJ+/QHcEhVP4hIK/BaVVcKEmArHM4BbzDTIaDDbCJFZHzmnQKD51p5g2M+CSxF1MQSXiHmtQ0NMgrsMgddqvrIDp9RD34duKCqiEgnMAU8BTYB51R1yvW9ZgoMngIaHfhjg6dywC8DvcAI0KGqi1H+c6bAIOkS4ADNQH02RlYBDryhBPgCYdF9zsaJTIGIbDPIzgLhV4BLHvxjNnikAIOnCc91H542UWvBvxl8MhccvBSISD3hlZoPvK9UODgRsGfUJ6LDHgXvyQJP5sq539wI7HUg3UXA54EDhcB9Ae3WLwIPioAnVXW6ELgv4Kj1I6r6m/BRcRvIOO0DegAfPke48oLhEF6dmT3fbGODAKr6BbgpIlvNrsfmrwIXHXjSbItqcevbnLHnns0twhD78FmDfy0WDn9TcMz6CVWdcw1UdR6oBq458BnCsJcEB4iJSDXwnfC2Ggf2q+qiHUhthMXZavMZeDLqN6uYFgdaHOeJ1dXVt3YmNEfYTxP+Xs2WA54R0O4OxGKxhGczQVgXA8B7VfVftiUL2OeN/SJ8ZAwAQ35NlLvFgbvAWeAd4RZ8Y+fAf2l/AAQGfuWJPdOiAAAAAElFTkSuQmCC"></button>
+
+<script type="text/javascript">
+    var doc = document.documentElement.outerHTML;
+</script>
+<script type="text/javascript" src="https://www.draw.io/embed.js"></script></body></html>
