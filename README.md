@@ -1,0 +1,1 @@
+# drawio-intellij-plugin
