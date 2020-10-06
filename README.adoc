@@ -1,0 +1,7 @@
+== drawio-intellij-plugin
+
+=== References
+
+* https://desk.draw.io/support/solutions/articles/16000042544-embed-mode
+* https://github.com/jgraph/drawio-integration
+* https://github.com/hediet/vscode-drawio
