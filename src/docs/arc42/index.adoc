@@ -23,10 +23,10 @@ ifdef::basebackend-html[]
 endif::basebackend-html[]
 
 // configure EN settings for asciidoc
-include::src/config.adoc[]
+include::config.adoc[]
 
 
-include::src/about-arc42.adoc[]
+include::about-arc42.adoc[]
 
 // horizontal line
 ***
