@@ -1,5 +1,14 @@
 == drawio-intellij-plugin
 
+This plugin enables you to edit diagrams.net (formerly known as draw.io) diagrams directly in IntelliJ.
+
+IMPORTANT: this plugin is far from being production ready.
+In fact, it is currenlty not more than a proof of concept.
+But if you like, you can help to evolve it.
+
+.a screenshot of one of the successful runs 
+image::images/drawioscreenshot.jpg[]
+
 === References
 
 * https://desk.draw.io/support/solutions/articles/16000042544-embed-mode
