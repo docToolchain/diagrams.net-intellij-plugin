@@ -1,0 +1,28 @@
+[[section-introduction-and-goals]]
+== Introduction and Goals
+
+Good diagrams are very important for a good documentation.
+https://www.diagrams.net/[diagrams.net] is open source, online, desktop and container deployable diagramming software which does an amazing job.
+
+One of the main features is that it is able to store the sources of the diagram within the meta data of a `.png` or `.svg` image.
+That makes it ideal for the https://docs-as-co.de[Docs-as-Code approach] for documenting software.
+Those image can be directly embedded in AsciiDoc documents but still remain editable.
+This way, you never lose the source of your diagrams.
+
+HINT: diagrams.net was formerly known as draw.io and many plugins, tools and docs still use this name.
+
+=== Task Definition
+
+The goal is to create a plugin for IntelliJ based IDEs which
+
+* adds a recognizable icon to all diagrams.net files.
+* opens diagrams.net files in the diagrams.net editor
+* saves them in the same format as they where
+
+Additional tasks migh be added in the future.
+
+=== Quality Goals
+
+It is expected that the diagrams.net files are under version control.
+So, currupted files will be easily recovered.
+Nevertheless, the main quality goal is that the editor will be stable (no crashed will editing) and the load/save mechanism will not corrupt files.
