@@ -1,0 +1,21 @@
+[[section-glossary]]
+== Glossary
+
+[options="header"]
+|===
+| Term | Alias | Definition
+
+| diagrams.net 
+| draw.io
+| open source, online, desktop and container deployable diagramming software +
+see also this https://www.diagrams.net/blog/move-diagrams-net[blog post]
+
+| JCEF 
+|
+| a Java port for CEF
+
+| CEF
+| https://en.wikipedia.org/wiki/Chromium_Embedded_Framework[Chromium Embedded Framework]
+| a framework/technology to embedd the well known chromium browser in other applications.
+
+|===
