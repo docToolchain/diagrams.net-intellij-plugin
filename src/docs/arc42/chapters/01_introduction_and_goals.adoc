@@ -37,6 +37,8 @@ Data protection is crucial.
 The second quality goal is that no data leaves the local system.
 If it is necessary to run diagrams.net on a server, it should be possible to set up your own server.
 
+See also https://github.com/jgraph/security-privacy-legal/blob/master/Security/Data.md[data security statement of draw.io]
+
 a| == 3
 a|
 Not everybody is always online.
