@@ -23,6 +23,21 @@ Additional tasks migh be added in the future.
 
 === Quality Goals
 
+[cols="1,10"]
+|===
+a| == 1
+a|
 It is expected that the diagrams.net files are under version control.
 So, currupted files will be easily recovered.
 Nevertheless, the main quality goal is that the editor will be stable (no crashed will editing) and the load/save mechanism will not corrupt files.
+
+a| == 2
+a|
+Data protection is crucial.
+The second quality goal is that no data leaves the local system.
+If it is necessary to run diagrams.net on a server, it should be possible to set up your own server.
+
+a| == 3
+a|
+Not everybody is always online.
+The third quality goal is that the plugin should also work offline.
