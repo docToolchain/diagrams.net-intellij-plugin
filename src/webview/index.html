@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base href="drawio-plugin://main/index.html" />
+    <script type="text/javascript">
+        /**
+         * @type {{
+         *     localStorage: any,
+         *     baseUrl: string,
+         *     theme: string,
+         *     lang: string,
+         *     showChrome: string, // "0" or "1"
+         * }}
+         */
+        const data = $$initialData$$;
+        if (!data.localStorage) {
+            data.localStorage = {};
+        }
+
+        class Host {
+            listeners = [];
+
+            constructor() {
+                window.processMessageFromHost = (message) => {
+                    for (const l of this.listeners) {
+                        l(message);
+                    }
+                };
+
+                let queue = [];
+                if (window.sendMessageToHost) {
+                    this.sendMessageToHost = window.sendMessageToHost;
+                } else {
+                    this.sendMessageToHost = (message) => {
+                        queue.push(message);
+                    };
+                    Object.defineProperty(window, "sendMessageToHost", {
+                        get: () => this.sendMessageToHost,
+                        set: (value) => {
+                            this.sendMessageToHost = value;
+                            for (const item of queue) {
+                                this.sendMessageToHost(item);
+                            }
+                            queue.length = 0;
+                        },
+                    });
+                }
+            }
+
+            /**
+             * @param {string} json string
+             */
+            sendMessage(message) {
+                this.sendMessageToHost(typeof message === "string" ? message : JSON.stringify(message));
+            }
+
+            addMessageListener(listener) {
+                this.listeners.push(listener);
+            }
+
+            log(...msg) {
+                console.log(msg);
+            }
+        }
+
+        const host = new Host();
+
+        (() => {
+            // Fix draw.io tries to access unavailable localStorage
+            // Replace it with a bridged version
+            const storage = data.localStorage;
+            const bridgedLocalStorage = {
+                getItem: function (key) {
+                    host.log("localStorage: get " + key);
+                    return storage[key];
+                },
+                setItem: function (key, val) {
+                    host.log("localStorage: set " + key + " to " + val);
+                    storage[key] = val;
+                    sendToVsCode({
+                        event: "updateLocalStorage",
+                        newLocalStorage: storage,
+                    });
+                },
+                removeItem: function (key) {
+                    host.log("localStorage: remove " + key);
+                    delete storage[key];
+                },
+            };
+            Object.defineProperty(window, "localStorage", {
+                value: bridgedLocalStorage,
+            });
+
+            // Fix draw.io tries to access unavailable cookie prop
+            Object.defineProperty(document, "cookie", { value: "" });
+
+            // See EditorUI.js:10675
+            const fakedWindowOpener = {
+                postMessage: (msg) => host.sendMessage(msg),
+            };
+            Object.defineProperty(window, "opener", {
+                value: fakedWindowOpener,
+            });
+
+            host.addMessageListener((msg) => {
+                // Emit messages with faked source, so that drawio handles the payload.
+                // If we don't do this, `evt.source === window.opener` will fail
+                // and drawio ignores the message.
+                const fakedEvt = new Event("message");
+                fakedEvt.source = fakedWindowOpener;
+                fakedEvt.data = msg;
+                window.dispatchEvent(fakedEvt);
+            })
+        })();
+
+        var urlParams = {
+            embed: "1",
+            configure: "1",
+            proto: "json",
+            ui: data.theme,
+            lang: data.lang,
+            noSaveBtn: "1",
+            noExitBtn: "1",
+            chrome: data.showChrome,
+        };
+
+        // Checks for local storage
+        var isLocalStorage = true;
+
+        function mxscript(src, onLoad, id, dataAppKey, noWrite) {
+            if (onLoad != null || noWrite) {
+                var s = document.createElement("script");
+                s.setAttribute("type", "text/javascript");
+                s.setAttribute("src", src);
+                var r = false;
+
+                if (id != null) {
+                    s.setAttribute("id", id);
+                }
+
+                if (dataAppKey != null) {
+                    s.setAttribute("data-app-key", dataAppKey);
+                }
+
+                if (onLoad != null) {
+                    s.onload = s.onreadystatechange = function () {
+                        if (
+                            !r &&
+                            (!this.readyState ||
+                                this.readyState == "complete")
+                        ) {
+                            r = true;
+                            onLoad();
+                        }
+                    };
+                }
+
+                var t = document.getElementsByTagName("script")[0];
+
+                if (t != null) {
+                    t.parentNode.insertBefore(s, t);
+                }
+            } else {
+                document.write(
+                    '<script src="' +
+                    src +
+                    '"' +
+                    (id != null ? ' id="' + id + '" ' : "") +
+                    (dataAppKey != null
+                        ? ' data-app-key="' + dataAppKey + '" '
+                        : "") +
+                    "></scr" +
+                    "ipt>"
+                );
+            }
+        }
+    </script>
+    <link
+            rel="stylesheet"
+            type="text/css"
+            href="js/croppie/croppie.min.css"
+    />
+    <link rel="stylesheet" type="text/css" href="styles/grapheditor.css" />
+    <link rel="manifest" href="images/manifest.json" />
+    <style type="text/css">
+        .geEditor {
+            color: black;
+            background-color: white;
+        }
+        body {
+            overflow: hidden;
+        }
+        div.picker {
+            z-index: 10007;
+        }
+        .geSidebarContainer .geTitle input {
+            font-size: 8pt;
+            color: #606060;
+        }
+        .geBlock {
+            z-index: -3;
+            margin: 100px;
+            margin-top: 40px;
+            margin-bottom: 30px;
+            padding: 20px;
+        }
+        .geBlock h1,
+        .geBlock h2 {
+            margin-top: 0px;
+            padding-top: 0px;
+        }
+        .geEditor ::-webkit-scrollbar {
+            width: 14px;
+            height: 14px;
+        }
+        .geEditor ::-webkit-scrollbar-track {
+            background-clip: padding-box;
+            border: solid transparent;
+            border-width: 1px;
+        }
+        .geEditor ::-webkit-scrollbar-corner {
+            background-color: transparent;
+        }
+        .geEditor ::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 0, 0, 0.1);
+            background-clip: padding-box;
+            border: solid transparent;
+            border-radius: 10px;
+        }
+        .geEditor ::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+        .geTemplate {
+            border: 1px solid transparent;
+            display: inline-block;
+            _display: inline;
+            vertical-align: top;
+            border-radius: 3px;
+            overflow: hidden;
+            font-size: 14pt;
+            cursor: pointer;
+            margin: 5px;
+        }
+    </style>
+    <script src="js/PreConfig.js"></script>
+    <script src="js/app.min.js"></script>
+    <script src="js/extensions.min.js"></script>
+    <script src="js/stencils.min.js"></script>
+    <script src="js/shapes.min.js"></script>
+    <script src="js/PostConfig.js"></script>
+</head>
+<body class="geEditor">
+<div id="geInfo">
+    <div class="geBlock" style="text-align: center; min-width: 50%">
+        <h1>Flowchart Maker and Online Diagram Software</h1>
+        <p>
+            diagrams.net (formerly draw.io) is free online diagram
+            software. You can use it as a flowchart maker, network
+            diagram software, to create UML online, as an ER diagram
+            tool, to design database schema, to build BPMN online, as a
+            circuit diagram maker, and more. draw.io can import .vsdx,
+            Gliffy&trade; and Lucidchart&trade; files .
+        </p>
+        <h2 id="geStatus">Loading...</h2>
+    </div>
+</div>
+<script type="text/javascript">
+    (() => {
+        function patchFn(clazz, fnName, fnFactory) {
+            var old = clazz[fnName];
+            clazz[fnName] = fnFactory(old);
+        }
+
+        host.log("Document loaded, patching prototypes");
+
+        patchFn(Menus.prototype, "addSubmenu", function (old) {
+            return function (...args) {
+                if (
+                    args[0] === "exportAs" ||
+                    args[0] === "importFrom"
+                ) {
+                    return;
+                }
+                console.log("addSubmenu: ", args[0]);
+                return old.apply(this, args);
+            };
+        });
+
+        patchFn(Menus.prototype, "addMenuItem", function (old) {
+            return function (...args) {
+                if (
+                    ["print", "saveAndExit", "plugins", "exit"].indexOf(
+                        args[1]
+                    ) !== -1
+                ) {
+                    return;
+                }
+                console.log("addMenuItem: ", args[1]);
+                return old.apply(this, args);
+            };
+        });
+
+        // Without this, it will crash. "help" is removed.
+        Menus.prototype.defaultMenuItems = Menus.prototype.defaultMenuItems.filter(
+            (i) => i !== "help"
+        );
+
+        patchFn(Menus.prototype, "put", function (old) {
+            return function (...args) {
+                if (["language", "help"].indexOf(args[0]) !== -1) {
+                    return args[1];
+                }
+                console.log("put: ", args[0]);
+                return old.apply(this, args);
+            };
+        });
+
+        EditorUi.prototype.addEmbedButtons = () => {};
+
+        // This prevents Draw.io from overriding VS Code commands
+        patchFn(mxEvent, "addListener", function (old) {
+            return function (...args) {
+                const [target, eventName, oldHandler] = args;
+                // console.log("Intercepting addListener", args);
+                if (eventName === "keydown") {
+                    args[2] = (/** @type {KeyboardEvent} */ keyEvt) => {
+                        console.log("Handling key", keyEvt);
+                        log("Handling key", keyEvt.key);
+
+                        // Draw.io should not override these shortcuts
+                        if (keyEvt.key === "Tab" && keyEvt.ctrlKey) {
+                            return;
+                        }
+                        if (keyEvt.key === "P" && keyEvt.ctrlKey) {
+                            // this covers ctrl+shift+p.
+                            return;
+                        }
+                        if (keyEvt.key === "p" && keyEvt.ctrlKey) {
+                            // this covers ctrl+p.
+                            // We don't need this keyboard shortcuts in drawio.
+                            // Printing does not make sense in VS Code.
+                            // Users should use the drawio desktop app for that.
+                            return;
+                        }
+                        if (
+                            keyEvt.key === "S" &&
+                            keyEvt.shiftKey &&
+                            keyEvt.altKey
+                        ) {
+                            // See https://github.com/hediet/vscode-drawio/issues/144
+                            // This shortcut destroys the diagram.
+                            return;
+                        }
+                        if (
+                            keyEvt.key === "S" &&
+                            keyEvt.ctrlKey &&
+                            keyEvt.shiftKey
+                        ) {
+                            // We are handling saving ourselves. This action does not make sense.
+                            return;
+                        }
+
+                        oldHandler(keyEvt);
+                    };
+                }
+
+                return old.apply(this, args);
+            };
+        });
+
+        /**
+         * See https://github.com/jgraph/mxgraph/blob/master/javascript/src/js/util/mxUrlConverter.js
+         * for non minified version.
+         * Fixes https://github.com/hediet/vscode-drawio/issues/53 and
+         * https://github.com/hediet/vscode-drawio/issues/74.
+         */
+        function fix_mxUrlConverter_prototype_convert() {
+            mxUrlConverter.prototype.baseUrl = data.baseUrl + "/";
+            mxUrlConverter.prototype.updateBaseUrl = function () {
+                this.baseDomain = data.baseUrl;
+                this.baseUrl = data.baseUrl + "/";
+            };
+            const RX_IS_ABS_URL = /^(\/\/|[a-zA-Z][a-zA-Z\d+\-.]*:)/;
+            mxUrlConverter.prototype.isRelativeUrl = function (url) {
+                return url != null && !RX_IS_ABS_URL.test(url);
+            };
+        }
+
+        fix_mxUrlConverter_prototype_convert();
+
+        App.main();
+    })();
+</script>
+</body>
+</html>
