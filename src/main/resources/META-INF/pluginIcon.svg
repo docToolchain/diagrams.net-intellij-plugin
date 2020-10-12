@@ -1,58 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="81" height="80" viewBox="0 0 81 80">
-  <defs>
-    <linearGradient id="pluginsdk_80-a" x1="-.031%" x2="100.053%" y1="49.963%" y2="49.963%">
-      <stop offset="25.81%" stop-color="#F97A12"/>
-      <stop offset="45.91%" stop-color="#B07B58"/>
-      <stop offset="72.41%" stop-color="#577BAE"/>
-      <stop offset="91.05%" stop-color="#1E7CE5"/>
-      <stop offset="100%" stop-color="#087CFA"/>
-    </linearGradient>
-    <linearGradient id="pluginsdk_80-b" x1="27.55%" x2="82.223%" y1="34.514%" y2="77.605%">
-      <stop offset="0%" stop-color="#F97A12"/>
-      <stop offset="7.18%" stop-color="#CB7A3E"/>
-      <stop offset="15.41%" stop-color="#9E7B6A"/>
-      <stop offset="24.2%" stop-color="#757B91"/>
-      <stop offset="33.44%" stop-color="#537BB1"/>
-      <stop offset="43.24%" stop-color="#387CCC"/>
-      <stop offset="53.81%" stop-color="#237CE0"/>
-      <stop offset="65.52%" stop-color="#147CEF"/>
-      <stop offset="79.25%" stop-color="#0B7CF7"/>
-      <stop offset="100%" stop-color="#087CFA"/>
-    </linearGradient>
-    <linearGradient id="pluginsdk_80-c" x1="63.121%" x2="40.793%" y1="97.699%" y2="-6.587%">
-      <stop offset="0%" stop-color="#FE315D"/>
-      <stop offset="7.84%" stop-color="#CB417E"/>
-      <stop offset="16.01%" stop-color="#9E4E9B"/>
-      <stop offset="24.74%" stop-color="#755BB4"/>
-      <stop offset="33.92%" stop-color="#5365CA"/>
-      <stop offset="43.65%" stop-color="#386DDB"/>
-      <stop offset="54.14%" stop-color="#2374E9"/>
-      <stop offset="65.76%" stop-color="#1478F3"/>
-      <stop offset="79.4%" stop-color="#0B7BF8"/>
-      <stop offset="100%" stop-color="#087CFA"/>
-    </linearGradient>
-    <linearGradient id="pluginsdk_80-d" x1="25.331%" x2="93.854%" y1="24.119%" y2="132.621%">
-      <stop offset="0%" stop-color="#FE315D"/>
-      <stop offset="4.023%" stop-color="#F63462"/>
-      <stop offset="10.37%" stop-color="#DF3A71"/>
-      <stop offset="16.67%" stop-color="#C24383"/>
-      <stop offset="29.12%" stop-color="#AD4A91"/>
-      <stop offset="54.98%" stop-color="#755BB4"/>
-      <stop offset="91.75%" stop-color="#1D76ED"/>
-      <stop offset="100%" stop-color="#087CFA"/>
-    </linearGradient>
-  </defs>
-  <g fill="none" fill-rule="evenodd">
-    <g fill-rule="nonzero" transform="translate(8 8)">
-      <path fill="url(#pluginsdk_80-a)" d="M6.08754566,64 L2.66453526e-15,59.1000946 L0,26.7918961 L30,38.6703369 L10.1403967,64 L6.08754566,64 Z"/>
-      <path fill="url(#pluginsdk_80-b)" d="M20.9524706,64 L52.2740919,31.9159091 L37.6708832,0.460194805 L38.0580944,1.33226763e-15 L64,0 L64,64 L20.9524706,64 Z"/>
-      <path fill="url(#pluginsdk_80-c)" d="M34.4123783,0 L64,0 L64,28.0366227 L49.0078336,44 L34,0.44696173 L34.4123783,0 Z"/>
-      <path fill="url(#pluginsdk_80-d)" d="M30.3358775,64 L0,64 L0,49.9709549 L6.23437817,29.2830519 L0,27.1596093 L0,0 L39.4697238,0 L58,21.3844805 L30.5381317,63.9259091 L30.3358775,64 Z"/>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="40px" height="40px" viewBox="0 0 40 40" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <g transform="matrix(0.772947,0,0,0.772947,2.22222,2.22222)">
+        <path d="M43.7,41.934C43.7,42.909 42.909,43.7 41.952,43.7L4.066,43.7C3.091,43.7 2.3,42.909 2.3,41.952L2.3,4.066C2.3,3.091 3.091,2.3 4.048,2.3L41.934,2.3C42.909,2.3 43.7,3.091 43.7,4.048L43.7,41.934Z" style="fill:rgb(240,135,5);fill-rule:nonzero;"/>
+        <path d="M43.7,41.934C43.7,42.909 42.909,43.7 41.952,43.7L16.486,43.7L8.243,35.328L13.377,26.956L28.594,8.059L43.7,23.607L43.7,41.934Z" style="fill:rgb(223,108,12);fill-rule:nonzero;"/>
+        <path d="M36.303,25.447L31.906,25.447L27.306,17.59C28.354,17.37 29.109,16.45 29.09,15.382L29.09,9.476C29.09,8.225 28.097,7.213 26.846,7.213L19.154,7.213C17.903,7.213 16.891,8.206 16.891,9.458L16.891,15.382C16.891,16.45 17.627,17.37 18.676,17.59L14.076,25.447L9.734,25.447C8.482,25.447 7.47,26.441 7.47,27.692L7.47,33.617C7.47,34.868 8.464,35.88 9.715,35.88L17.406,35.88C18.658,35.88 19.67,34.886 19.67,33.635L19.67,27.71C19.67,26.459 18.676,25.447 17.425,25.447L16.67,25.447L21.234,17.646L24.785,17.646L29.366,25.447L28.612,25.447C27.361,25.447 26.349,26.441 26.349,27.692L26.349,33.617C26.349,34.868 27.342,35.88 28.594,35.88L36.285,35.88C37.536,35.88 38.548,34.886 38.548,33.635L38.548,27.71C38.548,26.459 37.554,25.447 36.303,25.447Z" style="fill:white;fill-rule:nonzero;"/>
     </g>
-    <g fill-rule="nonzero" transform="translate(12 12)">
-      <rect width="56" height="56" fill="#000"/>
-      <rect width="22" height="4" x="4" y="46" fill="#FFFEFE"/>
-      <path fill="#FFFEFE" d="M11.128,25.28 C8.584,25.28 6.016,24.392 4,22.592 L6.184,19.976 C7.696,21.224 9.28,22.016 11.2,22.016 C12.712,22.016 13.624,21.416 13.624,20.432 L13.624,20.384 C13.624,19.448 13.048,18.968 10.24,18.248 C6.856,17.384 4.672,16.448 4.672,13.112 L4.672,13.064 C4.672,10.016 7.12,8 10.552,8 C13,8 15.088,8.768 16.792,10.136 L14.872,12.92 C13.384,11.888 11.92,11.264 10.504,11.264 C9.088,11.264 8.344,11.912 8.344,12.728 L8.344,12.776 C8.344,13.88 9.064,14.24 11.968,14.984 C15.376,15.872 17.296,17.096 17.296,20.024 L17.296,20.072 C17.296,23.408 14.752,25.28 11.128,25.28 Z M19.512,25.04 L19.512,8.24 L26.064,8.24 C31.344,8.24 34.992,11.864 34.992,16.592 L34.992,16.64 C34.992,21.368 31.344,25.04 26.064,25.04 L19.512,25.04 Z M26.064,11.576 L23.208,11.576 L23.208,21.704 L26.064,21.704 C29.088,21.704 31.128,19.664 31.128,16.688 L31.128,16.64 C31.128,13.664 29.088,11.576 26.064,11.576 Z M37.28,25.04 L37.28,8.24 L40.976,8.24 L40.976,15.584 L47.744,8.24 L52.28,8.24 L45.416,15.368 L52.568,25.04 L48.128,25.04 L42.92,17.888 L40.976,19.904 L40.976,25.04 L37.28,25.04 Z"/>
-    </g>
-  </g>
 </svg>
