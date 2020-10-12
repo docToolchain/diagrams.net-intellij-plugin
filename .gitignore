@@ -12,3 +12,14 @@ gradle-app.setting
 
 # # Work around https://youtrack.jetbrains.com/issue/IDEA-116898
 # gradle/wrapper/gradle-wrapper.properties
+
+/.idea/*
+*.iml
+# These are the run configurations you marked as "shared"
+# This allows you to share them with fellow developers.
+!/.idea/runConfigurations
+# You can configure your IntelliJ project settings to prompt fellow developers
+# to install required plugins.
+# Once you use this, check in the file
+# More information: https://www.jetbrains.com/​help/idea/required-plugin.html
+!/.idea/externalDependencies.xml
