@@ -13,19 +13,6 @@ import com.jetbrains.rd.util.lifetime.LifetimeDefinition
 import java.beans.PropertyChangeListener
 import javax.swing.JComponent
 
-class DiagramsEditorProvider : FileEditorProvider, DumbAware {
-    override fun accept(project: Project, file: VirtualFile): Boolean {
-        if (file.isDirectory || !file.exists()) {
-            return false;
-        }
-        return file.name.endsWith(".drawio");
-    }
-
-    override fun createEditor(project: Project, file: VirtualFile): FileEditor = DiagramsEditor(project, file)
-
-    override fun getEditorTypeId() = "diagrams.net JCEF editor"
-    override fun getPolicy() = FileEditorPolicy.HIDE_DEFAULT_EDITOR
-}
 
 class DiagramsEditor(private val project: Project, private val file: VirtualFile) : FileEditor {
     private val lifetimeDef = LifetimeDefinition()
@@ -36,21 +23,29 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
     private val view = DrawioWebView(lifetime)
 
     init {
+
         view.initializedPromise.then {
+            System.out.println("1: "+file.name)
             view.loadXmlLike(file.inputStream.reader().readText())
         }
 
         view.xmlContent.advise(lifetime) { xml ->
+            System.out.println("2: "+file.name)
             if (xml !== null) {
-                ApplicationManager.getApplication().invokeLater {
-                    ApplicationManager.getApplication().runWriteAction {
-                        file.getOutputStream(this).apply {
-                            writer().apply {
-                                write(xml)
+                if (file.name.endsWith(".svg")) {
+                    println("have to export as svg")
+                    view.exportSvg()
+                } else {
+                    ApplicationManager.getApplication().invokeLater {
+                        ApplicationManager.getApplication().runWriteAction {
+                            file.getOutputStream(this).apply {
+                                writer().apply {
+                                    write(xml)
+                                    flush()
+                                }
                                 flush()
+                                close()
                             }
-                            flush()
-                            close()
                         }
                     }
                 }

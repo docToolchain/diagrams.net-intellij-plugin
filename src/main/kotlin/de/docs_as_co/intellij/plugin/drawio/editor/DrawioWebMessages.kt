@@ -21,7 +21,7 @@ sealed class OutgoingMessage {
                 val XMLSVG = "xmlsvg"
             }
 
-            val action = "setTheme"
+            val action = "export"
         }
     }
 

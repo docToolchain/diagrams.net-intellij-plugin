@@ -15,6 +15,7 @@ class DrawioWebView(lifetime: Lifetime) : BaseDrawioWebView(lifetime) {
     val xmlContent: IPropertyView<String?> = _xmlContent
 
     override fun handleEvent(event: IncomingMessage.Event) {
+
         when (event) {
             is IncomingMessage.Event.Initialized -> {
                 _initializedPromise.setResult(Unit)
@@ -37,5 +38,8 @@ class DrawioWebView(lifetime: Lifetime) : BaseDrawioWebView(lifetime) {
     fun loadXmlLike(xmlLike: String) {
         _xmlContent.set(null) // xmlLike is not xml
         send(OutgoingMessage.Event.Load(xmlLike, 1))
+    }
+    fun exportSvg() {
+        send(OutgoingMessage.Request.Export(OutgoingMessage.Request.Export.XMLSVG))
     }
 }
