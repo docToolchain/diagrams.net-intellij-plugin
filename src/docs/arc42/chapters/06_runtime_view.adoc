@@ -43,7 +43,7 @@ In this scenario, we will see how the basic communication between the JavaScript
 
 [[init-webview]]
 .Init WebView
-[plantuml,rts1,svg]
+[plantuml,rts2,svg]
 ----
 participant "Intellij" as intellij
 participant DiagramsEditor as editor <<(C,#ADD1B2)>>
