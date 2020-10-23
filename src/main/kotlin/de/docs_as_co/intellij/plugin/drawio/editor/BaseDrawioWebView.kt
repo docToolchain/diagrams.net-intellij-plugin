@@ -75,6 +75,7 @@ abstract class BaseDrawioWebView(val lifetime: Lifetime) {
                     val promise = responseMap[message.requestId]!!
                     responseMap.remove(message.requestId)
                     promise.setResult(message)
+                    this.handleResponse(message)
                 }
 
                 if (message is IncomingMessage.Event) {
@@ -132,5 +133,6 @@ abstract class BaseDrawioWebView(val lifetime: Lifetime) {
     }
 
     protected abstract fun handleEvent(event: IncomingMessage.Event)
+    protected abstract fun handleResponse(response: IncomingMessage.Response)
 }
 

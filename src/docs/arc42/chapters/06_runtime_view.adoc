@@ -58,11 +58,52 @@ activate intellij
     activate drawio
 ...
 drawio -> webview : jsRequestHandler(configureEvent)
+    activate webview
     webview -> webview : handleEvent(configureEvent)
     webview -> webview : sendMessage(DrawioConfig)
     webview --> drawio : processMessageFromHost(DrawioConfig)
+    deactivate webview
 ...
-drawio -> webview : jsRequestHandler(initEvent)
+drawio -x webview : jsRequestHandler(initializedEvent)
+...
+drawio -> webview : jsRequestHandler(loadEvent)
+    activate webview
+    webview -x webview : handleEvent(loadEvent)
+    deactivate webview
+
 
 ----
 
+== RTS 03: Autosave
+
+[[init-webview]]
+.Init WebView
+[plantuml,rts3,svg]
+----
+database Filesystem as file
+participant DiagramsEditor as editor <<(C,#ADD1B2)>>
+participant DrawioWebView as webview <<(C,#ADD1B2)>>
+participant drawio as drawio
+activate webview
+activate drawio
+activate editor
+...
+drawio -> webview : jsRequestHandler(autosaveEvent)
+    activate webview
+    webview -> webview : handleEvent(autosaveEvent)
+    webview -> webview : _xmlContent.set(event.xml)
+alt filename.endsWith(".xml")
+        webview -> editor :
+        activate editor
+            editor -> file : save(xml)
+        deactivate editor
+else filename.endsWith(".svg")
+        editor -> webview : exportSvg()
+            webview -> webview : sendMessage(exportEvent)
+            webview -> drawio : processMessageFromHost(Export)
+            webview <-- drawio : jsRequestHandler(exportResponse)
+            webview -> webview : promise.setResponse(exportResponse)
+end
+'    deactivate webview
+...
+----

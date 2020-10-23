@@ -25,15 +25,15 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
     init {
 
         view.initializedPromise.then {
-            System.out.println("1: "+file.name)
             view.loadXmlLike(file.inputStream.reader().readText())
         }
 
         view.xmlContent.advise(lifetime) { xml ->
-            System.out.println("2: "+file.name)
             if (xml !== null) {
-                if (file.name.endsWith(".svg")) {
-                    println("have to export as svg")
+                val isSVGFile = file.name.endsWith(".svg")
+                val isSVGXML = xml.startsWith("<svg")
+                if ( isSVGFile && (!isSVGXML) ) {
+                    //ignore the xml payload and ask for an exported svg
                     view.exportSvg()
                 } else {
                     ApplicationManager.getApplication().invokeLater {

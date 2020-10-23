@@ -34,6 +34,6 @@ class DiagramsEditorProvider : FileEditorProvider, DumbAware {
     override fun createEditor(project: Project, file: VirtualFile): FileEditor = DiagramsEditor(project, file)
 
     override fun getEditorTypeId() = "diagrams.net JCEF editor"
-    override fun getPolicy() = FileEditorPolicy.HIDE_DEFAULT_EDITOR
+    override fun getPolicy() = FileEditorPolicy.PLACE_BEFORE_DEFAULT_EDITOR
 }
 
