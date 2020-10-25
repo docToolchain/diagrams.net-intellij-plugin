@@ -31,8 +31,7 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
         view.xmlContent.advise(lifetime) { xml ->
             if (xml !== null) {
                 val isSVGFile = file.name.endsWith(".svg")
-                val isSVGXML = xml.startsWith("<svg")
-                if ( isSVGFile && (!isSVGXML) ) {
+                if ( isSVGFile ) {
                     //ignore the xml payload and ask for an exported svg
                     view.exportSvg().then{ svg : String ->
                         saveFile (svg)
