@@ -22,11 +22,10 @@ class DiagramsEditorProvider : FileEditorProvider, DumbAware {
         if (file.isDirectory || !file.exists()) {
             return false;
         }
-        val extensions = "drawio;drawio.svg;dio;dio.svg"
-        extensions.split(";").forEach() {
-            if (file.name.endsWith("."+it)) {
-                return true
-            }
+        //check for the right file extension
+        val extensions = arrayOf(".drawio", ".drawio.svg", ".dio", ".dio.svg")
+        if (extensions.any { ext -> file.name.endsWith(ext)}) {
+            return true
         }
         return false
     }
