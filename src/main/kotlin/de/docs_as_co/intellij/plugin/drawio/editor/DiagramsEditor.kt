@@ -34,25 +34,31 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
                 val isSVGXML = xml.startsWith("<svg")
                 if ( isSVGFile && (!isSVGXML) ) {
                     //ignore the xml payload and ask for an exported svg
-                    view.exportSvg()
-                } else {
-                    ApplicationManager.getApplication().invokeLater {
-                        ApplicationManager.getApplication().runWriteAction {
-                            file.getOutputStream(this).apply {
-                                writer().apply {
-                                    write(xml)
-                                    flush()
-                                }
-                                flush()
-                                close()
-                            }
-                        }
+                    view.exportSvg().then{ svg : String ->
+                        saveFile (svg)
                     }
+                } else {
+                    saveFile(xml)
                 }
             }
         }
     }
 
+    fun saveFile(data : String) {
+        ApplicationManager.getApplication().invokeLater {
+            ApplicationManager.getApplication().runWriteAction {
+                file.getOutputStream(this).apply {
+                    writer().apply {
+                        write(data)
+                        flush()
+                    }
+                    flush()
+                    close()
+                }
+            }
+        }
+
+    }
     override fun getComponent(): JComponent {
         return view.component
     }

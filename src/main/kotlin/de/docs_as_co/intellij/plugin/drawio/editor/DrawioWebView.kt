@@ -40,13 +40,15 @@ class DrawioWebView(lifetime: Lifetime) : BaseDrawioWebView(lifetime) {
         _xmlContent.set(null) // xmlLike is not xml
         send(OutgoingMessage.Event.Load(xmlLike, 1))
     }
-    fun exportSvg() {
-        send(OutgoingMessage.Request.Export(OutgoingMessage.Request.Export.XMLSVG)).then { response ->
+    fun exportSvg() : Promise<String> {
+        val result = AsyncPromise<String>()
+        send(OutgoingMessage.Request.Export(OutgoingMessage.Request.Export.XMLSVG)).then  { response ->
             val data = (response as IncomingMessage.Response.Export).data
             val payload = data.split(",")[1]
             val decodedBytes = Base64.getDecoder().decode(payload)
             val svg = String(decodedBytes)
-            _xmlContent.set(svg)
+            result.setResult(svg)
         }
+        return result
     }
 }
