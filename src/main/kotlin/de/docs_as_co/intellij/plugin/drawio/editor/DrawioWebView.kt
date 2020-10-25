@@ -36,21 +36,17 @@ class DrawioWebView(lifetime: Lifetime) : BaseDrawioWebView(lifetime) {
         }
     }
 
-    override fun handleResponse(response: IncomingMessage.Response) {
-        when(response) {
-            is IncomingMessage.Response.Export -> {
-                val payload = response.data.split(",")[1]
-                val decodedBytes = Base64.getDecoder().decode(payload)
-                val svg = String(decodedBytes)
-                _xmlContent.set(svg)
-            }
-        }
-    }
     fun loadXmlLike(xmlLike: String) {
         _xmlContent.set(null) // xmlLike is not xml
         send(OutgoingMessage.Event.Load(xmlLike, 1))
     }
     fun exportSvg() {
-        send(OutgoingMessage.Request.Export(OutgoingMessage.Request.Export.XMLSVG))
+        send(OutgoingMessage.Request.Export(OutgoingMessage.Request.Export.XMLSVG)).then { response ->
+            val data = (response as IncomingMessage.Response.Export).data
+            val payload = data.split(",")[1]
+            val decodedBytes = Base64.getDecoder().decode(payload)
+            val svg = String(decodedBytes)
+            _xmlContent.set(svg)
+        }
     }
 }
