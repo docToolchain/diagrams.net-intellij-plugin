@@ -43,3 +43,4 @@ a| == 3
 a|
 Not everybody is always online.
 The third quality goal is that the plugin should also work offline.
+|===

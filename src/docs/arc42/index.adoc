@@ -3,7 +3,7 @@
 //
 // ====================================
 
-= image:arc42-logo.png[arc42] Template
+= arc42 Docs for IntelliJ Diagrams.net Plugin
 // toc-title definition MUST follow document title without blank line!
 :toc-title: Table of Contents
 
