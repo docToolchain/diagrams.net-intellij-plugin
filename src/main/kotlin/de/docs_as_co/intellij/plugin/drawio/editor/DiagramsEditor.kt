@@ -44,7 +44,7 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
         }
     }
 
-    fun saveFile(data : String) {
+    private fun saveFile(data : String) {
         ApplicationManager.getApplication().invokeLater {
             ApplicationManager.getApplication().runWriteAction {
                 file.getOutputStream(this).apply {
