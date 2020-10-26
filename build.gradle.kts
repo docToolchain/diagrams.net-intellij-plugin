@@ -75,7 +75,7 @@ tasks.jar {
     doFirst{
         //check if needed draw.io submodule is initialized
         if (!File("src/webview/drawio/src").exists()) {
-            throw GradleException("please init subprojects by execution 'git submodule update --init`")
+            throw GradleException("please init subprojects by execution 'git submodule update --init'")
         }
     }
     from("src/webview/drawio/src/main/webapp") {

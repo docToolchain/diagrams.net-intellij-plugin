@@ -1,7 +1,7 @@
 [[section-system-scope-and-context]]
 == System Scope and Context
 
-This plugin focues only on IntelliJ and _editing_ of diagrams.
+This plugin focuses only on IntelliJ and _editing_ of diagrams.
 
 Other IDEs or modification of diagrams are out of scope.
 
