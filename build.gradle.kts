@@ -5,7 +5,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     // Java support
-    id("java")
+    //id("java")
     // Kotlin support
     id("org.jetbrains.kotlin.jvm") version "1.4.10"
     // gradle-intellij-plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
@@ -16,6 +16,7 @@ plugins {
     id("io.gitlab.arturbosch.detekt") version "1.13.1"
     // ktlint linter - read more: https://github.com/JLLeitschuh/ktlint-gradle
     id("org.jlleitschuh.gradle.ktlint") version "9.4.0"
+    id("groovy")
 }
 
 // Import variables from gradle.properties file
@@ -41,8 +42,13 @@ repositories {
 }
 dependencies {
     detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.13.1")
-}
+    // mandatory dependencies for using Spock
+    testImplementation ("org.codehaus.groovy:groovy-all:2.5.11")
+    testImplementation ("org.spockframework:spock-core:1.3-groovy-2.5") {
+        exclude("org.codehaus.groovy", "groovy-xml")
+    }
 
+}
 // Configure gradle-intellij-plugin plugin.
 // Read more: https://github.com/JetBrains/gradle-intellij-plugin
 intellij {
@@ -103,7 +109,6 @@ tasks {
     withType<Detekt> {
         jvmTarget = "1.8"
     }
-
     patchPluginXml {
         version(pluginVersion)
         sinceBuild(pluginSinceBuild)
@@ -140,4 +145,8 @@ tasks {
         // https://jetbrains.org/intellij/sdk/docs/tutorials/build_system/deployment.html#specifying-a-release-channel
         channels(pluginVersion.split('-').getOrElse(1) { "default" }.split('.').first())
     }
+}
+
+tasks.test {
+    //useJUnitPlatform()
 }

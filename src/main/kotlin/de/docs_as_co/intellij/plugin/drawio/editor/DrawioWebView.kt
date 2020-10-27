@@ -5,6 +5,7 @@ import com.jetbrains.rd.util.reactive.IPropertyView
 import com.jetbrains.rd.util.reactive.Property
 import org.jetbrains.concurrency.AsyncPromise
 import org.jetbrains.concurrency.Promise
+import java.util.*
 
 class DrawioWebView(lifetime: Lifetime) : BaseDrawioWebView(lifetime) {
     private val _initializedPromise = AsyncPromise<Unit>()
@@ -15,6 +16,7 @@ class DrawioWebView(lifetime: Lifetime) : BaseDrawioWebView(lifetime) {
     val xmlContent: IPropertyView<String?> = _xmlContent
 
     override fun handleEvent(event: IncomingMessage.Event) {
+
         when (event) {
             is IncomingMessage.Event.Initialized -> {
                 _initializedPromise.setResult(Unit)
@@ -37,5 +39,16 @@ class DrawioWebView(lifetime: Lifetime) : BaseDrawioWebView(lifetime) {
     fun loadXmlLike(xmlLike: String) {
         _xmlContent.set(null) // xmlLike is not xml
         send(OutgoingMessage.Event.Load(xmlLike, 1))
+    }
+    fun exportSvg() : Promise<String> {
+        val result = AsyncPromise<String>()
+        send(OutgoingMessage.Request.Export(OutgoingMessage.Request.Export.XMLSVG)).then  { response ->
+            val data = (response as IncomingMessage.Response.Export).data
+            val payload = data.split(",")[1]
+            val decodedBytes = Base64.getDecoder().decode(payload)
+            val svg = String(decodedBytes)
+            result.setResult(svg)
+        }
+        return result
     }
 }

@@ -13,19 +13,6 @@ import com.jetbrains.rd.util.lifetime.LifetimeDefinition
 import java.beans.PropertyChangeListener
 import javax.swing.JComponent
 
-class DiagramsEditorProvider : FileEditorProvider, DumbAware {
-    override fun accept(project: Project, file: VirtualFile): Boolean {
-        if (file.isDirectory || !file.exists()) {
-            return false;
-        }
-        return file.name.endsWith(".drawio");
-    }
-
-    override fun createEditor(project: Project, file: VirtualFile): FileEditor = DiagramsEditor(project, file)
-
-    override fun getEditorTypeId() = "diagrams.net JCEF editor"
-    override fun getPolicy() = FileEditorPolicy.HIDE_DEFAULT_EDITOR
-}
 
 class DiagramsEditor(private val project: Project, private val file: VirtualFile) : FileEditor {
     private val lifetimeDef = LifetimeDefinition()
@@ -36,28 +23,41 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
     private val view = DrawioWebView(lifetime)
 
     init {
+
         view.initializedPromise.then {
             view.loadXmlLike(file.inputStream.reader().readText())
         }
 
         view.xmlContent.advise(lifetime) { xml ->
             if (xml !== null) {
-                ApplicationManager.getApplication().invokeLater {
-                    ApplicationManager.getApplication().runWriteAction {
-                        file.getOutputStream(this).apply {
-                            writer().apply {
-                                write(xml)
-                                flush()
-                            }
-                            flush()
-                            close()
-                        }
+                val isSVGFile = file.name.endsWith(".svg")
+                if ( isSVGFile ) {
+                    //ignore the xml payload and ask for an exported svg
+                    view.exportSvg().then{ svg : String ->
+                        saveFile (svg)
                     }
+                } else {
+                    saveFile(xml)
                 }
             }
         }
     }
 
+    private fun saveFile(data : String) {
+        ApplicationManager.getApplication().invokeLater {
+            ApplicationManager.getApplication().runWriteAction {
+                file.getOutputStream(this).apply {
+                    writer().apply {
+                        write(data)
+                        flush()
+                    }
+                    flush()
+                    close()
+                }
+            }
+        }
+
+    }
     override fun getComponent(): JComponent {
         return view.component
     }

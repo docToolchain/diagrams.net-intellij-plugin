@@ -2,6 +2,7 @@
 
 <!-- Plugin description -->
 This unofficial extension integrates [diagrams.net](https://app.diagrams.net/)  (formerly known as draw.io) directly into IntelliJ.
+It supports diagram files with the extensions `.drawio`
 <!-- Plugin description end -->
 
 ## About
@@ -11,6 +12,7 @@ In fact, it is currently only a proof of concept.
 If you like, you can help to evolve it.
 
 ![screenshot](images/drawioscreenshot.jpg)
+
 
 ## References
 

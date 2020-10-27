@@ -8,7 +8,7 @@ object DiagramsNet : Language("Diagrams.net")
 
 object DiagramsNetFileType : LanguageFileType(DiagramsNet) {
     override fun getName() = "Diagrams.net Diagram"
-    override fun getDescription() = "Simple language file"
+    override fun getDescription() = "Diagrams.net Diagram File"
     override fun getDefaultExtension() = "drawio"
     override fun getIcon() = DiagramsNetIcon.FILE
 }

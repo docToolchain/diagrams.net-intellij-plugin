@@ -8,7 +8,7 @@
     <extensions defaultExtensionNs="com.intellij">
         <!-- Add your extensions here -->
         <fileType name="Diagrams.net Diagram" implementationClass="de.docs_as_co.intellij.plugin.drawio.DiagramsNetFileType"
-                  fieldName="INSTANCE" language="Diagrams.net" extensions="drawio"/>
+                  fieldName="INSTANCE" language="Diagrams.net" extensions="drawio;drawio.svg;drawio.png;drawio.xml;dio;dio.svg;dio.png;dio.xml"/>
         <fileEditorProvider implementation="de.docs_as_co.intellij.plugin.drawio.editor.DiagramsEditorProvider" ></fileEditorProvider>
     </extensions>
 
