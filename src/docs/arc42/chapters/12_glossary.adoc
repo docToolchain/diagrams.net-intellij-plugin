@@ -16,6 +16,6 @@ see also this https://www.diagrams.net/blog/move-diagrams-net[blog post]
 
 | CEF
 | https://en.wikipedia.org/wiki/Chromium_Embedded_Framework[Chromium Embedded Framework]
-| a framework/technology to embedd the well known chromium browser in other applications.
+| a framework/technology to embed the well-known Chromium browser in other applications.
 
 |===
