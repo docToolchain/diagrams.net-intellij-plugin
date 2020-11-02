@@ -11,6 +11,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.testFramework.runNonUndoableWriteAction
 import com.jetbrains.rd.util.lifetime.LifetimeDefinition
 import java.beans.PropertyChangeListener
+import java.util.*
 import javax.swing.JComponent
 
 
@@ -25,7 +26,16 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
     init {
 
         view.initializedPromise.then {
-            view.loadXmlLike(file.inputStream.reader().readText())
+            var payload = ""
+            if (file.name.endsWith(".png")) {
+                val binaryContent = file.inputStream.readBytes()
+                payload = Base64.getEncoder().encodeToString(binaryContent)
+            } else {
+                payload = file.inputStream.reader().readText()
+            }
+            System.out.println("=====================")
+            System.out.println(payload)
+            view.loadXmlLike(payload)
         }
 
         view.xmlContent.advise(lifetime) { xml ->
