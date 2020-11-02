@@ -14,3 +14,13 @@ let's use the https://github.com/RicardoNiepel/C4-PlantUML[C4 PlantUML syntax] h
 === Technical Context
 
 TODO
+
+==== draw.io interface
+
+The draw.io interface is messages based and described in the support article https://desk.draw.io/support/solutions/articles/16000042544-embed-mode[Embed Mode].
+
+Example can be found at
+
+* Introduction/Example: https://github.com/jgraph/drawio-html5
+* GitHub Example: https://github.com/jgraph/drawio-github
+* https://support.draw.io/display/DOB/2016/05/09/Simple+draw.io+embedding+walk-through[Simple draw.io embedding walk-through]
