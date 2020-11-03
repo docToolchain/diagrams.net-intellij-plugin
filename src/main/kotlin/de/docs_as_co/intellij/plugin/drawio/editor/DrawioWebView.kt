@@ -4,8 +4,7 @@ import com.jetbrains.rd.util.lifetime.Lifetime
 import com.jetbrains.rd.util.reactive.IPropertyView
 import com.jetbrains.rd.util.reactive.Property
 import org.jetbrains.concurrency.AsyncPromise
-import org.jetbrains.concurrency.Promise
-import java.util.*
+import org.jetbrains.concurrency.Promiseg
 
 class DrawioWebView(lifetime: Lifetime) : BaseDrawioWebView(lifetime) {
     private val _initializedPromise = AsyncPromise<Unit>()
