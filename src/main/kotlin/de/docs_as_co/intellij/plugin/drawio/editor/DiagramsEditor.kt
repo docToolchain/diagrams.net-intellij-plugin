@@ -26,14 +26,13 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
     init {
 
         view.initializedPromise.then {
-            var payload = ""
             if (file.name.endsWith(".png")) {
-                val binaryContent = file.inputStream.readBytes()
-                payload = "data:image/png;base64,"+Base64.getEncoder().encodeToString(binaryContent)
+                val payload = file.inputStream.readBytes()
+                view.loadPng(payload)
             } else {
-                payload = file.inputStream.reader().readText()
+                val payload = file.inputStream.reader().readText()
+                view.loadXmlLike(payload)
             }
-            view.loadXmlLike(payload)
         }
 
         view.xmlContent.advise(lifetime) { xml ->
@@ -43,33 +42,27 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
                 if ( isSVGFile ) {
                     //ignore the xml payload and ask for an exported svg
                     view.exportSvg().then{ data : String ->
-                        saveFile (data)
+                        saveFile (data.toByteArray(charset("utf-8")))
                     }
                 } else if ( isPNGFile ) {
                     //ignore the xml payload and ask for an exported svg
-                    view.exportPng().then { data: String ->
+                    view.exportPng().then { data: ByteArray ->
                         saveFile(data)
                     }
                 } else {
-                    saveFile(xml)
+                    saveFile(xml.toByteArray(charset("utf-8")))
                 }
             }
         }
     }
 
-    private fun saveFile(data : String) {
+    private fun saveFile(data : ByteArray) {
         ApplicationManager.getApplication().invokeLater {
             ApplicationManager.getApplication().runWriteAction {
                 file.getOutputStream(this).apply {
                     writer().apply {
                         //svg and png are returned base64 encoded
-                        if (data.startsWith("data:")) {
-                            val payload = data.split(",")[1]
-                            val decodedBytes = Base64.getDecoder().decode(payload)
-                            write(decodedBytes)
-                        } else {
-                            write(data)
-                        }
+                        write(data)
                         flush()
                     }
                     flush()
