@@ -43,7 +43,7 @@ class DrawioWebView(lifetime: Lifetime) : BaseDrawioWebView(lifetime) {
 
     fun loadPng(payload: ByteArray) {
         _xmlContent.set(null) // xmlLike is not xml
-        val xmlLike = "data:image/png;base64,"+Base64.getEncoder().encodeToString(payload)
+        val xmlLike = "data:image/png;base64," + Base64.getEncoder().encodeToString(payload)
         send(OutgoingMessage.Event.Load(xmlLike, 1))
     }
 
