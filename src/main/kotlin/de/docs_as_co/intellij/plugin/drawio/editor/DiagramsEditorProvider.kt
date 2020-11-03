@@ -23,7 +23,7 @@ class DiagramsEditorProvider : FileEditorProvider, DumbAware {
             return false;
         }
         //check for the right file extension
-        val extensions = arrayOf(".drawio", ".drawio.svg", ".dio", ".dio.svg")
+        val extensions = arrayOf(".drawio", ".drawio.svg", ".drawio.png", ".dio", ".dio.svg", ".dio.png")
         if (extensions.any { ext -> file.name.endsWith(ext)}) {
             return true
         }

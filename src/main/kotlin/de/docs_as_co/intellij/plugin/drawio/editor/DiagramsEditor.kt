@@ -11,6 +11,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.testFramework.runNonUndoableWriteAction
 import com.jetbrains.rd.util.lifetime.LifetimeDefinition
 import java.beans.PropertyChangeListener
+import java.util.*
 import javax.swing.JComponent
 
 
@@ -25,29 +26,42 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
     init {
 
         view.initializedPromise.then {
-            view.loadXmlLike(file.inputStream.reader().readText())
+            if (file.name.endsWith(".png")) {
+                val payload = file.inputStream.readBytes()
+                view.loadPng(payload)
+            } else {
+                val payload = file.inputStream.reader().readText()
+                view.loadXmlLike(payload)
+            }
         }
 
         view.xmlContent.advise(lifetime) { xml ->
             if (xml !== null) {
                 val isSVGFile = file.name.endsWith(".svg")
+                val isPNGFile = file.name.endsWith(".png")
                 if ( isSVGFile ) {
                     //ignore the xml payload and ask for an exported svg
-                    view.exportSvg().then{ svg : String ->
-                        saveFile (svg)
+                    view.exportSvg().then{ data : String ->
+                        saveFile (data.toByteArray(charset("utf-8")))
+                    }
+                } else if ( isPNGFile ) {
+                    //ignore the xml payload and ask for an exported svg
+                    view.exportPng().then { data: ByteArray ->
+                        saveFile(data)
                     }
                 } else {
-                    saveFile(xml)
+                    saveFile(xml.toByteArray(charset("utf-8")))
                 }
             }
         }
     }
 
-    private fun saveFile(data : String) {
+    private fun saveFile(data : ByteArray) {
         ApplicationManager.getApplication().invokeLater {
             ApplicationManager.getApplication().runWriteAction {
                 file.getOutputStream(this).apply {
                     writer().apply {
+                        //svg and png are returned base64 encoded
                         write(data)
                         flush()
                     }
@@ -56,7 +70,6 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
                 }
             }
         }
-
     }
     override fun getComponent(): JComponent {
         return view.component
