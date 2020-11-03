@@ -33,8 +33,6 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
             } else {
                 payload = file.inputStream.reader().readText()
             }
-            System.out.println("=====================")
-            System.out.println(payload)
             view.loadXmlLike(payload)
         }
 
@@ -44,13 +42,13 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
                 val isPNGFile = file.name.endsWith(".png")
                 if ( isSVGFile ) {
                     //ignore the xml payload and ask for an exported svg
-                    view.exportSvg().then{ svg : String ->
-                        saveFile (svg)
+                    view.exportSvg().then{ data : String ->
+                        saveFile (data)
                     }
                 } else if ( isPNGFile ) {
                     //ignore the xml payload and ask for an exported svg
-                    view.exportPng().then { png: ByteArray ->
-                        savePngFile(png)
+                    view.exportPng().then { data: String ->
+                        saveFile(data)
                     }
                 } else {
                     saveFile(xml)
@@ -64,21 +62,14 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
             ApplicationManager.getApplication().runWriteAction {
                 file.getOutputStream(this).apply {
                     writer().apply {
-                        write(data)
-                        flush()
-                    }
-                    flush()
-                    close()
-                }
-            }
-        }
-    }
-    private fun savePngFile(data : ByteArray) {
-        ApplicationManager.getApplication().invokeLater {
-            ApplicationManager.getApplication().runWriteAction {
-                file.getOutputStream(this).apply {
-                    writer().apply {
-                        write(data)
+                        //svg and png are returned base64 encoded
+                        if (data.startsWith("data:")) {
+                            val payload = data.split(",")[1]
+                            val decodedBytes = Base64.getDecoder().decode(payload)
+                            write(decodedBytes)
+                        } else {
+                            write(data)
+                        }
                         flush()
                     }
                     flush()

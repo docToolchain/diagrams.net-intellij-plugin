@@ -44,21 +44,15 @@ class DrawioWebView(lifetime: Lifetime) : BaseDrawioWebView(lifetime) {
         val result = AsyncPromise<String>()
         send(OutgoingMessage.Request.Export(OutgoingMessage.Request.Export.XMLSVG)).then  { response ->
             val data = (response as IncomingMessage.Response.Export).data
-            val payload = data.split(",")[1]
-            val decodedBytes = Base64.getDecoder().decode(payload)
-            val svg = String(decodedBytes)
-            result.setResult(svg)
+            result.setResult(data)
         }
         return result
     }
-    fun exportPng() : Promise<ByteArray> {
-        val result = AsyncPromise<ByteArray>()
+    fun exportPng() : Promise<String> {
+        val result = AsyncPromise<String>()
         send(OutgoingMessage.Request.Export(OutgoingMessage.Request.Export.XMLPNG)).then  { response ->
             val data = (response as IncomingMessage.Response.Export).data
-            val payload = data.split(",")[1]
-            val decodedBytes = Base64.getDecoder().decode(payload)
-            val png = decodedBytes
-            result.setResult(png)
+            result.setResult(data)
         }
         return result
     }
