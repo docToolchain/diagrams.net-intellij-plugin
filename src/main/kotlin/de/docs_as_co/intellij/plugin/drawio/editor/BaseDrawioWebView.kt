@@ -36,7 +36,7 @@ abstract class BaseDrawioWebView(val lifetime: Lifetime) {
                         if (uri.path == "/index.html") {
                             data class InitialData(val baseUrl: String, val localStorage: String?, val theme: String, val lang: String, val showChrome: String)
 
-                            val text = BaseDrawioWebView.javaClass.getResourceAsStream("/assets/index.html").reader().readText()
+                            val text = BaseDrawioWebView::class.java.getResourceAsStream("/assets/index.html").reader().readText()
                             val updatedText = text.replace(
                                     "\$\$initialData\$\$",
                                     mapper.writeValueAsString(
@@ -52,7 +52,7 @@ abstract class BaseDrawioWebView(val lifetime: Lifetime) {
 
                             updatedText.byteInputStream()
                         } else {
-                            BaseDrawioWebView.javaClass.getResourceAsStream("/assets" + uri.path)
+                            BaseDrawioWebView::class.java.getResourceAsStream("/assets" + uri.path)
                         }
                     }
             ).also { successful -> assert(successful) }
