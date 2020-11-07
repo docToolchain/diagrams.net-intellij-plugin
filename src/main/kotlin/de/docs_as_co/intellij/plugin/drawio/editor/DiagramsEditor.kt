@@ -1,30 +1,50 @@
 package de.docs_as_co.intellij.plugin.drawio.editor
 
-import com.intellij.openapi.application.Application
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.command.WriteCommandAction
-import com.intellij.openapi.fileEditor.*
-import com.intellij.openapi.project.DumbAware
+import com.intellij.openapi.editor.colors.EditorColorsListener
+import com.intellij.openapi.editor.colors.EditorColorsManager
+import com.intellij.openapi.editor.colors.EditorColorsScheme
+import com.intellij.openapi.fileEditor.FileEditor
+import com.intellij.openapi.fileEditor.FileEditorLocation
+import com.intellij.openapi.fileEditor.FileEditorState
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.testFramework.runNonUndoableWriteAction
+import com.intellij.util.ui.UIUtil
 import com.jetbrains.rd.util.lifetime.LifetimeDefinition
 import java.beans.PropertyChangeListener
-import java.util.*
 import javax.swing.JComponent
+import javax.swing.UIManager
 
 
-class DiagramsEditor(private val project: Project, private val file: VirtualFile) : FileEditor {
+class DiagramsEditor(private val project: Project, private val file: VirtualFile) : FileEditor, EditorColorsListener {
     private val lifetimeDef = LifetimeDefinition()
     private val lifetime = lifetimeDef.lifetime
+    private var uiTheme = "dark" // "dark" or "kennedy"
 
     override fun getFile() = file
 
-    private val view = DrawioWebView(lifetime)
+    private var view :DrawioWebView
 
     init {
 
+        //subscribe to changes of the theme
+        val settingsConnection = ApplicationManager.getApplication().messageBus.connect(this)
+        settingsConnection.subscribe<EditorColorsListener>(EditorColorsManager.TOPIC, this)
+
+        val t1 = UIManager.getLookAndFeel()
+        val t2 = UIUtil.isUnderDarcula()
+        //set theme according to IntelliJ-theme
+        if (UIUtil.isUnderDarcula()) {
+            uiTheme = "dark"
+        } else {
+            uiTheme = "kennedy"
+        }
+        view = DrawioWebView(lifetime, uiTheme)
+        initView()
+    }
+
+    private fun initView() {
         view.initializedPromise.then {
             if (file.name.endsWith(".png")) {
                 val payload = file.inputStream.readBytes()
@@ -41,8 +61,8 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
                 val isPNGFile = file.name.endsWith(".png")
                 if ( isSVGFile ) {
                     //ignore the xml payload and ask for an exported svg
-                    view.exportSvg().then{ data : String ->
-                        saveFile (data.toByteArray(charset("utf-8")))
+                    view.exportSvg().then{ data: String ->
+                        saveFile(data.toByteArray(charset("utf-8")))
                     }
                 } else if ( isPNGFile ) {
                     //ignore the xml payload and ask for an exported svg
@@ -54,9 +74,24 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
                 }
             }
         }
+
     }
 
-    private fun saveFile(data : ByteArray) {
+    @Override
+    override public fun globalSchemeChange(scheme: EditorColorsScheme?) {
+        System.out.println("test");
+        if (scheme?.name=="Darcula" || scheme?.name=="High contrast") {
+            uiTheme = "dark"
+
+        } else {
+            uiTheme = "kennedy"
+        }
+        view = DrawioWebView(lifetime, uiTheme)
+        initView()
+        view.component.repaint()
+
+    }
+    private fun saveFile(data: ByteArray) {
         ApplicationManager.getApplication().invokeLater {
             ApplicationManager.getApplication().runWriteAction {
                 file.getOutputStream(this).apply {

@@ -7,7 +7,7 @@ import org.jetbrains.concurrency.AsyncPromise
 import org.jetbrains.concurrency.Promise
 import java.util.*
 
-class DrawioWebView(lifetime: Lifetime) : BaseDrawioWebView(lifetime) {
+class DrawioWebView(lifetime: Lifetime, uiTheme: String) : BaseDrawioWebView(lifetime, uiTheme) {
     private val _initializedPromise = AsyncPromise<Unit>()
 
     val initializedPromise: Promise<Unit> = _initializedPromise;

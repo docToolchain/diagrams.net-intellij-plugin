@@ -17,14 +17,14 @@ import org.jetbrains.concurrency.AsyncPromise
 import org.jetbrains.concurrency.Promise
 import java.net.URI
 
-abstract class BaseDrawioWebView(val lifetime: Lifetime) {
+abstract class BaseDrawioWebView(val lifetime: Lifetime, val uiTheme: String) {
     companion object {
         val mapper = jacksonObjectMapper().apply {
             configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         }
 
         var didRegisterSchemeHandler = false
-        fun initializeSchemeHandler() {
+        fun initializeSchemeHandler(uiTheme: String) {
             if (didRegisterSchemeHandler) {
                 return
             }
@@ -43,7 +43,7 @@ abstract class BaseDrawioWebView(val lifetime: Lifetime) {
                                             InitialData(
                                                     "drawio-plugin://main",
                                                     null,
-                                                    "Kennedy",
+                                                    uiTheme,
                                                     "en",
                                                     "1"
                                             )
@@ -65,7 +65,7 @@ abstract class BaseDrawioWebView(val lifetime: Lifetime) {
     private val responseMap = HashMap<String, AsyncPromise<IncomingMessage.Response>>()
 
     init {
-        initializeSchemeHandler()
+        initializeSchemeHandler(uiTheme)
 
         val jsRequestHandler = JBCefJSQuery.create(panel.browser).also { handler ->
             handler.addHandler { request: String ->
