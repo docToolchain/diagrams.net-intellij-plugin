@@ -1,4 +1,6 @@
 [[section-design-decisions]]
 == Design Decisions
 
-no decision documented yet
+include::09_ADR01_language.adoc[leveloffset=+1]
+
+include::09_ADR02_testing.adoc[leveloffset=+1]
