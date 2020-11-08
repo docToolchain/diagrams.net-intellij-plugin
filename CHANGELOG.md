@@ -5,3 +5,6 @@
 ## [0.0.1]
 ### Added
 -   MVP
+-   load *.(drawio|dio)(.svg|.png|) in editor
+-   support dark theme for darcula
+-   autosave

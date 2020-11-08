@@ -1,5 +1,6 @@
 import io.gitlab.arturbosch.detekt.Detekt
 import org.jetbrains.changelog.closure
+import org.jetbrains.changelog.date
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -11,7 +12,7 @@ plugins {
     // gradle-intellij-plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
     id("org.jetbrains.intellij") version "0.5.0"
     // gradle-changelog-plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
-    id("org.jetbrains.changelog") version "0.5.0"
+    id("org.jetbrains.changelog") version "0.6.2"
     // detekt linter - read more: https://detekt.github.io/detekt/gradle.html
     id("io.gitlab.arturbosch.detekt") version "1.13.1"
     // ktlint linter - read more: https://github.com/JLLeitschuh/ktlint-gradle
@@ -133,5 +134,15 @@ tasks {
         // Specify pre-release label to publish the plugin in a custom Release Channel automatically. Read more:
         // https://jetbrains.org/intellij/sdk/docs/tutorials/build_system/deployment.html#specifying-a-release-channel
         channels(pluginVersion.split('-').getOrElse(1) { "default" }.split('.').first())
+    }
+    changelog {
+        version = "${project.version}"
+        path = "${project.projectDir}/CHANGELOG.md"
+        header = closure { "[${project.version}] - ${date()}" }
+        headerParserRegex = """\d+\.\d+""".toRegex()
+        itemPrefix = "-"
+        keepUnreleasedSection = true
+        unreleasedTerm = "[Unreleased]"
+        groups = listOf("Added", "Changed", "Deprecated", "Removed", "Fixed", "Security")
     }
 }
