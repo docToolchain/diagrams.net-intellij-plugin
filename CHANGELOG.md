@@ -1,8 +1,10 @@
 <!-- Keep a Changelog guide -> https://keepachangelog.com -->
 
-# Draw.io Integration Changelog
+# Changelog
 
-## 0.1.0
+## [Unreleased]
+
+## [0.1.0]
 ### Added
 -   MVP
 -   load *.(drawio|dio)(.svg|.png|) in editor
