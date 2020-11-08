@@ -2,7 +2,7 @@
     <id>de.docs_as_co.intellij.plugin.drawio</id>
     <name>Draw.io Integration</name>
     <vendor url="https://docs-as-co.de">Docs As Code</vendor>
-
+    <version>0.1.0</version>
     <depends>com.intellij.modules.platform</depends>
 
     <extensions defaultExtensionNs="com.intellij">
