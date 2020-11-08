@@ -32,8 +32,6 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
         val settingsConnection = ApplicationManager.getApplication().messageBus.connect(this)
         settingsConnection.subscribe<EditorColorsListener>(EditorColorsManager.TOPIC, this)
 
-        val t1 = UIManager.getLookAndFeel()
-        val t2 = UIUtil.isUnderDarcula()
         //set theme according to IntelliJ-theme
         if (UIUtil.isUnderDarcula()) {
             uiTheme = "dark"
@@ -86,9 +84,7 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
         } else {
             uiTheme = "kennedy"
         }
-        view = DrawioWebView(lifetime, uiTheme)
-        initView()
-        view.component.repaint()
+        this.view.reload(uiTheme)
 
     }
     private fun saveFile(data: ByteArray) {

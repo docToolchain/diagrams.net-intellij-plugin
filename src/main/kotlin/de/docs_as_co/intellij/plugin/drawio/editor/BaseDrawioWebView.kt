@@ -17,7 +17,7 @@ import org.jetbrains.concurrency.AsyncPromise
 import org.jetbrains.concurrency.Promise
 import java.net.URI
 
-abstract class BaseDrawioWebView(val lifetime: Lifetime, val uiTheme: String) {
+abstract class BaseDrawioWebView(val lifetime: Lifetime, var uiTheme: String) {
     companion object {
         val mapper = jacksonObjectMapper().apply {
             configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -26,7 +26,7 @@ abstract class BaseDrawioWebView(val lifetime: Lifetime, val uiTheme: String) {
         var didRegisterSchemeHandler = false
         fun initializeSchemeHandler(uiTheme: String) {
             if (didRegisterSchemeHandler) {
-                return
+//                return
             }
             didRegisterSchemeHandler = true
 
@@ -66,7 +66,6 @@ abstract class BaseDrawioWebView(val lifetime: Lifetime, val uiTheme: String) {
 
     init {
         initializeSchemeHandler(uiTheme)
-
         val jsRequestHandler = JBCefJSQuery.create(panel.browser).also { handler ->
             handler.addHandler { request: String ->
                 val message = mapper.readValue(request, IncomingMessage::class.java)
@@ -85,7 +84,6 @@ abstract class BaseDrawioWebView(val lifetime: Lifetime, val uiTheme: String) {
             }
             lifetime.onTermination { handler.dispose() }
         }
-
         object : CefLoadHandlerAdapter() {
             override fun onLoadEnd(browser: CefBrowser?, frame: CefFrame?, httpStatusCode: Int) {
                 frame?.executeJavaScript(
@@ -105,6 +103,13 @@ abstract class BaseDrawioWebView(val lifetime: Lifetime, val uiTheme: String) {
 
     private var requestId = 0
 
+    public fun reload(uiTheme: String) {
+        this.uiTheme = uiTheme
+        //initializeSchemeHandler(uiTheme)
+        this.panel.browser.cefBrowser.reload()
+        send(OutgoingMessage.Event.Load("",1))
+
+    }
     private fun sendMessage(message: OutgoingMessage) {
         lifetime.assertAlive()
 
