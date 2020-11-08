@@ -80,7 +80,6 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
         System.out.println("test");
         if (scheme?.name=="Darcula" || scheme?.name=="High contrast") {
             uiTheme = "dark"
-
         } else {
             uiTheme = "kennedy"
         }

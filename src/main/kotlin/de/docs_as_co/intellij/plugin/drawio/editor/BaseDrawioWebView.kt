@@ -25,9 +25,6 @@ abstract class BaseDrawioWebView(val lifetime: Lifetime, var uiTheme: String) {
 
         var didRegisterSchemeHandler = false
         fun initializeSchemeHandler(uiTheme: String) {
-            if (didRegisterSchemeHandler) {
-//                return
-            }
             didRegisterSchemeHandler = true
 
             CefApp.getInstance().registerSchemeHandlerFactory(
@@ -105,9 +102,9 @@ abstract class BaseDrawioWebView(val lifetime: Lifetime, var uiTheme: String) {
 
     public fun reload(uiTheme: String) {
         this.uiTheme = uiTheme
-        //initializeSchemeHandler(uiTheme)
+        initializeSchemeHandler(uiTheme)
         this.panel.browser.cefBrowser.reload()
-        send(OutgoingMessage.Event.Load("",1))
+        //TODO: need to refresh the view in the right way to reflect change of theme
 
     }
     private fun sendMessage(message: OutgoingMessage) {
