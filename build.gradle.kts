@@ -6,9 +6,9 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     // Java support
-    id("java")
+    //id("java")
     // Kotlin support
-    id("org.jetbrains.kotlin.jvm") version "1.4.10"
+    id("org.jetbrains.kotlin.jvm") version "1.3.72"
     // gradle-intellij-plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
     id("org.jetbrains.intellij") version "0.5.0"
     // gradle-changelog-plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
@@ -17,6 +17,7 @@ plugins {
     id("io.gitlab.arturbosch.detekt") version "1.13.1"
     // ktlint linter - read more: https://github.com/JLLeitschuh/ktlint-gradle
     id("org.jlleitschuh.gradle.ktlint") version "9.4.0"
+    id("groovy")
 }
 
 // Import variables from gradle.properties file
@@ -42,8 +43,13 @@ repositories {
 }
 dependencies {
     detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.13.1")
-}
+    // mandatory dependencies for using Spock
+    testImplementation ("org.codehaus.groovy:groovy-all:2.5.11")
+    testImplementation ("org.spockframework:spock-core:1.3-groovy-2.5") {
+        exclude("org.codehaus.groovy", "groovy-xml")
+    }
 
+}
 // Configure gradle-intellij-plugin plugin.
 // Read more: https://github.com/JetBrains/gradle-intellij-plugin
 intellij {
@@ -73,6 +79,12 @@ detekt {
 }
 
 tasks.jar {
+    doFirst{
+        //check if needed draw.io submodule is initialized
+        if (!File("src/webview/drawio/src").exists()) {
+            throw GradleException("please init subprojects by execution 'git submodule update --init'")
+        }
+    }
     from("src/webview/drawio/src/main/webapp") {
         include("**/*")
         into("assets")
@@ -84,21 +96,20 @@ tasks.jar {
 }
 
 tasks {
-    // Set the compatibility versions to 1.8
+    // Set the compatibility versions to 11
     withType<JavaCompile> {
-        sourceCompatibility = "1.8"
-        targetCompatibility = "1.8"
+        sourceCompatibility = "11"
+        targetCompatibility = "11"
     }
     listOf("compileKotlin", "compileTestKotlin").forEach {
         getByName<KotlinCompile>(it) {
-            kotlinOptions.jvmTarget = "1.8"
+            kotlinOptions.jvmTarget = "11"
         }
     }
 
     withType<Detekt> {
-        jvmTarget = "1.8"
+        jvmTarget = "11"
     }
-
     patchPluginXml {
         version(pluginVersion)
         sinceBuild(pluginSinceBuild)
@@ -145,4 +156,8 @@ tasks {
         unreleasedTerm = "[Unreleased]"
         groups = listOf("Added", "Changed", "Deprecated", "Removed", "Fixed", "Security")
     }
+}
+
+tasks.test {
+    //useJUnitPlatform()
 }

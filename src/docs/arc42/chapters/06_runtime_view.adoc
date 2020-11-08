@@ -1,0 +1,109 @@
+[[section-runtime-view]]
+== Runtime View
+
+include::../config.adoc[]
+
+The following sequence diagrams will help you to understand the inner workings of the plugin.
+
+=== RTS 01: Init Plugin Editor
+
+[[init-editor]]
+.Init Plugin Editor
+[plantuml,rts1,svg]
+----
+actor User as user
+participant "Intellij" as intellij
+participant DiagramsEditorProvider as editorprovider <<(C,#ADD1B2)>>
+participant DiagramsEditor as editor <<(C,#ADD1B2)>>
+participant DrawioWebView as webview <<(C,#ADD1B2)>>
+'database Filesystem as file
+activate intellij
+user -> intellij: double click\ndiagram file
+  intellij -> editorprovider : accept(filename)
+  intellij <-- editorprovider : true
+  intellij -> editor : instantiate
+    activate editor
+    editor -> webview : instantiate
+    activate webview
+    webview -> drawio : load
+    activate drawio
+user <-- intellij : display editor
+----
+
+<<init-editor>> shows the simplified sequence on how the plugin editor is instantiated.
+While the file extensions for the fileType-plugin are specified directly in the {uri-repo-main}/resources/META-INF/plugin.xml[`plugin.xml`] file, there is a different mechanism for the fileEditor-Plugin.
+Intellij sends `project` and `file` to the {uri-repo-kotlin}/editor/DrawioEditorProvider.kt[``DiagramsEditorProvider``]'s `accept` method.
+This method could now inspect the file and check if it will provide an editor for it.
+In our case, we just check the file extension.
+If `accept()` returns a `true`, IntelliJ will create and Display the {uri-repo-kotlin}/editor/DrawioEditor.kt[``DiagramsEditor``.]
+
+=== RTS 02: Init WebView
+
+In this scenario, we will see how the basic communication between the JavaScript based draw.io and the Kotlin based Plugin works
+
+[[init-webview]]
+.Init WebView
+[plantuml,rts2,svg]
+----
+participant "Intellij" as intellij
+participant DiagramsEditor as editor <<(C,#ADD1B2)>>
+participant DrawioWebView as webview <<(C,#ADD1B2)>>
+'database Filesystem as file
+activate intellij
+  intellij -> editor : instantiate
+    activate editor
+    editor -> webview : instantiate
+    activate webview
+    webview -> drawio : load
+    activate drawio
+...
+drawio -> webview : jsRequestHandler(configureEvent)
+    activate webview
+    webview -> webview : handleEvent(configureEvent)
+    webview -> webview : sendMessage(DrawioConfig)
+    webview --> drawio : processMessageFromHost(DrawioConfig)
+    deactivate webview
+...
+drawio -x webview : jsRequestHandler(initializedEvent)
+...
+drawio -> webview : jsRequestHandler(loadEvent)
+    activate webview
+    webview -x webview : handleEvent(loadEvent)
+    deactivate webview
+
+
+----
+
+== RTS 03: Autosave
+
+[[init-webview]]
+.Init WebView
+[plantuml,rts3,svg]
+----
+database Filesystem as file
+participant DiagramsEditor as editor <<(C,#ADD1B2)>>
+participant DrawioWebView as webview <<(C,#ADD1B2)>>
+participant drawio as drawio
+activate webview
+activate drawio
+activate editor
+...
+drawio -> webview : jsRequestHandler(autosaveEvent)
+    activate webview
+    webview -> webview : handleEvent(autosaveEvent)
+    webview -> webview : _xmlContent.set(event.xml)
+alt filename.endsWith(".xml")
+        webview -> editor :
+        activate editor
+            editor -> file : save(xml)
+        deactivate editor
+else filename.endsWith(".svg")
+        editor -> webview : exportSvg()
+            webview -> webview : sendMessage(exportEvent)
+            webview -> drawio : processMessageFromHost(Export)
+            webview <-- drawio : jsRequestHandler(exportResponse)
+            webview -> webview : promise.setResponse(exportResponse)
+end
+'    deactivate webview
+...
+----

@@ -21,7 +21,7 @@ sealed class OutgoingMessage {
                 val XMLSVG = "xmlsvg"
             }
 
-            val action = "setTheme"
+            val action = "export"
         }
     }
 
@@ -54,7 +54,7 @@ data class DrawioConfig(val compressXml: Boolean?)
         JsonSubTypes.Type(value = IncomingMessage.Event.Initialized::class, name = "init"),
         JsonSubTypes.Type(value = IncomingMessage.Event.Save::class, name = "save"),
         JsonSubTypes.Type(value = IncomingMessage.Event.AutoSave::class, name = "autosave"),
-        JsonSubTypes.Type(value = IncomingMessage.Event.Configure::class, name = "configure"),
+        JsonSubTypes.Type(value = IncomingMessage.Event.Configure::class, name = "configure")
 )
 sealed class IncomingMessage {
     sealed class Response : IncomingMessage() {
