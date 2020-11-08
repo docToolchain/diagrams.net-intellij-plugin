@@ -150,7 +150,7 @@ tasks {
         version = "${project.version}"
         path = "${project.projectDir}/CHANGELOG.md"
         header = closure { "[${project.version}] - ${date()}" }
-        headerParserRegex = """\d+\.\d+""".toRegex()
+        headerParserRegex = """\d+\.\d+\.\d+""".toRegex()
         itemPrefix = "-"
         keepUnreleasedSection = true
         unreleasedTerm = "[Unreleased]"
