@@ -164,7 +164,6 @@ jobs:
         with:
           plugin-location: plugin-artifact/*.zip
           ide-versions: |
-            ideaIC:2019.3
             ideaIC:2020.1
             ideaIC:2020.2
 
