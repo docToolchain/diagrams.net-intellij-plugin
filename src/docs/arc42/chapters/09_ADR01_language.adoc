@@ -34,6 +34,8 @@ Since IntelliJ is a jetbrains project and jetbrains switched to Kotlin some time
 Kotlin is a modern language which adds quite a few new features and shortcuts.
 Java Code can be easily transformed to Kotlin through the IntelliJ IDE (`Code` -> `Convert Java File to Kotlin file`).
 
+In addition, the starter template für new plugins is written in Kotlin and thus it is expected that the future will bring more plugins written in Kotlin.
+
 === Consequences
 
 Contributors might have to learn the details of Kotlin wich might result in code which is not perfect Kotlin code.
