@@ -1,0 +1,45 @@
+== ADR 01: Plugin Programming Language
+
+[options="header"]
+|===
+| Status  | Date     | Decided by
+| decided | 07.11.20 | rdmueller
+|===
+
+=== Problem
+
+IntelliJ is JVM based and plugins can be written in one of many languages which create bytecode for the JVM.
+One of those languages have to be selected.
+
+=== Decision
+
+This plugin uses Kotlin as programming language.
+
+=== Alternatives
+
+==== Groovy
+
+As Ralf Müller (rdmueller) is mostly experienced in Groovy, he started to implement the plugin in Groovy.
+Since most plugin examples he tried to learn from, are written in Java, he soon switched over to Java.
+
+==== Java
+
+With the experience of Alexander Schwartz (ahus1) - the maintainer of the asciidoctor plugin for IntelliJ - we dropped Groovy and the first proof of concept has been implemented in Java.
+
+==== Kotlin
+
+When Henning Dieterichs (hediet)- the maintainer of the VS Code draw.io plugin - joined the project, he donated his knowledge about draw.io.
+Since IntelliJ is a jetbrains project and jetbrains switched to Kotlin some time ago, he switched to Kotlin as langauge for the plugin.
+
+Kotlin is a modern language which adds quite a few new features and shortcuts.
+Java Code can be easily transformed to Kotlin through the IntelliJ IDE (`Code` -> `Convert Java File to Kotlin file`).
+
+In addition, the starter template für new plugins is written in Kotlin and thus it is expected that the future will bring more plugins written in Kotlin.
+
+=== Consequences
+
+Contributors might have to learn the details of Kotlin wich might result in code which is not perfect Kotlin code.
+
+Since Kotlin is a relative new language, it seems to be harder to find code examples written in Kotlin.
+For the main code, this seems to be not a big deal, since you can convert Java to Kotlin (even automatically in Intellij via `Code` -> `Convert Java File to Kotlin file`).
+But for the Groovy DSL, this might be more of a problem.
