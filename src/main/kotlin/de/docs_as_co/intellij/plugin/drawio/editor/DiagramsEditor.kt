@@ -1,23 +1,21 @@
 package de.docs_as_co.intellij.plugin.drawio.editor
 
-import com.intellij.openapi.application.Application
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.fileEditor.*
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
+import com.intellij.openapi.util.UserDataHolderBase
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.testFramework.runNonUndoableWriteAction
 import com.jetbrains.rd.util.lifetime.LifetimeDefinition
 import java.beans.PropertyChangeListener
-import java.util.*
 import javax.swing.JComponent
 
 
-class DiagramsEditor(private val project: Project, private val file: VirtualFile) : FileEditor {
+class DiagramsEditor(private val project: Project, private val file: VirtualFile) : FileEditor, DumbAware {
     private val lifetimeDef = LifetimeDefinition()
     private val lifetime = lifetimeDef.lifetime
+    private val userDataHolder = UserDataHolderBase()
 
     override fun getFile() = file
 
@@ -75,11 +73,11 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
         return view.component
     }
 
-    override fun getPreferredFocusedComponent(): JComponent? {
+    override fun getPreferredFocusedComponent(): JComponent {
         return view.component
     }
 
-    override fun getName() = "diagrams.net editor";
+    override fun getName() = "diagrams.net editor"
 
     override fun setState(state: FileEditorState) {
 
@@ -109,9 +107,10 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
     }
 
     override fun <T : Any?> getUserData(key: Key<T>): T? {
-        return null
+        return userDataHolder.getUserData(key)
     }
 
     override fun <T : Any?> putUserData(key: Key<T>, value: T?) {
+        userDataHolder.putUserData(key, value)
     }
 }
