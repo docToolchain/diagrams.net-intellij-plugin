@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+## [0.1.1]
+
+### fixed
+-   SVG handling
+
 ## [0.1.0]
 
 ### Added
@@ -12,7 +17,3 @@
 -   support dark theme for darcula
 -   autosave
 
-## [0.1.1]
-
-### fixed
--   SVG handling
