@@ -52,7 +52,9 @@ class DrawioWebView(lifetime: Lifetime) : BaseDrawioWebView(lifetime) {
         val result = AsyncPromise<String>()
         send(OutgoingMessage.Request.Export(OutgoingMessage.Request.Export.XMLSVG)).then  { response ->
             val data = (response as IncomingMessage.Response.Export).data
-            result.setResult(data)
+            val payload = data.split(",")[1]
+            val decodedBytes = Base64.getDecoder().decode(payload)
+            result.setResult(String(decodedBytes))
         }
         return result
     }
