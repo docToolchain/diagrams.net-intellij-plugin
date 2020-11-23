@@ -17,17 +17,14 @@ import org.jetbrains.concurrency.AsyncPromise
 import org.jetbrains.concurrency.Promise
 import java.net.URI
 
-abstract class BaseDrawioWebView(val lifetime: Lifetime) {
+abstract class BaseDrawioWebView(val lifetime: Lifetime, var uiTheme: String) {
     companion object {
         val mapper = jacksonObjectMapper().apply {
             configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         }
 
         var didRegisterSchemeHandler = false
-        fun initializeSchemeHandler() {
-            if (didRegisterSchemeHandler) {
-                return
-            }
+        fun initializeSchemeHandler(uiTheme: String) {
             didRegisterSchemeHandler = true
 
             CefApp.getInstance().registerSchemeHandlerFactory(
@@ -43,7 +40,7 @@ abstract class BaseDrawioWebView(val lifetime: Lifetime) {
                                             InitialData(
                                                     "drawio-plugin://main",
                                                     null,
-                                                    "Kennedy",
+                                                    uiTheme,
                                                     "en",
                                                     "1"
                                             )
@@ -65,8 +62,7 @@ abstract class BaseDrawioWebView(val lifetime: Lifetime) {
     private val responseMap = HashMap<String, AsyncPromise<IncomingMessage.Response>>()
 
     init {
-        initializeSchemeHandler()
-
+        initializeSchemeHandler(uiTheme)
         val jsRequestHandler = JBCefJSQuery.create(panel.browser).also { handler ->
             handler.addHandler { request: String ->
                 val message = mapper.readValue(request, IncomingMessage::class.java)
@@ -85,7 +81,6 @@ abstract class BaseDrawioWebView(val lifetime: Lifetime) {
             }
             lifetime.onTermination { handler.dispose() }
         }
-
         object : CefLoadHandlerAdapter() {
             override fun onLoadEnd(browser: CefBrowser?, frame: CefFrame?, httpStatusCode: Int) {
                 frame?.executeJavaScript(
@@ -105,6 +100,13 @@ abstract class BaseDrawioWebView(val lifetime: Lifetime) {
 
     private var requestId = 0
 
+    public fun reload(uiTheme: String) {
+        this.uiTheme = uiTheme
+        initializeSchemeHandler(uiTheme)
+        this.panel.browser.cefBrowser.reload()
+        //TODO: need to refresh the view in the right way to reflect change of theme
+
+    }
     private fun sendMessage(message: OutgoingMessage) {
         lifetime.assertAlive()
 
