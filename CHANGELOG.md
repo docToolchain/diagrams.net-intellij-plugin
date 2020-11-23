@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+## [0.1.2]
+
+### Added
+- draw.io theme adopts to IntelliJ darcula
+
 ## [0.1.1]
 
 ### fixed
