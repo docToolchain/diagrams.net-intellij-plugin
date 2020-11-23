@@ -1,0 +1,28 @@
+== ADR 02: Test-Framework
+
+[options="header"]
+|===
+| Status  | Date     | Decided by
+| decided | 07.11.20 | rdmueller
+|===
+
+=== Problem
+
+For testing, we need a test-framework.
+
+=== Decision
+
+We start out with Spock as test-framework
+
+=== Alternatives
+
+==== JUnit-X vs. Spock
+
+JUnit seems to be the standard test-framework for Java or Kotlin development.
+However, Spock seems to be more powerful and lets us use the Behaviour-Driven-Development approach.
+
+=== Consequences
+
+With Spock, we add Groovy as additional language to the project.
+This raises the complexity, and we have to see if this is worth it.
+Should we notice that we need another test-framework, we can install it as additional one and still keep the Spock tests.

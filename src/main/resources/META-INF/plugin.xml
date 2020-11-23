@@ -1,15 +1,43 @@
-<idea-plugin>
-    <id>de.docs_as_co.intellij.plugin.drawio</id>
-    <name>Draw.io Integration</name>
-    <vendor url="https://docs-as-co.de">Docs As Code</vendor>
-    <version>0.1.0</version>
-    <depends>com.intellij.modules.platform</depends>
+<!-- https://jetbrains.org/intellij/sdk/docs/basics/plugin_structure/plugin_configuration_file.html -->
 
+<!-- `url` specifies the URL of the plugin homepage (can be opened from "Plugins" settings dialog) -->
+<idea-plugin url="https://www.jetbrains.com/idea">
+    <!-- Unique identifier of the plugin. It should be FQN.
+       It cannot be changed between the plugin versions.
+       If not specified, <name> will be used (not recommended). -->
+    <id>de.docs_as_co.intellij.plugin.drawio</id>
+    <!-- Plugin name. It should be short and descriptive and in Title Case.
+       Displayed in the "Plugins" settings dialog and the plugin repository Web interface. -->
+    <name>Draw.io Integration</name>
+    <!-- Description of the plugin.
+       Should be short and to the point.
+       Start the description with a verb in a present simple form such as
+       "integrates", "synchronizes", "adds support for" or "lets you view".
+       Don't use marketing adjectives like "simple", "lightweight", or "professional".
+       Don't repeat the name of the plugin.
+       For plugins that add language/platform/framework support, the description MUST specify
+       the version of the corresponding language/platform/framework.
+       Don't mention the IDE compatibility. E.g., don't say "Adds support to IntelliJ IDEA for..."
+       Displayed in the "Plugins" settings dialog and the plugin repository Web interface.
+       Simple HTML elements can be included between <![CDATA[  ]]> tags.  -->
+    <description></description>
+    <!-- The vendor of the plugin.
+       The optional "url" attribute specifies the URL of the vendor homepage.
+       The optional "email" attribute specifies the e-mail address of the vendor.
+       Displayed in the "Plugins" settings dialog and the plugin repository Web interface. -->
+    <vendor url="https://docs-as-co.de" email="ralf.d.mueller@gmail.com">Docs As Code</vendor>
+    <!-- Plugin version
+       Recommended format is BRANCH.BUILD.FIX (MAJOR.MINOR.FIX)
+       Displayed in the "Plugins" settings dialog and the plugin repository Web interface.  -->
+    <version>0.1.1</version>
+    <depends>com.intellij.modules.platform</depends>
+    <!-- Minimum and maximum build of IDE compatible with the plugin -->
+    <idea-version since-build="202" until-build="202.*"/>
     <extensions defaultExtensionNs="com.intellij">
         <!-- Add your extensions here -->
         <fileType name="Diagrams.net Diagram" implementationClass="de.docs_as_co.intellij.plugin.drawio.DiagramsNetFileType"
                   fieldName="INSTANCE" language="Diagrams.net" extensions="drawio;drawio.svg;drawio.png;drawio.xml;dio;dio.svg;dio.png;dio.xml"/>
-        <fileEditorProvider implementation="de.docs_as_co.intellij.plugin.drawio.editor.DiagramsEditorProvider" ></fileEditorProvider>
+        <fileEditorProvider implementation="de.docs_as_co.intellij.plugin.drawio.editor.DiagramsEditorProvider" />
     </extensions>
 
     <actions>

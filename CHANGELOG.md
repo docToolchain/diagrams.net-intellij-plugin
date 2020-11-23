@@ -1,7 +1,19 @@
 <!-- Keep a Changelog guide -> https://keepachangelog.com -->
 
-# Draw.io Integration Changelog
+# Changelog
 
-## [0.0.1]
+## [Unreleased]
+
+## [0.1.1]
+
+### fixed
+-   SVG handling
+
+## [0.1.0]
+
 ### Added
 -   MVP
+-   load *.(drawio|dio)(.svg|.png|) in editor
+-   support dark theme for darcula
+-   autosave
+
