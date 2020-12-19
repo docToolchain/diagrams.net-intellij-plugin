@@ -1,1 +1,1 @@
-rootProject.name = "Draw.io Integration"
+rootProject.name = "diagrams.net-intellij-plugin"

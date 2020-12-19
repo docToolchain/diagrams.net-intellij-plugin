@@ -5,10 +5,10 @@
     <!-- Unique identifier of the plugin. It should be FQN.
        It cannot be changed between the plugin versions.
        If not specified, <name> will be used (not recommended). -->
-    <id>de.docs_as_co.intellij.plugin.drawio</id>
+    <id>de.docs_as_co.intellij.plugin.diagramsnet</id>
     <!-- Plugin name. It should be short and descriptive and in Title Case.
        Displayed in the "Plugins" settings dialog and the plugin repository Web interface. -->
-    <name>Draw.io Integration</name>
+    <name>Diagrams.net Integration</name>
     <!-- Description of the plugin.
        Should be short and to the point.
        Start the description with a verb in a present simple form such as
