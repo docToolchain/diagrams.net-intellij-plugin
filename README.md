@@ -1,4 +1,4 @@
-# Draw.io Integration For IntelliJ
+# Diagrams.net Integration For IntelliJ
 
 <!-- Plugin description -->
 This unofficial extension integrates [diagrams.net](https://app.diagrams.net/)  (formerly known as draw.io) directly into IntelliJ.
