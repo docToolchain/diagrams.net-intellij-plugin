@@ -3,6 +3,18 @@
 # Changelog
 
 ## [Unreleased]
+### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+## [0.1.3] - 2020-12-23
 
 ## [0.1.3]
 
