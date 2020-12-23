@@ -325,7 +325,6 @@
                 if (eventName === "keydown") {
                     args[2] = (/** @type {KeyboardEvent} */ keyEvt) => {
                         console.log("Handling key", keyEvt);
-                        log("Handling key", keyEvt.key);
 
                         // Draw.io should not override these shortcuts
                         if (keyEvt.key === "Tab" && keyEvt.ctrlKey) {

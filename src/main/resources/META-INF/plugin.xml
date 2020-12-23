@@ -29,7 +29,7 @@
     <!-- Plugin version
        Recommended format is BRANCH.BUILD.FIX (MAJOR.MINOR.FIX)
        Displayed in the "Plugins" settings dialog and the plugin repository Web interface.  -->
-    <version>0.1.1</version>
+    <version>0.1.3</version>
     <depends>com.intellij.modules.platform</depends>
     <!-- Minimum and maximum build of IDE compatible with the plugin -->
     <idea-version since-build="202" until-build="202.*"/>

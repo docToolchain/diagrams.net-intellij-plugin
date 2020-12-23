@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+## [0.1.3]
+
+### fixed
+- keyboard shortcuts (#40)
+
 ## [0.1.2]
 
 ### Added
