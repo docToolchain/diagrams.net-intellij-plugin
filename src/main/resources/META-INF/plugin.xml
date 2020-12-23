@@ -1,7 +1,7 @@
 <!-- https://jetbrains.org/intellij/sdk/docs/basics/plugin_structure/plugin_configuration_file.html -->
 
 <!-- `url` specifies the URL of the plugin homepage (can be opened from "Plugins" settings dialog) -->
-<idea-plugin url="https://github.com/docToolchain/diragrams.net-intellij-plugin/">
+<idea-plugin url="https://github.com/docToolchain/diragrams.net-intellij-plugin#readme">
     <!-- Unique identifier of the plugin. It should be FQN.
        It cannot be changed between the plugin versions.
        If not specified, <name> will be used (not recommended). -->
