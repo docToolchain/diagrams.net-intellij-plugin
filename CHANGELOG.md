@@ -6,6 +6,7 @@
 ### Added
 
 ### Changed
+- Vendor-URL updated
 
 ### Deprecated
 
@@ -14,9 +15,8 @@
 ### Fixed
 
 ### Security
-## [0.1.3] - 2020-12-23
 
-## [0.1.3]
+## [0.1.3] - 2020-12-23
 
 ### fixed
 - keyboard shortcuts (#40)
@@ -29,7 +29,7 @@
 ## [0.1.1]
 
 ### fixed
--   SVG handling
+- SVG handling
 
 ## [0.1.0]
 

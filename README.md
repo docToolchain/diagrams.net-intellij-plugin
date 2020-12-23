@@ -11,8 +11,7 @@ It supports diagram files with the extensions `.drawio.(svg|png)`.
 
 ## About
 
-This plugin is far from being production ready.
-In fact, it is currently only a proof of concept.
+This plugin is still an early version and experimental.
 If you like, you can help to evolve it.
 
 ![screenshot](images/drawioscreenshot.jpg)
