@@ -1,4 +1,8 @@
-# Diagrams.net Integration For IntelliJ
+# Diagrams.net Integration for IntelliJ
+
+[![Build Status (GitHub Workflow Build)](https://github.com/docToolchain/diragrams.net-intellij-plugin/workflows/Build/badge.svg?branch=main)](https://github.com/docToolchain/diragrams.net-intellij-plugin/actions?query=workflow%3ABuild+branch%3Amain)
+[![JetBrains Plugins](https://img.shields.io/jetbrains/plugin/v/15635-diagrams-net-integration.svg)](https://plugins.jetbrains.com/plugin/15635-diagrams-net-integration)
+[![Downloads](https://img.shields.io/jetbrains/plugin/d/15635-diagrams-net-integration.svg)](https://plugins.jetbrains.com/plugin/15635-diagrams-net-integration)
 
 <!-- Plugin description -->
 This unofficial extension integrates [diagrams.net](https://app.diagrams.net/)  (formerly known as draw.io) directly into IntelliJ.
@@ -7,8 +11,7 @@ It supports diagram files with the extensions `.drawio.(svg|png)`.
 
 ## About
 
-This plugin is far from being production ready.
-In fact, it is currently only a proof of concept.
+This plugin is still an early version and experimental.
 If you like, you can help to evolve it.
 
 ![screenshot](images/drawioscreenshot.jpg)
