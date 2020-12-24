@@ -13,7 +13,6 @@ If you like, you can help to evolve it.
 
 ![screenshot](images/drawioscreenshot.jpg)
 
-
 ## References
 
 * https://desk.draw.io/support/solutions/articles/16000042544-embed-mode

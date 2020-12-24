@@ -2,7 +2,7 @@
 
 # Changelog
 
-## [Unreleased]
+## [Released]
 
 ## [0.1.3]
 
@@ -26,4 +26,6 @@
 -   load *.(drawio|dio)(.svg|.png|) in editor
 -   support dark theme for darcula
 -   autosave
+
+## [Unreleased]
 
