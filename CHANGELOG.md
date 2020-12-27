@@ -6,9 +6,8 @@
 ### Added
 
 ### Changed
-
-* PR#41 - Allow the plugin to be installed on more recent IDE builds 
-* Vendor-URL updated
+- PR#41 - Allow the plugin to be installed on more recent IDE builds 
+- Vendor-URL updated
 
 ### Deprecated
 
