@@ -14,7 +14,13 @@
 ## JBIJPPTPL
 
 name: Build
-on: [push, pull_request]
+on:
+  push:
+    # dependabot will create both branches and pull request
+    # only run on pull requests to avoid running twice and creating a release draft
+    branches-ignore:
+      - 'dependabot/**'
+  pull_request:
 jobs:
 
   # Run Gradle Wrapper Validation Action to verify the wrapper's checksum
@@ -180,7 +186,9 @@ jobs:
   # If accepted and published, release workflow would be triggered
   releaseDraft:
     name: Release Draft
-    if: github.event_name != 'pull_request'
+    # don't run on pull requests to avoid creating draft releases for pull requests
+    # only run on the main branch, to avoid cutting releases from feature branches
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
     needs: [build, verify]
     runs-on: ubuntu-latest
     steps:
