@@ -6,8 +6,6 @@
 ### Added
 
 ### Changed
-- PR#41 - Allow the plugin to be installed on more recent IDE builds 
-- Vendor-URL updated
 
 ### Deprecated
 
@@ -16,6 +14,12 @@
 ### Fixed
 
 ### Security
+
+## [0.1.4] - 2021-01-01
+
+### Changed
+- PR#41 - Allow the plugin to be installed on more recent IDE builds 
+- Vendor-URL updated
 
 ## [0.1.3] - 2020-12-23
 
