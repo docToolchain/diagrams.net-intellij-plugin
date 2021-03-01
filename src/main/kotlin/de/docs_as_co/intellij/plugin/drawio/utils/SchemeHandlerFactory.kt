@@ -33,6 +33,8 @@ class SchemeHandlerFactory(val getStream: (uri: URI) -> InputStream?) : CefSchem
                     response.mimeType = "application/javascript"
                 } else if (uri.path.endsWith(".css")) {
                     response.mimeType = "text/css"
+                } else if (uri.path.endsWith(".svg")) {
+                    response.mimeType = "image/svg+xml"
                 }
 
                 if (myStream === null) {

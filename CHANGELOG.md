@@ -6,6 +6,7 @@
 ### Added
 
 ### Changed
+- PR#59 - Restored compatibility with latest version of IntelliJ (2021.1 EAP)
 
 ### Deprecated
 
