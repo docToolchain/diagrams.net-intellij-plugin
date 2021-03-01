@@ -28,7 +28,11 @@ abstract class BaseDrawioWebView(val lifetime: Lifetime, var uiTheme: String) {
             didRegisterSchemeHandler = true
 
             CefApp.getInstance().registerSchemeHandlerFactory(
-                    "drawio-plugin", "*",
+                    // needed to use "https" as scheme here as "drawio-plugin" scheme didn't allow for CORS requests that were needed
+                    // to start the diagrams.net application in the JCEF/Chromium preview browser.
+                    // Worked in previous versions, but not from IntelliJ 2021.1 onwards; maybe due to tightened security in Chromium.
+                    // Error message was: "CORS policy: Cross origin requests are only supported for protocol schemes..."
+                    "https", "drawio-plugin",
                     SchemeHandlerFactory { uri: URI ->
                         if (uri.path == "/index.html") {
                             data class InitialData(val baseUrl: String, val localStorage: String?, val theme: String, val lang: String, val showChrome: String)
@@ -38,7 +42,7 @@ abstract class BaseDrawioWebView(val lifetime: Lifetime, var uiTheme: String) {
                                     "\$\$initialData\$\$",
                                     mapper.writeValueAsString(
                                             InitialData(
-                                                    "drawio-plugin://main",
+                                                    "https://drawio-plugin",
                                                     null,
                                                     uiTheme,
                                                     "en",
@@ -56,7 +60,7 @@ abstract class BaseDrawioWebView(val lifetime: Lifetime, var uiTheme: String) {
         }
     }
 
-    private val panel = LoadableJCEFHtmlPanel("drawio-plugin://main/index.html", null, null)
+    private val panel = LoadableJCEFHtmlPanel("https://drawio-plugin/index.html", null, null)
     val component = panel.component
 
     private val responseMap = HashMap<String, AsyncPromise<IncomingMessage.Response>>()
