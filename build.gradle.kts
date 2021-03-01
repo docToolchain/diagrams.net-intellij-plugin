@@ -87,6 +87,7 @@ tasks.jar {
     }
     from("src/webview/drawio/src/main/webapp") {
         include("**/*")
+        exclude("index.html")
         into("assets")
     }
     from("src/webview") {
