@@ -14,5 +14,5 @@ object DiagramsNetFileType : LanguageFileType(DiagramsNet) {
 }
 
 object DiagramsNetIcon {
-    val FILE = IconLoader.getIcon("/icons/diagrams.svg")
+    val FILE = IconLoader.getIcon("/icons/diagrams.svg", this.javaClass)
 }
