@@ -8,6 +8,7 @@
     <id>de.docs_as_co.intellij.plugin.diagramsnet</id>
     <!-- Plugin name. It should be short and descriptive and in Title Case.
        Displayed in the "Plugins" settings dialog and the plugin repository Web interface. -->
+    <!--suppress PluginXmlCapitalization -->
     <name>Diagrams.net Integration</name>
     <!-- Description of the plugin.
        Should be short and to the point.
@@ -20,7 +21,7 @@
        Don't mention the IDE compatibility. E.g., don't say "Adds support to IntelliJ IDEA for..."
        Displayed in the "Plugins" settings dialog and the plugin repository Web interface.
        Simple HTML elements can be included between <![CDATA[  ]]> tags.  -->
-    <description></description>
+    <description>(filled automatically by the build plugin)</description>
     <!-- The vendor of the plugin.
        The optional "url" attribute specifies the URL of the vendor homepage.
        The optional "email" attribute specifies the e-mail address of the vendor.
@@ -29,7 +30,7 @@
     <!-- Plugin version
        Recommended format is BRANCH.BUILD.FIX (MAJOR.MINOR.FIX)
        Displayed in the "Plugins" settings dialog and the plugin repository Web interface.  -->
-    <version>0.1.3</version>
+    <version>(filled automatically by the build plugin)</version>
     <depends>com.intellij.modules.platform</depends>
     <!-- Minimum and maximum build of IDE compatible with the plugin -->
     <idea-version since-build="203" />

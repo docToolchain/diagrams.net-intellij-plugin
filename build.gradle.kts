@@ -4,6 +4,8 @@ import org.jetbrains.changelog.date
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+fun properties(key: String) = project.findProperty(key).toString()
+
 plugins {
     // Java support
     //id("java")
@@ -20,21 +22,8 @@ plugins {
     id("groovy")
 }
 
-// Import variables from gradle.properties file
-val pluginGroup: String by project
-// `pluginName_` variable ends with `_` because of the collision with Kotlin magic getter in the `intellij` closure.
-// Read more about the issue: https://github.com/JetBrains/intellij-platform-plugin-template/issues/29
-val pluginName_: String by project
-val pluginVersion: String by project
-val pluginSinceBuild: String by project
-val pluginUntilBuild: String by project
-
-val platformType: String by project
-val platformVersion: String by project
-val platformDownloadSources: String by project
-
-group = pluginGroup
-version = pluginVersion
+group = properties("pluginGroup")
+version = properties("pluginVersion")
 
 // Configure project's dependencies
 repositories {
@@ -53,10 +42,10 @@ dependencies {
 // Configure gradle-intellij-plugin plugin.
 // Read more: https://github.com/JetBrains/gradle-intellij-plugin
 intellij {
-    pluginName = pluginName_
-    version = platformVersion
-    type = platformType
-    downloadSources = platformDownloadSources.toBoolean()
+    pluginName = properties("pluginName")
+    version = properties("platformVersion")
+    type = properties("platformType")
+    downloadSources = properties("platformDownloadSources").toBoolean()
     updateSinceUntilBuild = false // don't write information of current IntelliJ build into plugin.xml, instead use information from patchPluginXml
 
 //  Plugin Dependencies:
@@ -112,8 +101,8 @@ tasks {
         jvmTarget = "11"
     }
     patchPluginXml {
-        version(pluginVersion)
-        sinceBuild(pluginSinceBuild)
+        version(properties("pluginVersion"))
+        sinceBuild(properties("pluginSinceBuild"))
         // untilBuild(pluginUntilBuild) --> don't set "untilBuild" to allow new versions to use existing plugin without changes until breaking API changes are known
 
         // Extract the <!-- Plugin description --> section from README.md and provide for the plugin's manifest
@@ -139,6 +128,10 @@ tasks {
         )
     }
 
+    runPluginVerifier {
+        ideVersions(properties("pluginVerifierIdeVersions"))
+    }
+
     publishPlugin {
         dependsOn("patchChangelog")
         token(System.getenv("PUBLISH_TOKEN"))
@@ -146,14 +139,8 @@ tasks {
         channels(if ("true" == System.getenv("PRE_RELEASE")) "EAP" else "default")
     }
     changelog {
-        version = "${project.version}"
-        path = "${project.projectDir}/CHANGELOG.md"
+        version = properties("pluginVersion")
         header = closure { "[${project.version}] - ${date()}" }
-        headerParserRegex = """\d+\.\d+\.\d+""".toRegex()
-        itemPrefix = "-"
-        keepUnreleasedSection = true
-        unreleasedTerm = "[Unreleased]"
-        groups = listOf("Added", "Changed", "Deprecated", "Removed", "Fixed", "Security")
     }
 }
 
