@@ -31,6 +31,7 @@ jobs:
       - name: Publish Plugin
         env:
           PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
+          PRE_RELEASE: ${{ github.event.release.prerelease }}
         run: ./gradlew publishPlugin
 
   # Patch changelog, commit and push to the current repository
