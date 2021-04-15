@@ -81,7 +81,7 @@ detekt {
 tasks.jar {
     doFirst{
         //check if needed draw.io submodule is initialized
-        if (!File("src/webview/drawio/src").exists()) {
+        if (!File(projectDir, "src/webview/drawio/src").exists()) {
             throw GradleException("please init subprojects by execution 'git submodule update --init'")
         }
     }

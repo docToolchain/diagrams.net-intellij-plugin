@@ -41,7 +41,9 @@
     </extensions>
 
     <actions>
-
-
+        <group id="AsciiDocNew" text="AsciiDoc">
+            <action id="AsciiDocNewFile" class="de.docs_as_co.intellij.plugin.drawio.actions.DiagramCreateFileAction"/>
+            <add-to-group group-id="NewGroup" anchor="before" relative-to-action="NewFromTemplate"/>
+        </group>
     </actions>
 </idea-plugin>
