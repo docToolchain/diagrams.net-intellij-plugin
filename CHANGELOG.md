@@ -5,6 +5,7 @@
 ### Added
 
 ### Changed
+- Update to Diagrams.net 14.6.0
 
 ### Deprecated
 
