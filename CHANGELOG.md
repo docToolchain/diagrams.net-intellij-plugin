@@ -8,6 +8,7 @@
 
 ### Changed
 - Update to Diagrams.net 14.6.0
+- Migration to JDK 11 / Project requires minimum 2020.3
 
 ### Deprecated
 
