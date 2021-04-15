@@ -3,6 +3,7 @@
 
 ## [Unreleased]
 ### Added
+- Autodetect editable diagrams.net files (#48)
 
 ### Changed
 - Update to Diagrams.net 14.6.0
