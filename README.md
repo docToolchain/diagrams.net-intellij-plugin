@@ -16,6 +16,15 @@ If you like, you can help to evolve it.
 
 ![screenshot](images/drawioscreenshot.jpg)
 
+## Installation
+
+Releases are available on the [JetBrains Marketplace](https://plugins.jetbrains.com/plugin/15635-diagrams-net-integration). 
+Use [Install plugin from repository](https://www.jetbrains.com/help/idea/managing-plugins.html#install_plugin_from_repo) to install them.
+
+For pre-releases, either 
+- download them from the [GitHub releases](https://github.com/docToolchain/diagrams.net-intellij-plugin/releases) and use [Install plugin from disk](https://www.jetbrains.com/help/idea/managing-plugins.html#install_plugin_from_disk) or 
+- add the URL `https://plugins.jetbrains.com/plugins/eap/list?pluginId=15635` as a [custom plugin repository to your IDE](https://www.jetbrains.com/help/idea/managing-plugins.html#repos).
+
 ## References
 
 * https://desk.draw.io/support/solutions/articles/16000042544-embed-mode
