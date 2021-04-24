@@ -3,6 +3,18 @@
 
 ## [Unreleased]
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+## [0.1.6] - 2021-04-24
+### Added
 - Autodetect editable diagrams.net files (#48)
 - Entries in create new file context menu for diagrams.net including an empty template for editable SVG, editable PNG and XML (#48)
 
