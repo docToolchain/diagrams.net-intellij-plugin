@@ -2,6 +2,18 @@
 # Changelog
 
 ## [Unreleased]
+### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+## [0.1.7] - 2021-04-27
 
 ### Changed
 - Update to Diagrams.net 14.6.6
