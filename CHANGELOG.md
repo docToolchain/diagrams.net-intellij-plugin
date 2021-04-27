@@ -3,8 +3,10 @@
 
 ## [Unreleased]
 
-### Fixed
+### Changed
+- Update to Diagrams.net 14.6.6
 
+### Fixed
 - fix menu ID to avoid clash with AsciiDoc plugin (#48)
 
 ### Security
