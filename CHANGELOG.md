@@ -2,15 +2,10 @@
 # Changelog
 
 ## [Unreleased]
-### Added
-
-### Changed
-
-### Deprecated
-
-### Removed
 
 ### Fixed
+
+- fix menu ID to avoid clash with AsciiDoc plugin (#48)
 
 ### Security
 ## [0.1.6] - 2021-04-24
@@ -22,27 +17,10 @@
 - Update to Diagrams.net 14.6.0
 - Migration to JDK 11 / Project requires minimum 2020.3
 
-### Deprecated
-
-### Removed
-
-### Fixed
-
-### Security
 ## [0.1.5] - 2021-03-01
-
-### Added
 
 ### Changed
 - PR#59 - Restored compatibility with latest version of IntelliJ (2021.1 EAP)
-
-### Deprecated
-
-### Removed
-
-### Fixed
-
-### Security
 
 ## [0.1.4] - 2021-01-01
 
