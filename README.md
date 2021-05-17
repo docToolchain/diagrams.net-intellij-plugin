@@ -6,7 +6,10 @@
 
 <!-- Plugin description -->
 This unofficial extension integrates [diagrams.net](https://app.diagrams.net/)  (formerly known as draw.io) directly into IntelliJ.
-It supports diagram files with the extensions `.drawio.(svg|png)`.
+It supports diagram files with the extensions `.drawio.(svg|png|xml)` and `.dio.(svg|png|xml)`.
+It also auto-detects editable PNGs and SVGs created with diagrams.net.
+
+The editor uses an offline version of diagrams.net by default, therefore it works without an internet connection and content stays local in your IDE.
 <!-- Plugin description end -->
 
 ## About
