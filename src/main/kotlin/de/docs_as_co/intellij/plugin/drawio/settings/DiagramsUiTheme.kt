@@ -1,14 +1,16 @@
 package de.docs_as_co.intellij.plugin.drawio.settings
 
-enum class DiagramsUiTheme(val key: String, private val presentation: String) {
-    DEFAULT ("", "automatic (like IntelliJ)"),
-    DARK ("dark", "Dark"),
-    KENNEDY ("kennedy","Light (Kennedy)"),
-    ATLAS ("atlas","Atlas"),
-    MINIMAL ("min","Minimal"),
-    SKETCH ("sketch","Sketch");
+import de.docs_as_co.intellij.plugin.drawio.MyBundle
+
+enum class DiagramsUiTheme(val key: String) {
+    DEFAULT (""),
+    DARK ("dark"),
+    KENNEDY ("kennedy"),
+    ATLAS ("atlas"),
+    MINIMAL ("min"),
+    SKETCH ("sketch");
 
     override fun toString(): String {
-        return this.presentation;
+        return MyBundle.message("diagrams.theme.$name")
     }
 }
