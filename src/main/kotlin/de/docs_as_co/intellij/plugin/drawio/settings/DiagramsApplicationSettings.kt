@@ -9,10 +9,13 @@ import com.intellij.util.messages.Topic
 import com.intellij.util.xmlb.XmlSerializerUtil
 import com.intellij.util.xmlb.annotations.Property
 
+/**
+ * Application level settings for the Diagrams.net plugin.
+ */
 @State(name = "DiagramsApplicationSettings", storages = [Storage("diagramsNet.xml")])
 class DiagramsApplicationSettings : PersistentStateComponent<DiagramsApplicationSettings.State?>, DiagramsSettings.Holder {
     private val myState = State()
-    override fun getState(): State? {
+    override fun getState(): State {
         return myState
     }
 
