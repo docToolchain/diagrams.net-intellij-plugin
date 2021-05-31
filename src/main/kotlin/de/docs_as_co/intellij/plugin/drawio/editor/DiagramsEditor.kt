@@ -4,7 +4,9 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.colors.EditorColorsListener
 import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.editor.colors.EditorColorsScheme
-import com.intellij.openapi.fileEditor.*
+import com.intellij.openapi.fileEditor.FileEditor
+import com.intellij.openapi.fileEditor.FileEditorLocation
+import com.intellij.openapi.fileEditor.FileEditorState
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
@@ -12,39 +14,49 @@ import com.intellij.openapi.util.UserDataHolderBase
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.ui.UIUtil
 import com.jetbrains.rd.util.lifetime.LifetimeDefinition
+import de.docs_as_co.intellij.plugin.drawio.settings.DiagramsApplicationSettings
+import de.docs_as_co.intellij.plugin.drawio.settings.DiagramsUiTheme
 import java.beans.PropertyChangeListener
 import javax.swing.JComponent
-import javax.swing.UIManager
 
 
-class DiagramsEditor(private val project: Project, private val file: VirtualFile) : FileEditor, EditorColorsListener, DumbAware {
+class DiagramsEditor(private val project: Project, private val file: VirtualFile) : FileEditor, EditorColorsListener, DumbAware,
+    DiagramsApplicationSettings.SettingsChangedListener {
     private val lifetimeDef = LifetimeDefinition()
     private val lifetime = lifetimeDef.lifetime
-    private var uiTheme = "dark" // "dark" or "kennedy"
     private val userDataHolder = UserDataHolderBase()
 
     override fun getFile() = file
 
-    private var view :DrawioWebView
+    private var view :DiagramsWebView
 
     init {
 
         //subscribe to changes of the theme
         val settingsConnection = ApplicationManager.getApplication().messageBus.connect(this)
-        settingsConnection.subscribe<EditorColorsListener>(EditorColorsManager.TOPIC, this)
+        settingsConnection.subscribe(EditorColorsManager.TOPIC, this)
+        settingsConnection.subscribe(DiagramsApplicationSettings.SettingsChangedListener.TOPIC, this)
 
-        //set theme according to IntelliJ-theme
-        if (UIUtil.isUnderDarcula()) {
-            uiTheme = "dark"
-        } else {
-            uiTheme = "kennedy"
-        }
-        view = DrawioWebView(lifetime, uiTheme)
+        view = DiagramsWebView(lifetime, uiThemeFromConfig().key)
         initView()
     }
 
+    private fun uiThemeFromConfig(): DiagramsUiTheme {
+        var uiTheme = DiagramsApplicationSettings.instance.getDiagramsSettings().uiTheme
+
+        if (uiTheme == DiagramsUiTheme.DEFAULT) {
+            //set theme according to IntelliJ-theme
+            if (UIUtil.isUnderDarcula()) {
+                uiTheme = DiagramsUiTheme.DARK
+            } else {
+                uiTheme = DiagramsUiTheme.KENNEDY
+            }
+        }
+        return uiTheme
+    }
+
     private fun initView() {
-        view.initializedPromise.then {
+        view.initialized().then {
             if (file.name.endsWith(".png")) {
                 val payload = file.inputStream.readBytes()
                 view.loadPng(payload)
@@ -77,16 +89,18 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
     }
 
     @Override
-    override public fun globalSchemeChange(scheme: EditorColorsScheme?) {
-        System.out.println("test");
-        if (scheme?.name=="Darcula" || scheme?.name=="High contrast") {
-            uiTheme = "dark"
-        } else {
-            uiTheme = "kennedy"
+    override fun globalSchemeChange(scheme: EditorColorsScheme?) {
+        view.reload(uiThemeFromConfig().key) {
+            initView()
         }
-        this.view.reload(uiTheme)
-
     }
+
+    override fun onSettingsChange(settings: DiagramsApplicationSettings) {
+        view.reload(uiThemeFromConfig().key) {
+            initView()
+        }
+    }
+
     private fun saveFile(data: ByteArray) {
         ApplicationManager.getApplication().invokeLater {
             ApplicationManager.getApplication().runWriteAction {
@@ -146,4 +160,5 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
     override fun <T : Any?> putUserData(key: Key<T>, value: T?) {
         userDataHolder.putUserData(key, value)
     }
+
 }

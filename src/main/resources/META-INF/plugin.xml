@@ -35,11 +35,17 @@
     <!-- Minimum and maximum build of IDE compatible with the plugin -->
     <idea-version since-build="203" />
     <extensions defaultExtensionNs="com.intellij">
-        <!-- Add your extensions here -->
         <fileType name="Diagrams.net Diagram" implementationClass="de.docs_as_co.intellij.plugin.drawio.DiagramsNetFileType"
                   fieldName="INSTANCE" language="Diagrams.net" extensions="drawio;drawio.svg;drawio.png;drawio.xml;dio;dio.svg;dio.png;dio.xml"/>
         <fileEditorProvider implementation="de.docs_as_co.intellij.plugin.drawio.editor.DiagramsEditorProvider" />
         <iconProvider implementation="de.docs_as_co.intellij.plugin.drawio.icons.DiagramsEditorIconProvider" />
+        <applicationConfigurable id="Settings.DiagramsNet.Preview"
+                                 bundle="messages.MyBundle"
+                                 groupId="language"
+                                 nonDefaultProject="true"
+                                 key="settings.diagrams.name"
+                                 instance="de.docs_as_co.intellij.plugin.drawio.settings.DiagramsConfigurable" />
+        <applicationService serviceImplementation="de.docs_as_co.intellij.plugin.drawio.settings.DiagramsApplicationSettings" />
     </extensions>
 
     <actions>

@@ -3,16 +3,8 @@
 
 ## [Unreleased]
 ### Added
+- Theme of editor can be configured via plugin's settings (#65)
 
-### Changed
-
-### Deprecated
-
-### Removed
-
-### Fixed
-
-### Security
 ## [0.1.7] - 2021-04-27
 
 ### Changed

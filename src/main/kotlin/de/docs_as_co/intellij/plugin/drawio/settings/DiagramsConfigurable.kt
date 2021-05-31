@@ -1,0 +1,56 @@
+package de.docs_as_co.intellij.plugin.drawio.settings
+
+import com.intellij.openapi.options.SearchableConfigurable
+import de.docs_as_co.intellij.plugin.drawio.MyBundle.message
+import org.jetbrains.annotations.Nls
+import javax.swing.JComponent
+
+class DiagramsConfigurable : SearchableConfigurable {
+    private var myForm: DiagramsSettingsForm? = null
+    override fun getId(): String {
+        return "Settings.Asciidoclet"
+    }
+
+    override fun enableSearch(option: String): Runnable? {
+        return null
+    }
+
+    override fun getDisplayName(): @Nls String? {
+        return message("settings.diagrams.name")
+    }
+
+    override fun getHelpTopic(): String? {
+        return null
+    }
+
+    override fun createComponent(): JComponent? {
+        return form.component
+    }
+
+    override fun isModified(): Boolean {
+        val settings = DiagramsApplicationSettings.instance
+        return !form.getDiagramsSettings().equals(settings.getDiagramsSettings())
+    }
+
+    override fun apply() {
+        val settings = DiagramsApplicationSettings.instance
+        settings.setDiagramsPreviewSettings(form.getDiagramsSettings())
+    }
+
+    override fun reset() {
+        val settings = DiagramsApplicationSettings.instance
+        form.setDiagramsPreviewSettings(settings.getDiagramsSettings())
+    }
+
+    override fun disposeUIResources() {
+        myForm = null
+    }
+
+    val form: DiagramsSettingsForm
+        get() {
+            if (myForm == null) {
+                myForm = DiagramsSettingsForm()
+            }
+            return myForm!!
+        }
+}

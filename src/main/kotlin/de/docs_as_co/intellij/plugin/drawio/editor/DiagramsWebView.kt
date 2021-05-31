@@ -7,10 +7,13 @@ import org.jetbrains.concurrency.AsyncPromise
 import org.jetbrains.concurrency.Promise
 import java.util.*
 
-class DrawioWebView(lifetime: Lifetime, uiTheme: String) : BaseDrawioWebView(lifetime, uiTheme) {
-    private val _initializedPromise = AsyncPromise<Unit>()
+class DiagramsWebView(lifetime: Lifetime, uiTheme: String) : BaseDiagramsWebView(lifetime, uiTheme) {
+    private var _initializedPromise = AsyncPromise<Unit>()
 
-    val initializedPromise: Promise<Unit> = _initializedPromise;
+    // hide the internal promise type from the outside
+    fun initialized(): Promise<Unit> {
+        return _initializedPromise;
+    }
 
     private val _xmlContent = Property<String?>(null)
     val xmlContent: IPropertyView<String?> = _xmlContent
@@ -47,6 +50,13 @@ class DrawioWebView(lifetime: Lifetime, uiTheme: String) : BaseDrawioWebView(lif
         send(OutgoingMessage.Event.Load(xmlLike, 1))
     }
 
+    override fun reload(uiTheme: String, onThemeChanged: Runnable) {
+        super.reload(uiTheme) {
+            // promise needs to be reset, to that it can be listened to again when the reload is complete
+            _initializedPromise = AsyncPromise()
+            onThemeChanged.run()
+        }
+    }
 
     fun exportSvg() : Promise<String> {
         val result = AsyncPromise<String>()
@@ -68,4 +78,5 @@ class DrawioWebView(lifetime: Lifetime, uiTheme: String) : BaseDrawioWebView(lif
         }
         return result
     }
+
 }

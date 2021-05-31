@@ -17,7 +17,7 @@ import org.jetbrains.concurrency.AsyncPromise
 import org.jetbrains.concurrency.Promise
 import java.net.URI
 
-abstract class BaseDrawioWebView(val lifetime: Lifetime, var uiTheme: String) {
+abstract class BaseDiagramsWebView(val lifetime: Lifetime, var uiTheme: String) {
     companion object {
         val mapper = jacksonObjectMapper().apply {
             configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -26,6 +26,9 @@ abstract class BaseDrawioWebView(val lifetime: Lifetime, var uiTheme: String) {
         var didRegisterSchemeHandler = false
         fun initializeSchemeHandler(uiTheme: String) {
             didRegisterSchemeHandler = true
+
+            // clear old scheme handler factories in case this is a re-initialization with an updated theme
+            CefApp.getInstance().clearSchemeHandlerFactories()
 
             CefApp.getInstance().registerSchemeHandlerFactory(
                     // needed to use "https" as scheme here as "drawio-plugin" scheme didn't allow for CORS requests that were needed
@@ -37,7 +40,7 @@ abstract class BaseDrawioWebView(val lifetime: Lifetime, var uiTheme: String) {
                         if (uri.path == "/index.html") {
                             data class InitialData(val baseUrl: String, val localStorage: String?, val theme: String, val lang: String, val showChrome: String)
 
-                            val text = BaseDrawioWebView::class.java.getResourceAsStream("/assets/index.html").reader().readText()
+                            val text = BaseDiagramsWebView::class.java.getResourceAsStream("/assets/index.html").reader().readText()
                             val updatedText = text.replace(
                                     "\$\$initialData\$\$",
                                     mapper.writeValueAsString(
@@ -53,7 +56,7 @@ abstract class BaseDrawioWebView(val lifetime: Lifetime, var uiTheme: String) {
 
                             updatedText.byteInputStream()
                         } else {
-                            BaseDrawioWebView::class.java.getResourceAsStream("/assets" + uri.path)
+                            BaseDiagramsWebView::class.java.getResourceAsStream("/assets" + uri.path)
                         }
                     }
             ).also { successful -> assert(successful) }
@@ -104,11 +107,13 @@ abstract class BaseDrawioWebView(val lifetime: Lifetime, var uiTheme: String) {
 
     private var requestId = 0
 
-    public fun reload(uiTheme: String) {
-        this.uiTheme = uiTheme
-        initializeSchemeHandler(uiTheme)
-        this.panel.browser.cefBrowser.reload()
-        //TODO: need to refresh the view in the right way to reflect change of theme
+    open fun reload(uiTheme: String, onThemeChanged: Runnable) {
+        if (this.uiTheme != uiTheme) {
+            this.uiTheme = uiTheme
+            initializeSchemeHandler(uiTheme)
+            this.panel.browser.cefBrowser.reloadIgnoreCache()
+            onThemeChanged.run();
+        }
 
     }
     private fun sendMessage(message: OutgoingMessage) {
