@@ -5,6 +5,9 @@
 ### Added
 - Theme of editor can be configured via plugin's settings (#65)
 
+### Changed
+- Update to Diagrams.net 14.7.4
+
 ## [0.1.7] - 2021-04-27
 
 ### Changed

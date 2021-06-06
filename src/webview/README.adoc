@@ -1,0 +1,27 @@
+= Sub-Modules
+
+This is a sub-module pointing to https://github.com/jgraph/drawio.
+
+== Why a submodules
+
+This allows tracking te upstream development in a relatively straightforward way.
+
+== How to update
+
+Run the following commands when you want to update it:
+
+----
+cd src/webview/drawio
+git checkout dev
+cd ..
+git add drawio
+git commit ...
+git push
+----
+
+Run the following commands for all other developers:
+
+----
+git pull
+git submodule update --init
+----
