@@ -8,14 +8,15 @@ import javax.swing.JComponent
 class DiagramsConfigurable : SearchableConfigurable {
     private var myForm: DiagramsSettingsForm? = null
     override fun getId(): String {
-        return "Settings.Asciidoclet"
+        return "Settings.DiagramsNet.Preview"
     }
 
     override fun enableSearch(option: String): Runnable? {
         return null
     }
 
-    override fun getDisplayName(): @Nls String? {
+    @Suppress("DialogTitleCapitalization")
+    override fun getDisplayName(): @Nls String {
         return message("settings.diagrams.name")
     }
 
