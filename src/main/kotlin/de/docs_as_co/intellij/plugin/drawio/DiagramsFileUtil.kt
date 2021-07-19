@@ -2,6 +2,7 @@ package de.docs_as_co.intellij.plugin.drawio
 
 import com.intellij.openapi.vfs.VirtualFile
 import org.w3c.dom.NodeList
+import org.xml.sax.SAXParseException
 import javax.imageio.ImageIO
 import javax.imageio.ImageReader
 import javax.imageio.metadata.IIOMetadataFormatImpl
@@ -29,17 +30,33 @@ class DiagramsFileUtil {
 
             // Detect editable SVG. Editable SVG will have an embedded diagrams.net diagram.
             if (file.name.endsWith(".svg")) {
+                // prevent external content in SVGs. Even when working in a trusted project, resolving external context might slow down the UI
+                // https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html#jaxp-documentbuilderfactory-saxparserfactory-and-dom4j
                 val factory = DocumentBuilderFactory.newInstance()
+                factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+                factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+                factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+                factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+                factory.setXIncludeAware(false);
+                factory.setExpandEntityReferences(false);
+
                 val builder = factory.newDocumentBuilder()
                 // if if the attribute "content" of element "svg" starts with "<mxfile ", this is a diagrams.net file
                 file.inputStream.use {
-                    val doc = builder.parse(it)
-                    val xPathfactory = XPathFactory.newInstance()
-                    val xpath = xPathfactory.newXPath()
-                    val expr = xpath.compile("/svg/@content")
-                    val content = expr.evaluate(doc, XPathConstants.STRING)
-                    if (content.toString().startsWith("<mxfile ")) {
-                        return true
+                    try {
+                        val doc = builder.parse(it)
+                        val xPathfactory = XPathFactory.newInstance()
+                        val xpath = xPathfactory.newXPath()
+                        val expr = xpath.compile("/svg/@content")
+                        val content = expr.evaluate(doc, XPathConstants.STRING)
+                        if (content.toString().startsWith("<mxfile ")) {
+                            return true
+                        }
+                    } catch (ignored: SAXParseException) {
+                        // might happen if:
+                        // * XML is invalid
+                        // * XML contains a DTD as this is disallowed above (draw.io will never add a DTD, but other SVGs might have one)
+                        return false;
                     }
                 }
             }

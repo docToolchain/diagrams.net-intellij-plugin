@@ -2,15 +2,8 @@
 # Changelog
 
 ## [Unreleased]
-### Added
-
-### Changed
-
-### Deprecated
-
-### Removed
-
 ### Fixed
+- don't resolve external DTDs and other references when checking an SVG for draw.io content (#83)
 
 ### Security
 ## [0.1.8] - 2021-06-06
