@@ -2,6 +2,18 @@
 # Changelog
 
 ## [Unreleased]
+### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+## [0.1.11] - 2021-07-20
 ### Fixed
 - fix empty preview in Markdown or AsciiDoc editor being empty after editing a diagrams.net diagram (#87)
 
