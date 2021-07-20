@@ -2,17 +2,9 @@
 # Changelog
 
 ## [Unreleased]
-### Added
-
-### Changed
-
-### Deprecated
-
-### Removed
-
 ### Fixed
+- fix empty preview in Markdown or AsciiDoc editor being empty after editing a diagrams.net diagram (#87)
 
-### Security
 ## [0.1.10] - 2021-07-20
 ### Fixed
 - allow DTDs for draw.io content, but don't download load them if they are remote (#83)

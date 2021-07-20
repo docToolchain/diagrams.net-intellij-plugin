@@ -7,6 +7,7 @@ import com.intellij.ui.jcef.JBCefJSQuery
 import com.jetbrains.rd.util.lifetime.Lifetime
 import com.jetbrains.rd.util.lifetime.assertAlive
 import com.jetbrains.rd.util.lifetime.onTermination
+import de.docs_as_co.intellij.plugin.drawio.settings.DiagramsUiTheme
 import de.docs_as_co.intellij.plugin.drawio.utils.LoadableJCEFHtmlPanel
 import de.docs_as_co.intellij.plugin.drawio.utils.SchemeHandlerFactory
 import org.cef.CefApp
@@ -23,14 +24,15 @@ abstract class BaseDiagramsWebView(val lifetime: Lifetime, var uiTheme: String) 
             configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         }
 
-        var didRegisterSchemeHandler = false
+        private var didRegisterSchemeHandler = false
+        private var myUiTheme = DiagramsUiTheme.KENNEDY.key;
         fun initializeSchemeHandler(uiTheme: String) {
-            didRegisterSchemeHandler = true
+            // set new theme to private variable. Will be used when rendering the preview the next time
+            myUiTheme = uiTheme
 
-            // clear old scheme handler factories in case this is a re-initialization with an updated theme
-            CefApp.getInstance().clearSchemeHandlerFactories()
-
-            CefApp.getInstance().registerSchemeHandlerFactory(
+            if (!didRegisterSchemeHandler) {
+                didRegisterSchemeHandler = true
+                CefApp.getInstance().registerSchemeHandlerFactory(
                     // needed to use "https" as scheme here as "drawio-plugin" scheme didn't allow for CORS requests that were needed
                     // to start the diagrams.net application in the JCEF/Chromium preview browser.
                     // Worked in previous versions, but not from IntelliJ 2021.1 onwards; maybe due to tightened security in Chromium.
@@ -38,20 +40,28 @@ abstract class BaseDiagramsWebView(val lifetime: Lifetime, var uiTheme: String) 
                     "https", "drawio-plugin",
                     SchemeHandlerFactory { uri: URI ->
                         if (uri.path == "/index.html") {
-                            data class InitialData(val baseUrl: String, val localStorage: String?, val theme: String, val lang: String, val showChrome: String)
+                            data class InitialData(
+                                val baseUrl: String,
+                                val localStorage: String?,
+                                val theme: String,
+                                val lang: String,
+                                val showChrome: String
+                            )
 
-                            val text = BaseDiagramsWebView::class.java.getResourceAsStream("/assets/index.html").reader().readText()
+                            val text =
+                                BaseDiagramsWebView::class.java.getResourceAsStream("/assets/index.html").reader()
+                                    .readText()
                             val updatedText = text.replace(
-                                    "\$\$initialData\$\$",
-                                    mapper.writeValueAsString(
-                                            InitialData(
-                                                    "https://drawio-plugin",
-                                                    null,
-                                                    uiTheme,
-                                                    "en",
-                                                    "1"
-                                            )
+                                "\$\$initialData\$\$",
+                                mapper.writeValueAsString(
+                                    InitialData(
+                                        "https://drawio-plugin",
+                                        null,
+                                        myUiTheme,
+                                        "en",
+                                        "1"
                                     )
+                                )
                             )
 
                             updatedText.byteInputStream()
@@ -59,7 +69,8 @@ abstract class BaseDiagramsWebView(val lifetime: Lifetime, var uiTheme: String) 
                             BaseDiagramsWebView::class.java.getResourceAsStream("/assets" + uri.path)
                         }
                     }
-            ).also { successful -> assert(successful) }
+                ).also { successful -> assert(successful) }
+            }
         }
     }
 
@@ -86,7 +97,10 @@ abstract class BaseDiagramsWebView(val lifetime: Lifetime, var uiTheme: String) 
 
                 null
             }
-            lifetime.onTermination { handler.dispose() }
+            lifetime.onTermination {
+                handler.dispose()
+                panel.dispose()
+            }
         }
         object : CefLoadHandlerAdapter() {
             override fun onLoadEnd(browser: CefBrowser?, frame: CefFrame?, httpStatusCode: Int) {
