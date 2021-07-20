@@ -2,6 +2,18 @@
 # Changelog
 
 ## [Unreleased]
+### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+## [0.1.10] - 2021-07-20
 ### Fixed
 - allow DTDs for draw.io content, but don't download load them if they are remote (#83)
 
