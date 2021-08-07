@@ -28,7 +28,6 @@ version = properties("pluginVersion")
 // Configure project's dependencies
 repositories {
     mavenCentral()
-    jcenter()
 }
 dependencies {
     detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.17.1")
@@ -42,11 +41,11 @@ dependencies {
 // Configure gradle-intellij-plugin plugin.
 // Read more: https://github.com/JetBrains/gradle-intellij-plugin
 intellij {
-    pluginName = properties("pluginName")
-    version = properties("platformVersion")
-    type = properties("platformType")
-    downloadSources = properties("platformDownloadSources").toBoolean()
-    updateSinceUntilBuild = false // don't write information of current IntelliJ build into plugin.xml, instead use information from patchPluginXml
+    pluginName.set(properties("pluginName"))
+    version.set(properties("platformVersion"))
+    type.set(properties("platformType"))
+    downloadSources.set(properties("platformDownloadSources").toBoolean())
+    updateSinceUntilBuild.set(false) // don't write information of current IntelliJ build into plugin.xml, instead use information from patchPluginXml
 
 //  Plugin Dependencies:
 //  https://www.jetbrains.org/intellij/sdk/docs/basics/plugin_structure/plugin_dependencies.html
@@ -101,13 +100,13 @@ tasks {
         jvmTarget = "11"
     }
     patchPluginXml {
-        version(properties("pluginVersion"))
-        sinceBuild(properties("pluginSinceBuild"))
+        version.set(properties("pluginVersion"))
+        sinceBuild.set((properties("pluginSinceBuild")))
         // untilBuild(pluginUntilBuild) --> don't set "untilBuild" to allow new versions to use existing plugin without changes until breaking API changes are known
 
         // Extract the <!-- Plugin description --> section from README.md and provide for the plugin's manifest
-        pluginDescription(
-            closure {
+        pluginDescription.set(
+            provider {
                 File(projectDir, "README.md").readText().lines().run {
                     val start = "<!-- Plugin description -->"
                     val end = "<!-- Plugin description end -->"
@@ -121,22 +120,22 @@ tasks {
         )
 
         // Get the latest available change notes from the changelog file
-        changeNotes(
-            closure {
+        changeNotes.set(
+            provider {
                 changelog.getLatest().toHTML()
             }
         )
     }
 
     runPluginVerifier {
-        ideVersions(properties("pluginVerifierIdeVersions"))
+        ideVersions.set(properties("pluginVerifierIdeVersions").split(',').map(String::trim).filter(String::isNotEmpty))
     }
 
     publishPlugin {
         dependsOn("patchChangelog")
-        token(System.getenv("PUBLISH_TOKEN"))
+        token.set(System.getenv("PUBLISH_TOKEN"))
         // if release is marked as a pre-release in the GitHub release, push it to EAP
-        channels(if ("true" == System.getenv("PRE_RELEASE")) "EAP" else "default")
+        channels.set(listOf(if ("true" == System.getenv("PRE_RELEASE")) "EAP" else "default"))
     }
     changelog {
         version = properties("pluginVersion")
