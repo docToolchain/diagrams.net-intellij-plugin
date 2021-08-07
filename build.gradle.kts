@@ -1,5 +1,4 @@
 import io.gitlab.arturbosch.detekt.Detekt
-import org.jetbrains.changelog.closure
 import org.jetbrains.changelog.date
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -138,8 +137,8 @@ tasks {
         channels.set(listOf(if ("true" == System.getenv("PRE_RELEASE")) "EAP" else "default"))
     }
     changelog {
-        version = properties("pluginVersion")
-        header = closure { "[${project.version}] - ${date()}" }
+        version.set(properties("pluginVersion"))
+        header.set(provider { "[${project.version}] - ${date()}" })
     }
 }
 
