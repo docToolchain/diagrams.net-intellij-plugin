@@ -11,6 +11,7 @@
 ### Removed
 
 ### Fixed
+- add XML header for SVG files (#113)
 
 ### Security
 ## [0.1.11] - 2021-07-20
