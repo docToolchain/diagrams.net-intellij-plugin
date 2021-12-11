@@ -2,20 +2,13 @@
 # Changelog
 
 ## [Unreleased]
-### Added
-
 ### Changed
 - update minimum required version to 2021.1
 - Update to Diagrams.net 15.5.4 (#108)
 
-### Deprecated
-
-### Removed
-
 ### Fixed
 - add XML header for SVG files (#113)
 
-### Security
 ## [0.1.11] - 2021-07-20
 ### Fixed
 - fix empty preview in Markdown or AsciiDoc editor being empty after editing a diagrams.net diagram (#87)
