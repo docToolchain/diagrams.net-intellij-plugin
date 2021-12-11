@@ -6,6 +6,7 @@
 
 ### Changed
 - update minimum required version to 2021.1
+- Update to Diagrams.net 15.5.4 (#108)
 
 ### Deprecated
 
