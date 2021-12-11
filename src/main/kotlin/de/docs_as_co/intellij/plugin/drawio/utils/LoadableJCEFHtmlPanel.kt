@@ -7,7 +7,7 @@ import com.intellij.openapi.application.invokeLater
 import com.intellij.openapi.editor.EditorBundle
 import com.intellij.openapi.util.registry.Registry
 import com.intellij.ui.components.JBLoadingPanel
-import com.intellij.ui.jcef.JBCefBrowser
+import com.intellij.ui.jcef.JBCefBrowserBase
 import com.intellij.ui.jcef.JCEFHtmlPanel
 import com.intellij.util.AlarmFactory
 import org.cef.browser.CefBrowser
@@ -25,7 +25,7 @@ class LoadableJCEFHtmlPanel(
     private val loadingPanel = JBLoadingPanel(BorderLayout(), this).apply { setLoadingText(CommonBundle.getLoadingTreeNodeText()) }
     private val alarm = AlarmFactory.getInstance().create()
 
-    val browser: JBCefBrowser get() = htmlPanelComponent
+    val browser: JBCefBrowserBase get() = htmlPanelComponent
 
     companion object {
         private const val LOADING_KEY = 1

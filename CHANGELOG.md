@@ -5,6 +5,7 @@
 ### Added
 
 ### Changed
+- update minimum required version to 2021.1
 
 ### Deprecated
 
