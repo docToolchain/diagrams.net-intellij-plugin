@@ -2,3 +2,25 @@
 == Building Block View
 
 This plugin has two blocks: the viewer and the plugin shell. In the plugin shell, it has glue layer (file type, icon, language, etc.), the web container and settings.
+
+=== plugin.xml
+In this file we defined 5 extensions and 1 action.
+
+==== Extensions (5)
+[options="header"]
+|===
+| Extension | Name                  | Implementation          | Notes
+| filetype  | Diagrams.net Diagram  | x.x.DiagramsNetFileType | define file extensions
+| fileEditorProvider  | NA  | DiagramsEditorProvider          |
+| iconProvider  | NA  | DiagramsEditorIconProvider            | load it from an SVG file
+| applicationConfigurable  | NA  | x.x.DiagramsConfigurable   | allow plugins to add pages to the Settings/Preferences dialog
+| applicationService  | NA  | x.x.DiagramsApplicationSettings   | also for settings?
+|===
+
+==== Actions (1)
+[options="header"]
+|===
+| ID                  | Class                    | Notes
+| DiagramsNetNewFile  | DiagramCreateFileAction  | Users can select SVG, PNG or XML
+|===
+
