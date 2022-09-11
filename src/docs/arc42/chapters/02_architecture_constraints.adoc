@@ -2,7 +2,7 @@
 == Architecture Constraints
 
 This plugin is intended for the IntelliJ based IDEs.
-This bringst up some constraints.
+This brings up some constraints.
 
 * the plugin has to be written in a JVM based language
 * the plugin has to run with the https://www.jetbrains.com/help/idea/installation-guide.html#requirements[minimum system requirements of IntelliJ]
@@ -10,7 +10,6 @@ This bringst up some constraints.
 ** 2.5 GB disk space and another 1 GB for caches
 ** Monitor Resolution 1024x768
 ** 64-bit Operating System
-* starting with IntelliJ 2020.2, the JavaFX based browser solution within IntelliJ will be deprecated and replaced with the Chromium Embedded Framework (CEF) in its Java based version (JCEF)footnote:[see the JetBraint Platform blog post from July 15, 2020: https://blog.jetbrains.com/platform/2020/07/javafx-and-jcef-in-the-intellij-platform/].
-So, the architecture has to support JCEF.
+* So, the architecture has to support JCEF.
 * current IntelliJ ships with Java 11 as runtime.
 So the system must run on Java 11 and higher.
