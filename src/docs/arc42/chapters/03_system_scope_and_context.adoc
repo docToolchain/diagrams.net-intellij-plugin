@@ -1,9 +1,7 @@
 [[section-system-scope-and-context]]
 == System Scope and Context
 
-This plugin focuses only on IntelliJ and _editing_ of diagrams.
-
-Other IDEs or modification of diagrams are out of scope.
+This plugin must work on all JetBrains IDEs that share the same platform as Intellij IDEA.
 
 === Business Context
 
@@ -15,7 +13,9 @@ let's use the https://github.com/RicardoNiepel/C4-PlantUML[C4 PlantUML syntax] h
 
 TODO
 
-==== draw.io interface
+==== ZenUML interface
+
+TODO
 
 The draw.io interface is messages based and described in the support article https://desk.draw.io/support/solutions/articles/16000042544-embed-mode[Embed Mode].
 
