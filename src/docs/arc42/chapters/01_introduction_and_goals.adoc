@@ -2,42 +2,33 @@
 == Introduction and Goals
 
 Good diagrams are very important for a good documentation.
-https://www.diagrams.net/[diagrams.net] is open source, online, desktop and container deployable diagramming software which does an amazing job.
+https://www.zenuml.com/[ZenUML] is open source, online, desktop and platform integrated diagramming software which does an amazing job.
 
-One of the main features is that it is able to store the sources of the diagram within the meta data of a `.png` or `.svg` image.
-That makes it ideal for the https://docs-as-co.de[Docs-as-Code approach] for documenting software.
-Those images can be directly embedded in AsciiDoc documents but still remain editable.
-This way, you never lose the source of your diagrams.
-
-HINT: diagrams.net was formerly known as draw.io and many plugins, tools and docs still use this name.
+One of the main features is that it is able to store the sources of the diagram as plain text.
+That makes it ideal for documenting software.
 
 === Task Definition
 
 The goal is to create a plugin for IntelliJ based IDEs which
 
-* adds a recognizable icon to all diagrams.net files,
-* opens diagrams.net files in the diagrams.net editor, and
-* saves them in the same format as they were.
+* adds a recognizable icon to all ZenUML files,
+* opens ZenUML files with ZenUML viewer
 
 Additional tasks might be added in the future.
 
 === Quality Goals
 
-[cols="1,10"]
+[cols="1,20"]
 |===
 a| 1
 a|
-It is expected that the diagrams.net files are under version control.
+It is expected that the ZenUML files are under version control.
 So, corrupted files will be easily recovered.
-Nevertheless, the main quality goal is that the editor will be stable (no crashed will editing) and the load/save mechanism will not corrupt files.
 
 a| 2
 a|
 Data protection is crucial.
 The second quality goal is that no data leaves the local system.
-If it is necessary to run diagrams.net on a server, it should be possible to set up your own server.
-
-See also https://github.com/jgraph/security-privacy-legal/blob/master/Security/Data.md[data security statement of draw.io]
 
 a| 3
 a|
