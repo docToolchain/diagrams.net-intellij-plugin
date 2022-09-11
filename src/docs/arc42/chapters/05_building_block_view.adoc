@@ -1,0 +1,4 @@
+[[section-solution-strategy]]
+== Building Block View
+
+This plugin has two blocks: the viewer and the plugin shell. In the plugin shell, it has glue layer (file type, icon, language, etc.), the web container and settings.
