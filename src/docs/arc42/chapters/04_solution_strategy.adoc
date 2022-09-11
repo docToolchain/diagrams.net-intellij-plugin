@@ -1,12 +1,14 @@
 [[section-solution-strategy]]
 == Solution Strategy
 
-diagrams.net is a web based diagramming tool which runs in different browsers.
+ZenUML is a web based diagramming tool which runs in different browsers.
 Since IntelliJ version 2020.01, JetBrains added the https://jetbrains.org/intellij/sdk/docs/reference_guide/jcef.html[JCEF - Java Chromium Embedded Framework] to its platform.
 
 This enables us to use the powerful chromium browser to run diagrams.net within IntelliJ.
 
-The diagrams.net documentation has good https://github.com/jgraph/drawio-integration[examples on how to embedd diagrams.not in a stand aline, local HTML page].
+TODO: Think about how we should embed ZenUML viewer. Render directly on the page or embed an iFrame as diagrams.net does.
+
+The diagrams.net documentation has good https://github.com/jgraph/drawio-integration[examples on how to embedd diagrams.net in a stand aline, local HTML page].
 These where used as a starting point, together with the knowledge of Henning Dieterichs, the author of the draw.io plugin for VS Code.
 He learned a lot about draw.io while writing his plugin and thus helped to get draw.io up and running as offline solution.
 
