@@ -22,6 +22,7 @@
 
             constructor() {
                 window.processMessageFromHost = (message) => {
+                    this.log('processMessageFromHost', message);
                     for (const l of this.listeners) {
                         l(message);
                     }
@@ -32,6 +33,7 @@
                     this.sendMessageToHost = window.sendMessageToHost;
                 } else {
                     this.sendMessageToHost = (message) => {
+                        this.log('sendMessageToHost', message);
                         queue.push(message);
                     };
                     Object.defineProperty(window, "sendMessageToHost", {
@@ -51,6 +53,7 @@
              * @param {string} json string
              */
             sendMessage(message) {
+                this.log('sendMessage', message);
                 this.sendMessageToHost(typeof message === "string" ? message : JSON.stringify(message));
             }
 
@@ -64,116 +67,7 @@
         }
 
         const host = new Host();
-
-        (() => {
-            // Fix draw.io tries to access unavailable localStorage
-            // Replace it with a bridged version
-            const storage = data.localStorage;
-            const bridgedLocalStorage = {
-                getItem: function (key) {
-                    host.log("localStorage: get " + key);
-                    return storage[key];
-                },
-                setItem: function (key, val) {
-                    host.log("localStorage: set " + key + " to " + val);
-                    storage[key] = val;
-                    sendToVsCode({
-                        event: "updateLocalStorage",
-                        newLocalStorage: storage,
-                    });
-                },
-                removeItem: function (key) {
-                    host.log("localStorage: remove " + key);
-                    delete storage[key];
-                },
-            };
-            Object.defineProperty(window, "localStorage", {
-                value: bridgedLocalStorage,
-            });
-
-            // Fix draw.io tries to access unavailable cookie prop
-            Object.defineProperty(document, "cookie", { value: "" });
-
-            // See EditorUI.js:10675
-            const fakedWindowOpener = {
-                postMessage: (msg) => host.sendMessage(msg),
-            };
-            Object.defineProperty(window, "opener", {
-                value: fakedWindowOpener,
-            });
-
-            host.addMessageListener((msg) => {
-                // Emit messages with faked source, so that drawio handles the payload.
-                // If we don't do this, `evt.source === window.opener` will fail
-                // and drawio ignores the message.
-                const fakedEvt = new Event("message");
-                fakedEvt.source = fakedWindowOpener;
-                fakedEvt.data = msg;
-                window.dispatchEvent(fakedEvt);
-            })
-        })();
-
-        var urlParams = {
-            embed: "1",
-            configure: "1",
-            proto: "json",
-            ui: data.theme,
-            lang: data.lang,
-            noSaveBtn: "1",
-            noExitBtn: "1",
-            chrome: data.showChrome,
-        };
-
-        // Checks for local storage
-        var isLocalStorage = true;
-
-        function mxscript(src, onLoad, id, dataAppKey, noWrite) {
-            if (onLoad != null || noWrite) {
-                var s = document.createElement("script");
-                s.setAttribute("type", "text/javascript");
-                s.setAttribute("src", src);
-                var r = false;
-
-                if (id != null) {
-                    s.setAttribute("id", id);
-                }
-
-                if (dataAppKey != null) {
-                    s.setAttribute("data-app-key", dataAppKey);
-                }
-
-                if (onLoad != null) {
-                    s.onload = s.onreadystatechange = function () {
-                        if (
-                            !r &&
-                            (!this.readyState ||
-                                this.readyState == "complete")
-                        ) {
-                            r = true;
-                            onLoad();
-                        }
-                    };
-                }
-
-                var t = document.getElementsByTagName("script")[0];
-
-                if (t != null) {
-                    t.parentNode.insertBefore(s, t);
-                }
-            } else {
-                document.write(
-                    '<script src="' +
-                    src +
-                    '"' +
-                    (id != null ? ' id="' + id + '" ' : "") +
-                    (dataAppKey != null
-                        ? ' data-app-key="' + dataAppKey + '" '
-                        : "") +
-                    "></scr" +
-                    "ipt>"
-                );
-            }
-        }
+        host.sendMessage(JSON.stringify({event: 'init'}))
     </script>
     <link
             rel="stylesheet"
