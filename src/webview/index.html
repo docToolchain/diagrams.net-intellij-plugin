@@ -33,9 +33,7 @@
                     for (const l of this.listeners) {
                         l(message);
                     }
-                    const div = document.createElement('div');
-                    div.append(message);
-                    document.body.append(div);
+                    window.app.$store.state.code = JSON.parse(message).xml;
                 };
 
                 let queue = [];
@@ -89,8 +87,9 @@
 
 
 </head>
-<body class="geEditor">
-<div id="geInfo">
+<!--We need class zenuml for tailwind to work. This is configured in vue-sequence-->
+<body class="zenuml m-2">
+<div id="mounting-point">
     <div class="geBlock" style="text-align: center; min-width: 50%">
         <h1>ZenUML</h1>
         <p>
@@ -100,13 +99,13 @@
         <h2 id="geStatus">Loading...</h2>
     </div>
 </div>
-<div id="mounting-point"></div>
+
 <script>
 
     window.addEventListener("load", function(event) {
         console.log("window loaded");
         Vue.use(Vuex);
-        let { DiagramFrame, SeqDiagram, Store } = window['vue-sequence'].VueSequence;
+        let { DiagramFrame, Store } = window['vue-sequence'].VueSequence;
         let storeConfig = Store();
         storeConfig.state.code = "A.method";
         Vue.component("seq-diagram", DiagramFrame);
