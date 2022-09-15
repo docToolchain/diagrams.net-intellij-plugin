@@ -29,17 +29,17 @@ class DiagramsConfigurable : SearchableConfigurable {
     }
 
     override fun isModified(): Boolean {
-        val settings = DiagramsApplicationSettings.instance
+        val settings = ZenumlUniversalApplicationSettings.instance
         return !form.getDiagramsSettings().equals(settings.getDiagramsSettings())
     }
 
     override fun apply() {
-        val settings = DiagramsApplicationSettings.instance
+        val settings = ZenumlUniversalApplicationSettings.instance
         settings.setDiagramsPreviewSettings(form.getDiagramsSettings())
     }
 
     override fun reset() {
-        val settings = DiagramsApplicationSettings.instance
+        val settings = ZenumlUniversalApplicationSettings.instance
         form.setDiagramsPreviewSettings(settings.getDiagramsSettings())
     }
 

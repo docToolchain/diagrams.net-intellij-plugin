@@ -13,7 +13,7 @@ import com.intellij.util.xmlb.annotations.Property
  * Application level settings for the Diagrams.net plugin.
  */
 @State(name = "DiagramsApplicationSettings", storages = [Storage("diagramsNet.xml")])
-class DiagramsApplicationSettings : PersistentStateComponent<DiagramsApplicationSettings.State?>, DiagramsSettings.Holder {
+class ZenumlUniversalApplicationSettings : PersistentStateComponent<ZenumlUniversalApplicationSettings.State?>, DiagramsSettings.Holder {
     private val myState = State()
     override fun getState(): State {
         return myState
@@ -40,12 +40,12 @@ class DiagramsApplicationSettings : PersistentStateComponent<DiagramsApplication
     }
 
     companion object {
-        val instance: DiagramsApplicationSettings
-            get() = ServiceManager.getService(DiagramsApplicationSettings::class.java)
+        val instance: ZenumlUniversalApplicationSettings
+            get() = ServiceManager.getService(ZenumlUniversalApplicationSettings::class.java)
     }
 
     interface SettingsChangedListener {
-        fun onSettingsChange(settings: DiagramsApplicationSettings)
+        fun onSettingsChange(settings: ZenumlUniversalApplicationSettings)
 
         companion object {
             val TOPIC = Topic.create(

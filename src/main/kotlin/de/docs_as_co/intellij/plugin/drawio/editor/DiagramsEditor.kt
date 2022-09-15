@@ -18,7 +18,7 @@ import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import com.intellij.util.messages.MessageBusConnection
 import com.intellij.util.ui.UIUtil
 import com.jetbrains.rd.util.lifetime.LifetimeDefinition
-import de.docs_as_co.intellij.plugin.drawio.settings.DiagramsApplicationSettings
+import de.docs_as_co.intellij.plugin.drawio.settings.ZenumlUniversalApplicationSettings
 import de.docs_as_co.intellij.plugin.drawio.settings.DiagramsUiTheme
 import java.beans.PropertyChangeListener
 import java.io.BufferedReader
@@ -26,7 +26,7 @@ import javax.swing.JComponent
 
 
 class DiagramsEditor(private val project: Project, private val file: VirtualFile) : FileEditor, EditorColorsListener, DumbAware,
-    DiagramsApplicationSettings.SettingsChangedListener {
+    ZenumlUniversalApplicationSettings.SettingsChangedListener {
     private val lifetimeDef = LifetimeDefinition()
     private val lifetime = lifetimeDef.lifetime
     private val userDataHolder = UserDataHolderBase()
@@ -44,7 +44,7 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
         //subscribe to changes of the theme
         val settingsConnection = ApplicationManager.getApplication().messageBus.connect(this)
         settingsConnection.subscribe(EditorColorsManager.TOPIC, this)
-        settingsConnection.subscribe(DiagramsApplicationSettings.SettingsChangedListener.TOPIC, this)
+        settingsConnection.subscribe(ZenumlUniversalApplicationSettings.SettingsChangedListener.TOPIC, this)
         view = DiagramsWebView(lifetime, uiThemeFromConfig().key)
 
         // Listen to any file modification in the project.
@@ -65,7 +65,7 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
     }
 
     private fun uiThemeFromConfig(): DiagramsUiTheme {
-        var uiTheme = DiagramsApplicationSettings.instance.getDiagramsSettings().uiTheme
+        var uiTheme = ZenumlUniversalApplicationSettings.instance.getDiagramsSettings().uiTheme
 
         if (uiTheme == DiagramsUiTheme.DEFAULT) {
             //set theme according to IntelliJ-theme
@@ -119,7 +119,7 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
         }
     }
 
-    override fun onSettingsChange(settings: DiagramsApplicationSettings) {
+    override fun onSettingsChange(settings: ZenumlUniversalApplicationSettings) {
         view.reload(uiThemeFromConfig().key) {
             initView()
         }
@@ -148,8 +148,7 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
         return view.component
     }
 
-    @Suppress("DialogTitleCapitalization")
-    override fun getName() = "diagrams.net editor"
+    override fun getName() = "ZenUML Editor"
 
     override fun setState(state: FileEditorState) {
 
