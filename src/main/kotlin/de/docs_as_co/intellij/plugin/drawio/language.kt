@@ -4,12 +4,12 @@ import com.intellij.lang.Language
 import com.intellij.openapi.fileTypes.LanguageFileType
 import com.intellij.openapi.util.IconLoader
 
-object DiagramsNet : Language("Diagrams.net")
+object DiagramsNet : Language("ZenUML")
 
 object DiagramsNetFileType : LanguageFileType(DiagramsNet) {
-    override fun getName() = "Diagrams.net Diagram"
-    override fun getDescription() = "Diagrams.net Diagram File"
-    override fun getDefaultExtension() = "drawio"
+    override fun getName() = "ZenUML Diagram"
+    override fun getDescription() = "ZenUML diagram file"
+    override fun getDefaultExtension() = "zen"
     override fun getIcon() = DiagramsNetIcon.FILE
 }
 

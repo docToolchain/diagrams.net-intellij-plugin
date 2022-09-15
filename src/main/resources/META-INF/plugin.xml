@@ -5,11 +5,11 @@
     <!-- Unique identifier of the plugin. It should be FQN.
        It cannot be changed between the plugin versions.
        If not specified, <name> will be used (not recommended). -->
-    <id>de.docs_as_co.intellij.plugin.diagramsnet</id>
+    <id>com.zenuml.intellij.plugin</id>
     <!-- Plugin name. It should be short and descriptive and in Title Case.
        Displayed in the "Plugins" settings dialog and the plugin repository Web interface. -->
     <!--suppress PluginXmlCapitalization -->
-    <name>Diagrams.net Integration</name>
+    <name>ZenUML Integration Universal</name>
     <!-- Description of the plugin.
        Should be short and to the point.
        Start the description with a verb in a present simple form such as
@@ -26,7 +26,7 @@
        The optional "url" attribute specifies the URL of the vendor homepage.
        The optional "email" attribute specifies the e-mail address of the vendor.
        Displayed in the "Plugins" settings dialog and the plugin repository Web interface. -->
-    <vendor url="https://docs-as-co.de" email="ralf.d.mueller@gmail.com">Docs As Code</vendor>
+    <vendor url="https://zenuml.com" email="support@zenuml.com">ZenUML</vendor>
     <!-- Plugin version
        Recommended format is BRANCH.BUILD.FIX (MAJOR.MINOR.FIX)
        Displayed in the "Plugins" settings dialog and the plugin repository Web interface.  -->
@@ -35,8 +35,8 @@
     <!-- Minimum and maximum build of IDE compatible with the plugin -->
     <idea-version since-build="222.2889.14" />
     <extensions defaultExtensionNs="com.intellij">
-        <fileType name="Diagrams.net Diagram" implementationClass="de.docs_as_co.intellij.plugin.drawio.DiagramsNetFileType"
-                  fieldName="INSTANCE" language="Diagrams.net" extensions="drawio;drawio.svg;drawio.png;drawio.xml;dio;dio.svg;dio.png;dio.xml"/>
+        <fileType name="ZenUML Diagram" implementationClass="de.docs_as_co.intellij.plugin.drawio.DiagramsNetFileType"
+                  fieldName="INSTANCE" language="ZenUML" extensions="z;zen;zenuml"/>
         <fileEditorProvider implementation="de.docs_as_co.intellij.plugin.drawio.editor.DiagramsEditorProvider" />
         <iconProvider implementation="de.docs_as_co.intellij.plugin.drawio.icons.DiagramsEditorIconProvider" />
         <applicationConfigurable id="Settings.DiagramsNet.Preview"
