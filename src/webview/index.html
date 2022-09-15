@@ -2,6 +2,13 @@
 <html>
 <head>
     <base href="https://drawio-plugin/index.html" />
+    <meta charset="utf-8">
+    <title>vue-sequence demo</title>
+    <script src="https://unpkg.com/vue@2.6.12/dist/vue.js"></script>
+    <script src="https://unpkg.com/vuex@3.6.2/dist/vuex.js"></script>
+    <script src="https://unpkg.com/vue-sequence@1.0.239/dist/vue-sequence.umd.min.js"></script>
+
+    <link rel="stylesheet" href="https://unpkg.com/vue-sequence@1.0.239/dist/vue-sequence.css">
     <script type="text/javascript">
         /**
          * @type {{
@@ -93,6 +100,22 @@
         <h2 id="geStatus">Loading...</h2>
     </div>
 </div>
+<div id="mounting-point"></div>
+<script>
 
+    window.addEventListener("load", function(event) {
+        console.log("window loaded");
+        Vue.use(Vuex);
+        let { DiagramFrame, SeqDiagram, Store } = window['vue-sequence'].VueSequence;
+        let storeConfig = Store();
+        storeConfig.state.code = "A.method";
+        Vue.component("seq-diagram", DiagramFrame);
+        window.app = new Vue({
+            el: document.getElementById('mounting-point'),
+            store: new Vuex.Store(storeConfig),
+            render: (h) => h('seq-diagram')
+        });
+    });
+</script>
 </body>
 </html>
