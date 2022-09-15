@@ -1,15 +1,14 @@
-# Diagrams.net Integration for IntelliJ
+# ZenUML Universal for JetBrains
 
 [![Build Status (GitHub Workflow Build)](https://github.com/docToolchain/diragrams.net-intellij-plugin/workflows/Build/badge.svg?branch=main)](https://github.com/docToolchain/diragrams.net-intellij-plugin/actions?query=workflow%3ABuild+branch%3Amain)
 [![JetBrains Plugins](https://img.shields.io/jetbrains/plugin/v/15635-diagrams-net-integration.svg)](https://plugins.jetbrains.com/plugin/15635-diagrams-net-integration)
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/15635-diagrams-net-integration.svg)](https://plugins.jetbrains.com/plugin/15635-diagrams-net-integration)
 
 <!-- Plugin description -->
-This unofficial extension integrates [diagrams.net](https://app.diagrams.net/)  (formerly known as draw.io) directly into IntelliJ.
-It supports diagram files with the extensions `.drawio.(svg|png|xml)` and `.dio.(svg|png|xml)`.
-It also auto-detects editable PNGs and SVGs created with diagrams.net.
+This official extension integrates [ZenUML](https://ZenUML.com/) directly into all JetBrains IDEs.
+It supports ZenUML diagram files with the extensions `.z`, `.zen` and `.zenuml`.
 
-The editor uses an offline version of diagrams.net by default, therefore it works without an internet connection and content stays local in your IDE.
+The editor uses an offline version of ZenUML renderer, therefore it works without an internet connection and content stays local in your IDE.
 <!-- Plugin description end -->
 
 ## About
