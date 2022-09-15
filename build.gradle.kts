@@ -30,12 +30,9 @@ repositories {
 }
 dependencies {
     detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.21.0")
-    // mandatory dependencies for using Spock
-    testImplementation ("org.codehaus.groovy:groovy-all:3.0.12")
     testImplementation ("org.spockframework:spock-core:2.2-groovy-4.0") {
         exclude("org.codehaus.groovy", "groovy-xml")
     }
-
 }
 // Configure gradle-intellij-plugin plugin.
 // Read more: https://github.com/JetBrains/gradle-intellij-plugin
