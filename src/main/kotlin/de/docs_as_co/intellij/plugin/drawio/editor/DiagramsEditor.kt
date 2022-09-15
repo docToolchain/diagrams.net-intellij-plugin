@@ -12,11 +12,16 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.UserDataHolderBase
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.openapi.vfs.newvfs.BulkFileListener
+import com.intellij.openapi.vfs.newvfs.events.VFileEvent
+import com.intellij.util.messages.MessageBusConnection
 import com.intellij.util.ui.UIUtil
 import com.jetbrains.rd.util.lifetime.LifetimeDefinition
 import de.docs_as_co.intellij.plugin.drawio.settings.DiagramsApplicationSettings
 import de.docs_as_co.intellij.plugin.drawio.settings.DiagramsUiTheme
 import java.beans.PropertyChangeListener
+import java.io.BufferedReader
 import javax.swing.JComponent
 
 
@@ -40,8 +45,22 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
         val settingsConnection = ApplicationManager.getApplication().messageBus.connect(this)
         settingsConnection.subscribe(EditorColorsManager.TOPIC, this)
         settingsConnection.subscribe(DiagramsApplicationSettings.SettingsChangedListener.TOPIC, this)
-
         view = DiagramsWebView(lifetime, uiThemeFromConfig().key)
+
+        // Listen to any file modification in the project.
+        val connection: MessageBusConnection = project.messageBus.connect(this)
+        connection.subscribe(VirtualFileManager.VFS_CHANGES, object : BulkFileListener {
+            override fun after(events: MutableList<out VFileEvent>) {
+                println(events)
+                events.forEach {
+                    if (it.file!!.name == getFile().name) {
+                        val content = getFile().inputStream.bufferedReader().use(BufferedReader::readText)
+                        println("After content $content")
+                        view.loadXmlLike(content)
+                    }
+                }
+            }
+        })
         initView()
     }
 
