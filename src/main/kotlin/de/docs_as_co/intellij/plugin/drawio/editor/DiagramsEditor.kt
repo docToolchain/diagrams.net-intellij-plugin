@@ -159,7 +159,7 @@ class DiagramsEditor(project: Project, private val file: VirtualFile) : FileEdit
         return view.component
     }
 
-    override fun getName() = "ZenUML Editor"
+    override fun getName() = "ZenUML Viewer"
 
     override fun setState(state: FileEditorState) {
 
