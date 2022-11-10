@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 ### Changed
-- recognized drawio XML files by their content (#178)
+- recognize diagrams.net XML files by their content (#178)
 - Update to Diagrams.net 20.5.3
 
 ## [0.1.12] - 2021-12-11
