@@ -1,17 +1,8 @@
 # Changelog
 
 ## [Unreleased]
-### Added
-
 ### Changed
-
-### Deprecated
-
-### Removed
-
-### Fixed
-
-### Security
+- recognized drawio XML files by their content (#178)
 
 ## [0.1.12] - 2021-12-11
 ### Changed

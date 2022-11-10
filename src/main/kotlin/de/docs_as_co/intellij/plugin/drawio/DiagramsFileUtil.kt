@@ -29,7 +29,7 @@ class DiagramsFileUtil {
             }
 
             // Detect editable SVG. Editable SVG will have an embedded diagrams.net diagram.
-            if (file.name.endsWith(".svg")) {
+            if (file.name.lowercase().endsWith(".svg")) {
                 // prevent external content in SVGs. Even when working in a trusted project, resolving external context might slow down the UI
                 // https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html#jaxp-documentbuilderfactory-saxparserfactory-and-dom4j
                 val factory = DocumentBuilderFactory.newInstance()
@@ -40,7 +40,7 @@ class DiagramsFileUtil {
                 factory.setExpandEntityReferences(false);
 
                 val builder = factory.newDocumentBuilder()
-                // if if the attribute "content" of element "svg" starts with "<mxfile ", this is a diagrams.net file
+                // if the attribute "content" of element "svg" starts with "<mxfile ", this is a diagrams.net file
                 file.inputStream.use {
                     try {
                         val doc = builder.parse(it)
@@ -60,7 +60,7 @@ class DiagramsFileUtil {
             }
 
             // Detect editable PNG. Editable SVG will have an embedded diagrams.net diagram.
-            if (file.name.endsWith(".png")) {
+            if (file.name.lowercase().endsWith(".png")) {
                 file.inputStream.use {
                     ImageIO.createImageInputStream(it).use { input ->
                         val readers: Iterator<ImageReader> = ImageIO.getImageReaders(input)
@@ -81,6 +81,35 @@ class DiagramsFileUtil {
                                 }
                             }
                         }
+                    }
+                }
+            }
+
+            // Detect editable SVG. Editable SVG will have an embedded diagrams.net diagram.
+            if (file.name.lowercase().endsWith(".xml")) {
+                // prevent external content in SVGs. Even when working in a trusted project, resolving external context might slow down the UI
+                // https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html#jaxp-documentbuilderfactory-saxparserfactory-and-dom4j
+                val factory = DocumentBuilderFactory.newInstance()
+                factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+                factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+                factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+                factory.setXIncludeAware(false);
+                factory.setExpandEntityReferences(false);
+
+                val builder = factory.newDocumentBuilder()
+                // if the XML contains "<mxfile><diagram/></mxfile>", this is a diagrams.net file
+                file.inputStream.use {
+                    try {
+                        val doc = builder.parse(it)
+                        val xPathfactory = XPathFactory.newInstance()
+                        val xpath = xPathfactory.newXPath()
+                        val expr = xpath.compile("/mxfile/diagram")
+                        val content = expr.evaluate(doc, XPathConstants.STRING)
+                        return content != null
+                    } catch (ignored: SAXParseException) {
+                        // might happen if:
+                        // * XML is invalid
+                        return false;
                     }
                 }
             }
