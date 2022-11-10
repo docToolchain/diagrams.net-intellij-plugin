@@ -5,7 +5,7 @@
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/15635-diagrams-net-integration.svg)](https://plugins.jetbrains.com/plugin/15635-diagrams-net-integration)
 
 <!-- Plugin description -->
-This unofficial extension integrates [diagrams.net](https://app.diagrams.net/)  (formerly known as draw.io) directly into IntelliJ.
+This unofficial extension integrates [diagrams.net](https://app.diagrams.net/) (formerly known as draw.io) directly into IntelliJ and other JetBrains IDEs based on it like PyCharm, RubyMine and WebStorm.
 It supports diagram files with the extensions `.drawio.(svg|png|xml)` and `.dio.(svg|png|xml)`.
 It also auto-detects editable PNGs and SVGs created with diagrams.net.
 
