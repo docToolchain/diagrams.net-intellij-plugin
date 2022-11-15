@@ -33,11 +33,11 @@ class DiagramsFileUtil {
                 // prevent external content in SVGs. Even when working in a trusted project, resolving external context might slow down the UI
                 // https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html#jaxp-documentbuilderfactory-saxparserfactory-and-dom4j
                 val factory = DocumentBuilderFactory.newInstance()
-                factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
-                factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
-                factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
-                factory.setXIncludeAware(false);
-                factory.setExpandEntityReferences(false);
+                factory.setFeature("http://xml.org/sax/features/external-general-entities", false)
+                factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false)
+                factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
+                factory.setXIncludeAware(false)
+                factory.setExpandEntityReferences(false)
 
                 val builder = factory.newDocumentBuilder()
                 // if the attribute "content" of element "svg" starts with "<mxfile ", this is a diagrams.net file
@@ -54,7 +54,7 @@ class DiagramsFileUtil {
                     } catch (ignored: SAXParseException) {
                         // might happen if:
                         // * XML is invalid
-                        return false;
+                        return false
                     }
                 }
             }
@@ -90,11 +90,11 @@ class DiagramsFileUtil {
                 // prevent external content in SVGs. Even when working in a trusted project, resolving external context might slow down the UI
                 // https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html#jaxp-documentbuilderfactory-saxparserfactory-and-dom4j
                 val factory = DocumentBuilderFactory.newInstance()
-                factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
-                factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
-                factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
-                factory.setXIncludeAware(false);
-                factory.setExpandEntityReferences(false);
+                factory.setFeature("http://xml.org/sax/features/external-general-entities", false)
+                factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false)
+                factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
+                factory.setXIncludeAware(false)
+                factory.setExpandEntityReferences(false)
 
                 val builder = factory.newDocumentBuilder()
                 // if the XML contains "<mxfile><diagram/></mxfile>", this is a diagrams.net file
@@ -104,12 +104,14 @@ class DiagramsFileUtil {
                         val xPathfactory = XPathFactory.newInstance()
                         val xpath = xPathfactory.newXPath()
                         val expr = xpath.compile("/mxfile/diagram")
-                        val content = expr.evaluate(doc, XPathConstants.STRING)
-                        return content != null
+                        val content = expr.evaluate(doc, XPathConstants.NODESET)
+                        if (content is NodeList) {
+                            return content.length > 0
+                        }
                     } catch (ignored: SAXParseException) {
                         // might happen if:
                         // * XML is invalid
-                        return false;
+                        return false
                     }
                 }
             }

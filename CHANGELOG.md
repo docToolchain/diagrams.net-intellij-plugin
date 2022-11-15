@@ -2,17 +2,9 @@
 
 ## Unreleased
 
-### Added
-
-### Changed
-
-### Deprecated
-
-### Removed
-
 ### Fixed
 
-### Security
+- rework diagrams.net XML files recognition (#179)
 
 ## [0.1.13] - 2022-11-10
 
