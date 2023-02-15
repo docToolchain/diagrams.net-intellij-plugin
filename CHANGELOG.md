@@ -2,10 +2,24 @@
 
 ## Unreleased
 
+### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## [0.2.0] - 2023-02-15
+
 ### Fixed
 - support for IntelliJ 2022.3 (#201)
 
-## [0.1.14] - 2022-11-15
+## 0.1.14 - 2022-11-15
 
 ### Fixed
 - rework diagrams.net XML files recognition (#179)
