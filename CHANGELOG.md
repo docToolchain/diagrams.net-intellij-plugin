@@ -2,18 +2,8 @@
 
 ## Unreleased
 
-### Added
-
-### Changed
-
-### Deprecated
-
-### Removed
-
 ### Fixed
 - support for IntelliJ 2022.3 (#201)
-
-### Security
 
 ## [0.1.14] - 2022-11-15
 
