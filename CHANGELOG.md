@@ -11,6 +11,7 @@
 ### Removed
 
 ### Fixed
+- support for IntelliJ 2022.3 (#201)
 
 ### Security
 
