@@ -167,4 +167,8 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
         userDataHolder.putUserData(key, value)
     }
 
+    fun openDevTools() {
+        view.openDevTools();
+    }
+
 }

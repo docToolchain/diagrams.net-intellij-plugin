@@ -3,16 +3,7 @@
 ## Unreleased
 
 ### Added
-
-### Changed
-
-### Deprecated
-
-### Removed
-
-### Fixed
-
-### Security
+- support for off-screen rendering and DevTools for the preview (#201)
 
 ## 0.2.0 - 2023-02-15
 

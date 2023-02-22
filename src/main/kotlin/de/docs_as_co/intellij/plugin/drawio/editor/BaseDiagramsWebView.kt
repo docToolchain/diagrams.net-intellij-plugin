@@ -6,7 +6,6 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.intellij.ui.jcef.JBCefJSQuery
 import com.jetbrains.rd.util.lifetime.Lifetime
 import com.jetbrains.rd.util.lifetime.assertAlive
-import com.jetbrains.rd.util.lifetime.onTermination
 import de.docs_as_co.intellij.plugin.drawio.settings.DiagramsUiTheme
 import de.docs_as_co.intellij.plugin.drawio.utils.LoadableJCEFHtmlPanel
 import de.docs_as_co.intellij.plugin.drawio.utils.SchemeHandlerFactory
@@ -76,6 +75,10 @@ abstract class BaseDiagramsWebView(val lifetime: Lifetime, var uiTheme: String) 
 
     private val panel = LoadableJCEFHtmlPanel("https://drawio-plugin/index.html", null, null)
     val component = panel.component
+
+    fun openDevTools() {
+        panel.browser.openDevtools()
+    }
 
     private val responseMap = HashMap<String, AsyncPromise<IncomingMessage.Response>>()
 

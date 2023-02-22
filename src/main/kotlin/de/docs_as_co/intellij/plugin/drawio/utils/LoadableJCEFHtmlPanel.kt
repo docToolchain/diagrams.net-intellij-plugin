@@ -21,7 +21,11 @@ class LoadableJCEFHtmlPanel(
     url: String? = null, html: String? = null,
     var timeoutCallback: String? = EditorBundle.message("message.html.editor.timeout")
 ) : Disposable {
-    private val htmlPanelComponent = JCEFHtmlPanel(null)
+    private val htmlPanelComponent = JCEFHtmlPanel(
+        isOffScreenRenderingEnabled(),
+        null,
+        null)
+
     private val loadingPanel = JBLoadingPanel(BorderLayout(), this).apply { setLoadingText(CommonBundle.getLoadingTreeNodeText()) }
     private val alarm = AlarmFactory.getInstance().create()
 
@@ -81,4 +85,9 @@ class LoadableJCEFHtmlPanel(
     }
 
     val component: JComponent get() = this.multiPanel
+
+    private fun isOffScreenRenderingEnabled(): Boolean {
+        return Registry.`is`("ide.browser.jcef.diagramsNet.osr.enabled", true)
+    }
+
 }
