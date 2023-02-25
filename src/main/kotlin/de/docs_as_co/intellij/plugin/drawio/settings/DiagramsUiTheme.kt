@@ -1,16 +1,15 @@
 package de.docs_as_co.intellij.plugin.drawio.settings
 
-import de.docs_as_co.intellij.plugin.drawio.MyBundle
+import de.docs_as_co.intellij.plugin.drawio.DiagramsNetBundle
 
 enum class DiagramsUiTheme(val key: String) {
-    DEFAULT (""),
-    DARK ("dark"),
-    KENNEDY ("kennedy"),
+    DEFAULT ("kennedy"),
     ATLAS ("atlas"),
     MINIMAL ("min"),
-    SKETCH ("sketch");
+    SKETCH ("sketch"),
+    SIMPLE ("simple");
 
     override fun toString(): String {
-        return MyBundle.message("diagrams.theme.$name")
+        return DiagramsNetBundle.message("diagrams.theme.$name")
     }
 }

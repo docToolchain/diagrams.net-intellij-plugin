@@ -9,6 +9,7 @@
 
 ### Fixed
 - support for IntelliJ 2022.3 (#201)
+- re-implement dark mode (#185)
 
 ## 0.1.14 - 2022-11-15
 

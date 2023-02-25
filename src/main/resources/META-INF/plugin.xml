@@ -40,7 +40,7 @@
         <fileEditorProvider implementation="de.docs_as_co.intellij.plugin.drawio.editor.DiagramsEditorProvider" />
         <iconProvider implementation="de.docs_as_co.intellij.plugin.drawio.icons.DiagramsEditorIconProvider" />
         <applicationConfigurable id="Settings.DiagramsNet.Preview"
-                                 bundle="messages.MyBundle"
+                                 bundle="messages.DiagramsNetBundle"
                                  groupId="language"
                                  nonDefaultProject="true"
                                  key="settings.diagrams.name"

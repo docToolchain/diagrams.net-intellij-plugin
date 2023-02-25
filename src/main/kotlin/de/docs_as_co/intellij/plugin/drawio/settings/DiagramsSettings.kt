@@ -6,9 +6,13 @@ class DiagramsSettings {
     @Attribute("uiTheme", converter = DiagramsUiThemeConverter::class)
     var uiTheme: DiagramsUiTheme = DiagramsUiTheme.DEFAULT
 
+    @Attribute("uiMode", converter = DiagramsUiModeConverter::class)
+    var uiMode: DiagramsUiMode = DiagramsUiMode.AUTO
+
     constructor() {}
-    constructor(uiTheme: DiagramsUiTheme) {
+    constructor(uiTheme: DiagramsUiTheme, uiMode: DiagramsUiMode) {
         this.uiTheme = uiTheme
+        this.uiMode = uiMode
     }
 
     override fun equals(other: Any?): Boolean {
@@ -19,12 +23,12 @@ class DiagramsSettings {
             return false
         }
         val that = other as DiagramsSettings
-        return uiTheme == that.uiTheme
+        return uiTheme == that.uiTheme && uiMode == that.uiMode
     }
 
     override fun hashCode(): Int {
         var result = 0
-        result = 31 * result + uiTheme.hashCode()
+        result = 31 * result + uiTheme.hashCode() + uiMode.hashCode()
         return result
     }
 

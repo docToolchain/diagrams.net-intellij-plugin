@@ -7,7 +7,7 @@ import org.jetbrains.concurrency.AsyncPromise
 import org.jetbrains.concurrency.Promise
 import java.util.*
 
-class DiagramsWebView(lifetime: Lifetime, uiTheme: String) : BaseDiagramsWebView(lifetime, uiTheme) {
+class DiagramsWebView(lifetime: Lifetime, uiTheme: String, uiMode: String) : BaseDiagramsWebView(lifetime, uiTheme, uiMode) {
     private var _initializedPromise = AsyncPromise<Unit>()
 
     // hide the internal promise type from the outside
@@ -50,8 +50,8 @@ class DiagramsWebView(lifetime: Lifetime, uiTheme: String) : BaseDiagramsWebView
         send(OutgoingMessage.Event.Load(xmlLike, 1))
     }
 
-    override fun reload(uiTheme: String, onThemeChanged: Runnable) {
-        super.reload(uiTheme) {
+    override fun reload(uiTheme: String, uiMode: String, onThemeChanged: Runnable) {
+        super.reload(uiTheme, uiMode) {
             // promise needs to be reset, to that it can be listened to again when the reload is complete
             _initializedPromise = AsyncPromise()
             onThemeChanged.run()

@@ -15,6 +15,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.ui.UIUtil
 import com.jetbrains.rd.util.lifetime.LifetimeDefinition
 import de.docs_as_co.intellij.plugin.drawio.settings.DiagramsApplicationSettings
+import de.docs_as_co.intellij.plugin.drawio.settings.DiagramsUiMode
 import de.docs_as_co.intellij.plugin.drawio.settings.DiagramsUiTheme
 import java.beans.PropertyChangeListener
 import javax.swing.JComponent
@@ -41,22 +42,25 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
         settingsConnection.subscribe(EditorColorsManager.TOPIC, this)
         settingsConnection.subscribe(DiagramsApplicationSettings.SettingsChangedListener.TOPIC, this)
 
-        view = DiagramsWebView(lifetime, uiThemeFromConfig().key)
+        view = DiagramsWebView(lifetime, uiThemeFromConfig().key, uiModeFromConfig().key)
         initView()
     }
 
     private fun uiThemeFromConfig(): DiagramsUiTheme {
-        var uiTheme = DiagramsApplicationSettings.instance.getDiagramsSettings().uiTheme
+        return DiagramsApplicationSettings.instance.getDiagramsSettings().uiTheme
+    }
 
-        if (uiTheme == DiagramsUiTheme.DEFAULT) {
+    private fun uiModeFromConfig(): DiagramsUiMode {
+        var uiMode = DiagramsApplicationSettings.instance.getDiagramsSettings().uiMode
+        if (uiMode == DiagramsUiMode.AUTO) {
             //set theme according to IntelliJ-theme
-            if (UIUtil.isUnderDarcula()) {
-                uiTheme = DiagramsUiTheme.DARK
+            uiMode = if (UIUtil.isUnderDarcula()) {
+                DiagramsUiMode.DARK
             } else {
-                uiTheme = DiagramsUiTheme.KENNEDY
+                DiagramsUiMode.LIGHT
             }
         }
-        return uiTheme
+        return uiMode
     }
 
     private fun initView() {
@@ -95,13 +99,13 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
 
     @Override
     override fun globalSchemeChange(scheme: EditorColorsScheme?) {
-        view.reload(uiThemeFromConfig().key) {
+        view.reload(uiThemeFromConfig().key, uiModeFromConfig().key) {
             initView()
         }
     }
 
     override fun onSettingsChange(settings: DiagramsApplicationSettings) {
-        view.reload(uiThemeFromConfig().key) {
+        view.reload(uiThemeFromConfig().key, uiModeFromConfig().key) {
             initView()
         }
     }

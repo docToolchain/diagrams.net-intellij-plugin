@@ -6,6 +6,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.intellij.ui.jcef.JBCefJSQuery
 import com.jetbrains.rd.util.lifetime.Lifetime
 import com.jetbrains.rd.util.lifetime.assertAlive
+import de.docs_as_co.intellij.plugin.drawio.settings.DiagramsUiMode
 import de.docs_as_co.intellij.plugin.drawio.settings.DiagramsUiTheme
 import de.docs_as_co.intellij.plugin.drawio.utils.LoadableJCEFHtmlPanel
 import de.docs_as_co.intellij.plugin.drawio.utils.SchemeHandlerFactory
@@ -17,17 +18,19 @@ import org.jetbrains.concurrency.AsyncPromise
 import org.jetbrains.concurrency.Promise
 import java.net.URI
 
-abstract class BaseDiagramsWebView(val lifetime: Lifetime, var uiTheme: String) {
+abstract class BaseDiagramsWebView(val lifetime: Lifetime, var uiTheme: String, var uiMode: String) {
     companion object {
         val mapper = jacksonObjectMapper().apply {
             configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         }
 
         private var didRegisterSchemeHandler = false
-        private var myUiTheme = DiagramsUiTheme.KENNEDY.key;
-        fun initializeSchemeHandler(uiTheme: String) {
+        private var myUiTheme = DiagramsUiTheme.DEFAULT.key;
+        private var myUiMode = DiagramsUiMode.AUTO.key;
+        fun initializeSchemeHandler(uiTheme: String, uiMode: String) {
             // set new theme to private variable. Will be used when rendering the preview the next time
             myUiTheme = uiTheme
+            myUiMode = uiMode
 
             if (!didRegisterSchemeHandler) {
                 didRegisterSchemeHandler = true
@@ -43,6 +46,7 @@ abstract class BaseDiagramsWebView(val lifetime: Lifetime, var uiTheme: String) 
                                 val baseUrl: String,
                                 val localStorage: String?,
                                 val theme: String,
+                                val mode: String,
                                 val lang: String,
                                 val showChrome: String
                             )
@@ -57,6 +61,7 @@ abstract class BaseDiagramsWebView(val lifetime: Lifetime, var uiTheme: String) 
                                         "https://drawio-plugin",
                                         null,
                                         myUiTheme,
+                                        myUiMode,
                                         "en",
                                         "1"
                                     )
@@ -83,7 +88,7 @@ abstract class BaseDiagramsWebView(val lifetime: Lifetime, var uiTheme: String) 
     private val responseMap = HashMap<String, AsyncPromise<IncomingMessage.Response>>()
 
     init {
-        initializeSchemeHandler(uiTheme)
+        initializeSchemeHandler(uiTheme, uiMode)
         val jsRequestHandler = JBCefJSQuery.create(panel.browser).also { handler ->
             handler.addHandler { request: String ->
                 val message = mapper.readValue(request, IncomingMessage::class.java)
@@ -124,10 +129,11 @@ abstract class BaseDiagramsWebView(val lifetime: Lifetime, var uiTheme: String) 
 
     private var requestId = 0
 
-    open fun reload(uiTheme: String, onThemeChanged: Runnable) {
-        if (this.uiTheme != uiTheme) {
+    open fun reload(uiTheme: String, uiMode: String, onThemeChanged: Runnable) {
+        if (this.uiTheme != uiTheme || this.uiMode != uiMode) {
             this.uiTheme = uiTheme
-            initializeSchemeHandler(uiTheme)
+            this.uiMode = uiMode
+            initializeSchemeHandler(uiTheme, uiMode)
             this.panel.browser.cefBrowser.reloadIgnoreCache()
             onThemeChanged.run();
         }

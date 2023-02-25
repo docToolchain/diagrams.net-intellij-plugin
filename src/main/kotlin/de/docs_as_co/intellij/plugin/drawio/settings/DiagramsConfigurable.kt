@@ -1,7 +1,7 @@
 package de.docs_as_co.intellij.plugin.drawio.settings
 
 import com.intellij.openapi.options.SearchableConfigurable
-import de.docs_as_co.intellij.plugin.drawio.MyBundle.message
+import de.docs_as_co.intellij.plugin.drawio.DiagramsNetBundle.message
 import org.jetbrains.annotations.Nls
 import javax.swing.JComponent
 

@@ -8,16 +8,16 @@ import com.intellij.util.xmlb.Converter
  * this uses the Enum name to serialize the contents. Therefore the presentation and the theme key for Diagrams.net
  * can change independently of the name of the Enum.
  */
-object DiagramsUiThemeConverter : Converter<DiagramsUiTheme>() {
-    override fun toString(value: DiagramsUiTheme): String {
+object DiagramsUiModeConverter : Converter<DiagramsUiMode>() {
+    override fun toString(value: DiagramsUiMode): String {
         return value.name
     }
 
-    override fun fromString(value: String): DiagramsUiTheme {
+    override fun fromString(value: String): DiagramsUiMode {
         return try {
-            DiagramsUiTheme.valueOf(value)
+            DiagramsUiMode.valueOf(value)
         } catch (ex: IllegalArgumentException) {
-            DiagramsUiTheme.DEFAULT
+            DiagramsUiMode.AUTO
         }
     }
 
