@@ -3,6 +3,12 @@
 ## Unreleased
 
 ### Added
+
+### Fixed
+
+## 0.2.1 - 2023-02-25
+
+### Added
 - support for off-screen rendering and DevTools for the preview (#201)
 - re-implement dark mode (#185)
 
