@@ -4,12 +4,12 @@
 
 ### Added
 - support for off-screen rendering and DevTools for the preview (#201)
+- re-implement dark mode (#185)
 
 ## 0.2.0 - 2023-02-15
 
 ### Fixed
 - support for IntelliJ 2022.3 (#201)
-- re-implement dark mode (#185)
 
 ## 0.1.14 - 2022-11-15
 
