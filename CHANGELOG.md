@@ -2,9 +2,8 @@
 
 ## Unreleased
 
-### Added
-
 ### Fixed
+- undo off-screen recording as it interferes with keyboard access on Linux/macOS (#212)
 
 ## 0.2.1 - 2023-02-25
 

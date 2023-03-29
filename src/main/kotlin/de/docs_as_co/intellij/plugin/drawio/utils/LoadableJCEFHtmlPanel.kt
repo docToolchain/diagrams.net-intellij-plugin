@@ -87,7 +87,9 @@ class LoadableJCEFHtmlPanel(
     val component: JComponent get() = this.multiPanel
 
     private fun isOffScreenRenderingEnabled(): Boolean {
-        return Registry.`is`("ide.browser.jcef.diagramsNet.osr.enabled", true)
+        // Off-screen rendering prevents keyboard access to the editor (i.e. can't type in text fields),
+        // therefore disabling it.
+        return Registry.`is`("ide.browser.jcef.diagramsNet.osr.enabled", false)
     }
 
 }
