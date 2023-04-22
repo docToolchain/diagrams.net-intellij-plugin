@@ -5,10 +5,10 @@
 ### Fixed
 
 - off-screen rendering now always disabled for old Linux/macOS versions and not configurable (#212)
- 
-### Security
 
-## [0.2.2] - 2023-03-29
+### Security
+ 
+## 0.2.2 - 2023-03-29
 
 ### Fixed
 - undo off-screen rendering as it interferes with keyboard access on Linux/macOS (#212)
