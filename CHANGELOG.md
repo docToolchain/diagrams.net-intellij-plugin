@@ -2,12 +2,23 @@
 
 ## Unreleased
 
+### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
 ### Fixed
 
+### Security
+
+## [0.2.3] - 2023-04-22
+
+### Fixed
 - off-screen rendering now always disabled for old Linux/macOS versions and not configurable (#212)
 
-### Security
- 
 ## 0.2.2 - 2023-03-29
 
 ### Fixed
