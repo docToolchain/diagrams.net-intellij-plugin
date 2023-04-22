@@ -5,6 +5,7 @@ import com.intellij.ide.plugins.MultiPanel
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.invokeLater
 import com.intellij.openapi.editor.EditorBundle
+import com.intellij.openapi.util.SystemInfoRt
 import com.intellij.openapi.util.registry.Registry
 import com.intellij.ui.components.JBLoadingPanel
 import com.intellij.ui.jcef.JBCefBrowserBase
@@ -87,9 +88,18 @@ class LoadableJCEFHtmlPanel(
     val component: JComponent get() = this.multiPanel
 
     private fun isOffScreenRenderingEnabled(): Boolean {
-        // Off-screen rendering prevents keyboard access to the editor (i.e. can't type in text fields),
+        // Off-screen rendering prevents keyboard access to the editor on Linux and macOS in old versions,
         // therefore disabling it.
-        return Registry.`is`("ide.browser.jcef.diagramsNet.osr.enabled", false)
+        // see: https://youtrack.jetbrains.com/issue/JBR-5348
+        // 17.0.6+10-b829.5
+        val jvmVersion = System.getProperty("java.vm.version")
+        val build: Double = try {
+            jvmVersion.replace("[^-]*-b([0-9]*)".toRegex(), "$1").toDouble()
+        } catch (e: NumberFormatException) {
+            0.0
+        }
+        // starting from 231.8770.17 / 2023.1.1 EAP off-screen-rendering starts to work
+        return SystemInfoRt.isWindows || build >= 829.9
     }
 
 }

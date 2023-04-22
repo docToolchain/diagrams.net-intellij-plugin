@@ -33,7 +33,7 @@
     <version>(filled automatically by the build plugin)</version>
     <depends>com.intellij.modules.platform</depends>
     <!-- Minimum and maximum build of IDE compatible with the plugin -->
-    <idea-version since-build="203" />
+    <idea-version since-build="223" />
     <extensions defaultExtensionNs="com.intellij">
         <fileType name="Diagrams.net Diagram" implementationClass="de.docs_as_co.intellij.plugin.drawio.DiagramsNetFileType"
                   fieldName="INSTANCE" language="Diagrams.net" extensions="drawio;drawio.svg;drawio.png;drawio.xml;dio;dio.svg;dio.png;dio.xml"/>
@@ -46,7 +46,6 @@
                                  key="settings.diagrams.name"
                                  instance="de.docs_as_co.intellij.plugin.drawio.settings.DiagramsConfigurable" />
         <applicationService serviceImplementation="de.docs_as_co.intellij.plugin.drawio.settings.DiagramsApplicationSettings" />
-        <registryKey defaultValue="true" description="Whether the Diagrams.net view should be displayed in the off-screen mode." key="ide.browser.jcef.diagramsNet.osr.enabled" />
     </extensions>
 
     <actions>
