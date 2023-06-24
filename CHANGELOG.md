@@ -2,17 +2,9 @@
 
 ## Unreleased
 
-### Added
-
-### Changed
-
-### Deprecated
-
-### Removed
-
 ### Fixed
-
-### Security
+- support IntelliJ 2023.2 platform (#234)
+- minimum IntelliJ platform version supported is now 2023.1.1
 
 ## [0.2.3] - 2023-04-22
 

@@ -13,6 +13,7 @@ import de.docs_as_co.intellij.plugin.drawio.utils.SchemeHandlerFactory
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
+import org.cef.handler.CefLifeSpanHandlerAdapter
 import org.cef.handler.CefLoadHandlerAdapter
 import org.jetbrains.concurrency.AsyncPromise
 import org.jetbrains.concurrency.Promise
@@ -88,7 +89,14 @@ abstract class BaseDiagramsWebView(val lifetime: Lifetime, var uiTheme: String, 
     private val responseMap = HashMap<String, AsyncPromise<IncomingMessage.Response>>()
 
     init {
-        initializeSchemeHandler(uiTheme, uiMode)
+        object : CefLifeSpanHandlerAdapter() {
+            override fun onAfterCreated(browser: CefBrowser?) {
+                super.onAfterCreated(browser)
+                initializeSchemeHandler(uiTheme, uiMode)
+            }
+        }.also { handler ->
+            panel.browser.jbCefClient.addLifeSpanHandler(handler, panel.browser.cefBrowser);
+        }
         val jsRequestHandler = JBCefJSQuery.create(panel.browser).also { handler ->
             handler.addHandler { request: String ->
                 val message = mapper.readValue(request, IncomingMessage::class.java)
