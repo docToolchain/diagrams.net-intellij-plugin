@@ -2,11 +2,25 @@
 
 ## Unreleased
 
+### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## [0.2.4] - 2023-06-24
+
 ### Fixed
 - support IntelliJ 2023.2 platform (#234)
 - minimum IntelliJ platform version supported is now 2023.1.1
 
-## [0.2.3] - 2023-04-22
+## 0.2.3 - 2023-04-22
 
 ### Fixed
 - off-screen rendering now always disabled for old Linux/macOS versions and not configurable (#212)
