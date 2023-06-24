@@ -22,12 +22,12 @@ import java.net.URI
 abstract class BaseDiagramsWebView(val lifetime: Lifetime, var uiTheme: String, var uiMode: String) {
     companion object {
         val mapper = jacksonObjectMapper().apply {
-            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         }
 
         private var didRegisterSchemeHandler = false
-        private var myUiTheme = DiagramsUiTheme.DEFAULT.key;
-        private var myUiMode = DiagramsUiMode.AUTO.key;
+        private var myUiTheme = DiagramsUiTheme.DEFAULT.key
+        private var myUiMode = DiagramsUiMode.AUTO.key
         fun initializeSchemeHandler(uiTheme: String, uiMode: String) {
             // set new theme to private variable. Will be used when rendering the preview the next time
             myUiTheme = uiTheme
@@ -95,7 +95,7 @@ abstract class BaseDiagramsWebView(val lifetime: Lifetime, var uiTheme: String, 
                 initializeSchemeHandler(uiTheme, uiMode)
             }
         }.also { handler ->
-            panel.browser.jbCefClient.addLifeSpanHandler(handler, panel.browser.cefBrowser);
+            panel.browser.jbCefClient.addLifeSpanHandler(handler, panel.browser.cefBrowser)
         }
         val jsRequestHandler = JBCefJSQuery.create(panel.browser).also { handler ->
             handler.addHandler { request: String ->
@@ -143,7 +143,7 @@ abstract class BaseDiagramsWebView(val lifetime: Lifetime, var uiTheme: String, 
             this.uiMode = uiMode
             initializeSchemeHandler(uiTheme, uiMode)
             this.panel.browser.cefBrowser.reloadIgnoreCache()
-            onThemeChanged.run();
+            onThemeChanged.run()
         }
 
     }

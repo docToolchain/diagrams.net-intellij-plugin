@@ -2,7 +2,6 @@ package de.docs_as_co.intellij.plugin.drawio.settings
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.PersistentStateComponent
-import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 import com.intellij.util.messages.Topic
@@ -41,7 +40,7 @@ class DiagramsApplicationSettings : PersistentStateComponent<DiagramsApplication
 
     companion object {
         val instance: DiagramsApplicationSettings
-            get() = ServiceManager.getService(DiagramsApplicationSettings::class.java)
+            get() = ApplicationManager.getApplication().getService(DiagramsApplicationSettings::class.java)
     }
 
     interface SettingsChangedListener {
