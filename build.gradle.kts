@@ -16,7 +16,7 @@ plugins {
     // gradle-changelog-plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
     id("org.jetbrains.changelog") version "2.1.2"
     // detekt linter - read more: https://detekt.github.io/detekt/gradle.html
-    id("io.gitlab.arturbosch.detekt") version "1.23.0"
+    id("io.gitlab.arturbosch.detekt") version "1.23.1"
     // ktlint linter - read more: https://github.com/JLLeitschuh/ktlint-gradle
     id("org.jlleitschuh.gradle.ktlint") version "11.5.0"
     id("groovy")
