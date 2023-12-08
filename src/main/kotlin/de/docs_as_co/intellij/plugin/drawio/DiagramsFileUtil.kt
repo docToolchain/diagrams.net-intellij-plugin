@@ -3,6 +3,7 @@ package de.docs_as_co.intellij.plugin.drawio
 import com.intellij.openapi.vfs.VirtualFile
 import org.w3c.dom.NodeList
 import org.xml.sax.SAXParseException
+import javax.imageio.IIOException
 import javax.imageio.ImageIO
 import javax.imageio.ImageReader
 import javax.imageio.metadata.IIOMetadataFormatImpl
@@ -67,18 +68,27 @@ class DiagramsFileUtil {
                         if (readers.hasNext()) {
                             val reader = readers.next()
                             reader.input = input
-                            val entries: NodeList = reader.getImageMetadata(0).getAsTree(IIOMetadataFormatImpl.standardMetadataFormatName).childNodes
+                            try {
+                                val entries: NodeList = reader.getImageMetadata(0)
+                                    .getAsTree(IIOMetadataFormatImpl.standardMetadataFormatName).childNodes
 
-                            // if we find a text node with an attribute mxfile, this is a image contains diagrams.net information
-                            for (i in 0 until entries.length) {
-                                val node = entries.item(i) as IIOMetadataNode
-                                if (node.nodeName.equals("Text")) {
-                                    for (j in 0 until node.childNodes.length) {
-                                        if (node.childNodes.item(j).attributes.getNamedItem("keyword").nodeValue.equals("mxfile")) {
-                                            return true
+                                // if we find a text node with an attribute mxfile, this is a image contains diagrams.net information
+                                for (i in 0 until entries.length) {
+                                    val node = entries.item(i) as IIOMetadataNode
+                                    if (node.nodeName.equals("Text")) {
+                                        for (j in 0 until node.childNodes.length) {
+                                            if (node.childNodes.item(j).attributes.getNamedItem("keyword").nodeValue.equals(
+                                                    "mxfile"
+                                                )
+                                            ) {
+                                                return true
+                                            }
                                         }
                                     }
                                 }
+                            } catch (iio: IIOException) {
+                                // will happen on broken PNG images
+                                return false
                             }
                         }
                     }
