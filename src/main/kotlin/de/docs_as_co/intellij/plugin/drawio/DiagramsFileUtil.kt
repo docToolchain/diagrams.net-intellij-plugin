@@ -29,7 +29,7 @@ class DiagramsFileUtil {
             }
 
             // Detect editable SVG. Editable SVG will have an embedded diagrams.net diagram.
-            if (file.name.lowercase().endsWith(".svg")) {
+            if (file.name.lowercase().endsWith(".svg") & file.exists()) {
                 // prevent external content in SVGs. Even when working in a trusted project, resolving external context might slow down the UI
                 // https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html#jaxp-documentbuilderfactory-saxparserfactory-and-dom4j
                 val factory = DocumentBuilderFactory.newInstance()
@@ -60,7 +60,7 @@ class DiagramsFileUtil {
             }
 
             // Detect editable PNG. Editable SVG will have an embedded diagrams.net diagram.
-            if (file.name.lowercase().endsWith(".png")) {
+            if (file.name.lowercase().endsWith(".png") && file.exists()) {
                 file.inputStream.use {
                     ImageIO.createImageInputStream(it).use { input ->
                         val readers: Iterator<ImageReader> = ImageIO.getImageReaders(input)
