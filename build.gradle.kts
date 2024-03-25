@@ -32,7 +32,7 @@ repositories {
 dependencies {
     detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.6")
     // mandatory dependencies for using Spock
-    testImplementation ("org.codehaus.groovy:groovy-all:3.0.20")
+    testImplementation ("org.codehaus.groovy:groovy-all:3.0.21")
     testImplementation ("org.spockframework:spock-core:2.3-groovy-4.0") {
         exclude("org.codehaus.groovy", "groovy-xml")
     }
