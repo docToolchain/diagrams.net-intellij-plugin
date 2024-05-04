@@ -1,5 +1,6 @@
 package de.docs_as_co.intellij.plugin.drawio.actions
 
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.PlatformDataKeys
@@ -12,6 +13,10 @@ class OpenDevtoolsAction : AnAction() {
         if (fileEditor is DiagramsEditor) {
             fileEditor.openDevTools();
         }
+    }
+
+    override fun getActionUpdateThread(): ActionUpdateThread {
+        return ActionUpdateThread.BGT
     }
 
     override fun update(event: AnActionEvent) {

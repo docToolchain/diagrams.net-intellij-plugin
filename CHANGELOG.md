@@ -13,6 +13,7 @@
 
 ### Fixed
 - prevent blank preview (#298)
+- prevent warning about EDT/BGT needs to be chosen (#297)
 
 ## 0.2.4 - 2023-06-24
 
