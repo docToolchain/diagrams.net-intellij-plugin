@@ -12,6 +12,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.UserDataHolderBase
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.ui.JBColor
 import com.intellij.util.ui.UIUtil
 import com.jetbrains.rd.util.lifetime.LifetimeDefinition
 import de.docs_as_co.intellij.plugin.drawio.settings.DiagramsApplicationSettings
@@ -54,10 +55,10 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
         var uiMode = DiagramsApplicationSettings.instance.getDiagramsSettings().uiMode
         if (uiMode == DiagramsUiMode.AUTO) {
             //set theme according to IntelliJ-theme
-            uiMode = if (UIUtil.isUnderDarcula()) {
-                DiagramsUiMode.DARK
-            } else {
+            uiMode = if (JBColor.isBright()) {
                 DiagramsUiMode.LIGHT
+            } else {
+                DiagramsUiMode.DARK
             }
         }
         return uiMode
