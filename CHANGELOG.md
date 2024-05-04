@@ -12,10 +12,9 @@
 ### Removed
 
 ### Fixed
+- prevent blank preview (#298)
 
-### Security
-
-## [0.2.4] - 2023-06-24
+## 0.2.4 - 2023-06-24
 
 ### Fixed
 - support IntelliJ 2023.2 platform (#234)
