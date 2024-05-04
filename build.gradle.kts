@@ -136,6 +136,9 @@ tasks {
 
     runPluginVerifier {
         ideVersions.set(properties("pluginVerifierIdeVersions").split(',').map(String::trim).filter(String::isNotEmpty))
+        // Version 1.364 seems has to have a problem due to https://youtrack.jetbrains.com/issue/MP-6388
+        // Version 1.365 has a problem as I can't disable the check for the 'intellij' in the plugin ID verification
+        verifierVersion.set("1.307")
     }
 
     publishPlugin {
