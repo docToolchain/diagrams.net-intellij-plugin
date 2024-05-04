@@ -8,6 +8,7 @@ import com.intellij.openapi.editor.EditorBundle
 import com.intellij.openapi.util.SystemInfoRt
 import com.intellij.openapi.util.registry.Registry
 import com.intellij.ui.components.JBLoadingPanel
+import com.intellij.ui.jcef.JBCefApp
 import com.intellij.ui.jcef.JBCefBrowserBase
 import com.intellij.ui.jcef.JCEFHtmlPanel
 import com.intellij.util.Alarm
@@ -23,7 +24,7 @@ class LoadableJCEFHtmlPanel(
     var timeoutCallback: String? = EditorBundle.message("message.html.editor.timeout")
 ) : Disposable {
     private val htmlPanelComponent = JCEFHtmlPanel(
-        isOffScreenRenderingEnabled(),
+        JBCefApp.isOffScreenRenderingModeEnabled(),
         null,
         null)
 
@@ -86,20 +87,5 @@ class LoadableJCEFHtmlPanel(
     }
 
     val component: JComponent get() = this.multiPanel
-
-    private fun isOffScreenRenderingEnabled(): Boolean {
-        // Off-screen rendering prevents keyboard access to the editor on Linux and macOS in old versions,
-        // therefore disabling it.
-        // see: https://youtrack.jetbrains.com/issue/JBR-5348
-        // 17.0.6+10-b829.5
-        val jvmVersion = System.getProperty("java.vm.version")
-        val build: Double = try {
-            jvmVersion.replace("[^-]*-b([0-9]*)".toRegex(), "$1").toDouble()
-        } catch (e: NumberFormatException) {
-            0.0
-        }
-        // starting from 231.8770.17 / 2023.1.1 EAP off-screen-rendering starts to work
-        return SystemInfoRt.isWindows || build >= 829.9
-    }
 
 }
