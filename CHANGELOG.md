@@ -6,6 +6,7 @@
 
 ### Changed
 - minimum IntelliJ platform version supported is now 2023.3.1
+- update to draw.io 22.1.22
 
 ### Deprecated
 
