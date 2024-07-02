@@ -7,8 +7,6 @@
 - don't parse large XML files to avoid OOM (#304)
 - don't load parts of the editor app twice (#301)
 
-### Security
-
 ## [0.2.5] - 2024-05-04
 
 ### Changed
