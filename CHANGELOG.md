@@ -2,12 +2,26 @@
 
 ## Unreleased
 
+### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## [0.2.6] - 2024-07-02
+
 ### Fixed
 
 - don't parse large XML files to avoid OOM (#304)
 - don't load parts of the editor app twice (#301)
 
-## [0.2.5] - 2024-05-04
+## 0.2.5 - 2024-05-04
 
 ### Changed
 
