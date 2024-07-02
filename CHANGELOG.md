@@ -12,6 +12,8 @@
 
 ### Fixed
 
+- don't parse large XML files to avoid OOM (#304)
+
 ### Security
 
 ## [0.2.5] - 2024-05-04

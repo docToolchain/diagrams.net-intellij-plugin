@@ -96,7 +96,8 @@ class DiagramsFileUtil {
             }
 
             // Detect editable SVG. Editable SVG will have an embedded diagrams.net diagram.
-            if (file.name.lowercase().endsWith(".xml")) {
+            // Ignore large XML files as they are are probably not a diagram.
+            if (file.name.lowercase().endsWith(".xml") && file.exists() && file.length < 10_000_000) {
                 // prevent external content in SVGs. Even when working in a trusted project, resolving external context might slow down the UI
                 // https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html#jaxp-documentbuilderfactory-saxparserfactory-and-dom4j
                 val factory = DocumentBuilderFactory.newInstance()
