@@ -2,14 +2,6 @@
 
 ## Unreleased
 
-### Added
-
-### Changed
-
-### Deprecated
-
-### Removed
-
 ### Fixed
 
 - don't parse large XML files to avoid OOM (#304)
