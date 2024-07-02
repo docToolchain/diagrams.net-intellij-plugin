@@ -13,6 +13,7 @@
 ### Fixed
 
 - don't parse large XML files to avoid OOM (#304)
+- don't load parts of the editor app twice (#301)
 
 ### Security
 
