@@ -30,7 +30,7 @@ repositories {
     mavenCentral()
 }
 dependencies {
-    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.6")
+    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.7")
     // mandatory dependencies for using Spock
     testImplementation ("org.codehaus.groovy:groovy-all:3.0.22")
     testImplementation ("org.spockframework:spock-core:2.3-groovy-4.0") {
