@@ -28,69 +28,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Run Gradle Wrapper Validation Action to verify the wrapper's checksum
-  gradleValidation:
-    name: Gradle Wrapper
-    runs-on: ubuntu-latest
-    steps:
-
-      # Check out current repository
-      - name: Fetch Sources
-        uses: actions/checkout@v4
-        with:
-          submodules: true
-
-      # Validate wrapper
-      - name: Gradle Wrapper Validation
-        uses: gradle/actions/wrapper-validation@v4
-
-  # Run verifyPlugin and test Gradle tasks
-  test:
-    name: Test
-    needs: gradleValidation
-    runs-on: ubuntu-latest
-    steps:
-
-      # Setup Java 11 environment for the next steps
-      - name: Setup Java
-        uses: actions/setup-java@v4.7.1
-        with:
-          java-version: 17
-          distribution: 'zulu'
-
-      # Check out current repository
-      - name: Fetch Sources
-        uses: actions/checkout@v4
-        with:
-          submodules: true
-
-      # Cache Gradle dependencies
-      - name: Setup Gradle Dependencies Cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-caches-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}
-
-      # Cache Gradle Wrapper
-      - name: Setup Gradle Wrapper Cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
-
-      # Run detekt, ktlint and tests
-      #- name: Run Linters and Test
-      #  run: ./gradlew check
-
-      # Run verifyPlugin Gradle task
-      - name: Verify Plugin
-        run: ./gradlew --stacktrace verifyPlugin
 
   # Build plugin with buildPlugin Gradle task and provide the artifact for the next workflow jobs
   # Requires test job to be passed
   build:
     name: Build
-    needs: test
     runs-on: ubuntu-latest
     outputs:
       name: ${{ steps.properties.outputs.name }}
@@ -103,28 +45,18 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v4.7.1
         with:
-          java-version: 17
-          distribution: 'zulu'
+          java-version: 21
+          distribution: 'corretto'
+
+      # Setup Gradle
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
 
       # Check out current repository
       - name: Fetch Sources
         uses: actions/checkout@v4
         with:
           submodules: true
-
-      # Cache Gradle Dependencies
-      - name: Setup Gradle Dependencies Cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-caches-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}
-
-      # Cache Gradle Wrapper
-      - name: Setup Gradle Wrapper Cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
 
       # Set environment variables
       - name: Export Properties
@@ -146,7 +78,7 @@ jobs:
 
       # Build artifact using buildPlugin Gradle task
       - name: Build Plugin
-        run: ./gradlew buildPlugin
+        run: ./gradlew --stacktrace check verifyPlugin buildPlugin
 
       # Upload plugin artifact to make it available in the next jobs
       - name: Upload artifact
@@ -156,61 +88,6 @@ jobs:
           path: ./build/distributions/${{ needs.build.outputs.artifact }}
           if-no-files-found: error
 
-  # Verify built plugin using IntelliJ Plugin Verifier tool
-  # Requires build job to be passed
-  verify:
-    name: Verify
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-
-      # Setup Java 11 environment for the next steps
-      - name: Setup Java
-        uses: actions/setup-java@v4.7.1
-        with:
-          java-version: 17
-          distribution: 'zulu'
-
-      # Check out current repository
-      - name: Fetch Sources
-        uses: actions/checkout@v4
-        with:
-          submodules: true
-
-      # Cache Gradle Dependencies
-      - name: Setup Gradle Dependencies Cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-caches-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}
-
-      # Cache Gradle Wrapper
-      - name: Setup Gradle Wrapper Cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
-
-      # Set environment variables
-      - name: Export Properties
-        id: properties
-        shell: bash
-        run: |
-          PROPERTIES="$(./gradlew properties --console=plain -q)"
-          IDE_VERSIONS="$(echo "$PROPERTIES" | grep "^pluginVerifierIdeVersions:" | base64)"
-          echo "ideVersions=$IDE_VERSIONS" >> $GITHUB_OUTPUT
-          echo "pluginVerifierHomeDir=~/.cache/pluginVerifier" >> $GITHUB_OUTPUT
-      # Cache Plugin Verifier IDEs
-      - name: Setup Plugin Verifier IDEs Cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.properties.outputs.pluginVerifierHomeDir }}/ides
-          key: ${{ runner.os }}-plugin-verifier-${{ steps.properties.outputs.ideVersions }}
-
-      # Run IntelliJ Plugin Verifier action using GitHub Action
-      - name: Verify Plugin
-        run: ./gradlew runPluginVerifier -Pplugin.verifier.home.dir=${{ steps.properties.outputs.pluginVerifierHomeDir }}
-
   # Prepare a draft release for GitHub Releases page for the manual verification
   # If accepted and published, release workflow would be triggered
   releaseDraft:
@@ -218,7 +95,7 @@ jobs:
     # don't run on pull requests to avoid creating draft releases for pull requests
     # only run on the main branch, to avoid cutting releases from feature branches
     if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
-    needs: [build, verify]
+    needs: [build]
     runs-on: ubuntu-latest
     steps:
 
