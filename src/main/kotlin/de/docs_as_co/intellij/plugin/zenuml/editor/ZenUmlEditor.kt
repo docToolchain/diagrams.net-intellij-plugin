@@ -34,43 +34,43 @@ class ZenUmlEditor(private val project: Project, private val file: VirtualFile) 
     private val lifetime = lifetimeDef.lifetime
     private val userDataHolder = UserDataHolderBase()
     private val panel = JPanel(BorderLayout())
-    
+
     private var view: ZenUmlWebView? = null
     private val statusLabel = JLabel("Initializing ZenUML Editor...")
 
     init {
         LOG.info("Initializing ZenUML Editor for ${file.path}")
-        
+
         // Add a status label at the top
         panel.add(statusLabel, BorderLayout.NORTH)
-        
+
         try {
             // Subscribe to changes of the theme
             val settingsConnection = ApplicationManager.getApplication().messageBus.connect(this)
             settingsConnection.subscribe(EditorColorsManager.TOPIC, this)
 
             // Initialize the WebView with the current theme
-            val isDarkTheme = UIUtil.isUnderDarcula()
+            val isDarkTheme = JBColor.isBright()
             val theme = if (isDarkTheme) "dark" else "light"
             LOG.info("Creating ZenUmlWebView with theme: $theme")
-            
+
             try {
                 view = ZenUmlWebView(lifetime, theme)
-                
+
                 // Add the WebView component to the panel
                 panel.add(view!!.component, BorderLayout.CENTER)
                 statusLabel.text = "ZenUML Editor loaded successfully"
-                
+
                 // Load the initial content
                 loadContent()
-                
+
                 // Listen for changes in the WebView content
                 view!!.codeContent.advise(lifetime) { newContent ->
                     if (newContent != null) {
                         updateFileContent(newContent)
                     }
                 }
-                
+
                 // Listen for initialization
                 view!!.initialized().onSuccess {
                     LOG.info("ZenUML WebView initialized successfully")
@@ -78,7 +78,7 @@ class ZenUmlEditor(private val project: Project, private val file: VirtualFile) 
                 }.onError { error ->
                     LOG.error("Failed to initialize ZenUML WebView", error)
                     statusLabel.text = "Error: Failed to initialize ZenUML Editor"
-                    
+
                     // Remove the WebView component and show an error message
                     panel.remove(view!!.component)
                     panel.add(JLabel("Error: ${error.message}"), BorderLayout.CENTER)
