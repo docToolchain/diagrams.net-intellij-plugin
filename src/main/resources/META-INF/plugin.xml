@@ -50,6 +50,7 @@
         <!-- ZenUML Extensions -->
         <fileType name="ZenUML Diagram" implementationClass="de.docs_as_co.intellij.plugin.zenuml.file.ZenUmlFileType"
                   fieldName="INSTANCE" language="ZenUML" extensions="zenuml;zen;z"/>
+        <fileEditorProvider implementation="de.docs_as_co.intellij.plugin.zenuml.editor.ZenUmlEditorProvider" />
     </extensions>
 
     <actions>
