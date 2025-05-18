@@ -66,5 +66,7 @@
             <action id="ZenUmlNewFile" class="de.docs_as_co.intellij.plugin.zenuml.actions.ZenUmlCreateFileAction"/>
             <add-to-group group-id="NewGroup" anchor="before" relative-to-action="NewFromTemplate"/>
         </group>
+        <action id="ZenUmlOpenDevtools" text="Open Devtools Window for the current ZenUML Preview"
+                class="de.docs_as_co.intellij.plugin.zenuml.actions.OpenZenUmlDevtoolsAction"/>
     </actions>
 </idea-plugin>

@@ -186,4 +186,11 @@ class ZenUmlEditor(private val project: Project, private val file: VirtualFile) 
     override fun <T : Any?> getUserData(key: Key<T>): T? = userDataHolder.getUserData(key)
 
     override fun <T : Any?> putUserData(key: Key<T>, value: T?) = userDataHolder.putUserData(key, value)
+
+    /**
+     * Opens the developer tools window for the WebView
+     */
+    fun openDevTools() {
+        view?.openDevTools()
+    }
 }
