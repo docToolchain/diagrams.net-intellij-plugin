@@ -7,6 +7,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDirectory
 import de.docs_as_co.intellij.plugin.zenuml.ZenUmlIcons
 
+@Suppress("DialogTitleCapitalization")
 class ZenUmlCreateFileAction : CreateFileFromTemplateAction("ZenUML Diagram", "Create a new ZenUML diagram", ZenUmlIcons.ZENUML_ICON), DumbAware {
     override fun buildDialog(project: Project, directory: PsiDirectory, builder: CreateFileFromTemplateDialog.Builder) {
         builder.setTitle("New ZenUML Diagram")
