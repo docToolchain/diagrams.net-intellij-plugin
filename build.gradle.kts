@@ -109,6 +109,10 @@ tasks.jar {
         include("index.html")
         into("assets")
     }
+    from("src/webview/zenuml") {
+        include("**/*")
+        into("assets/zenuml")
+    }
 }
 
 java {
