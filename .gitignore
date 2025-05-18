@@ -18,6 +18,10 @@ gradle-app.setting
 
 /.idea/*
 *.iml
+.intellijPlatform
+
+.kotlin/sessions
+
 # These are the run configurations you marked as "shared"
 # This allows you to share them with fellow developers.
 !/.idea/runConfigurations

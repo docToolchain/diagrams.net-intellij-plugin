@@ -46,6 +46,10 @@
                                  key="settings.diagrams.name"
                                  instance="de.docs_as_co.intellij.plugin.drawio.settings.DiagramsConfigurable" />
         <applicationService serviceImplementation="de.docs_as_co.intellij.plugin.drawio.settings.DiagramsApplicationSettings" />
+
+        <!-- ZenUML Extensions -->
+        <fileType name="ZenUML Diagram" implementationClass="de.docs_as_co.intellij.plugin.zenuml.file.ZenUmlFileType"
+                  fieldName="INSTANCE" language="ZenUML" extensions="zenuml;zen;z"/>
     </extensions>
 
     <actions>
@@ -55,5 +59,11 @@
         </group>
         <action id="DiagramsNetOpenDevtools" text="Open Devtools Window for the current Diagrams.net Preview"
                 class="de.docs_as_co.intellij.plugin.drawio.actions.OpenDevtoolsAction"/>
+
+        <!-- ZenUML Actions -->
+        <group id="ZenUmlNew" text="ZenUML">
+            <action id="ZenUmlNewFile" class="de.docs_as_co.intellij.plugin.zenuml.actions.ZenUmlCreateFileAction"/>
+            <add-to-group group-id="NewGroup" anchor="before" relative-to-action="NewFromTemplate"/>
+        </group>
     </actions>
 </idea-plugin>
