@@ -36,6 +36,10 @@ class DiagramsWebView(lifetime: Lifetime, uiTheme: String, uiMode: String) : Bas
             IncomingMessage.Event.Load -> {
                 // Ignore
             }
+            else -> {
+                // Handle any other event types that might be coming from the JavaScript side
+                // This prevents NoWhenBranchMatchedException
+            }
         }
     }
 
