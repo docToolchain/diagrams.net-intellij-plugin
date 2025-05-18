@@ -5,7 +5,6 @@ import com.intellij.ide.plugins.MultiPanel
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.invokeLater
 import com.intellij.openapi.editor.EditorBundle
-import com.intellij.openapi.util.SystemInfoRt
 import com.intellij.openapi.util.registry.Registry
 import com.intellij.ui.components.JBLoadingPanel
 import com.intellij.ui.jcef.JBCefApp
@@ -54,6 +53,12 @@ class LoadableJCEFHtmlPanel(
             htmlPanelComponent.loadHTML(html)
         }
         multiPanel.select(CONTENT_KEY, true)
+    }
+
+    init {
+        // TODO: Remove this when https://github.com/docToolchain/diagrams.net-intellij-plugin/issues/343 is fixed
+        // Disable out-of-process mode for JCEF
+        Registry.get("ide.browser.jcef.out-of-process.enabled").setValue(false)
     }
 
     init {
