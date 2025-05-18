@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZenUML Viewer (Webview)</title>
+    <title>ZenUML Editor</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -18,13 +18,23 @@
             flex: 1;
             overflow: hidden;
         }
+        #editor-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        #preview-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
         #editor {
             flex: 1;
-            border-right: 1px solid #ccc;
+            border: 1px solid #ccc;
             padding: 10px;
             font-family: monospace;
-            white-space: pre;
-            overflow: auto;
+            resize: none;
+            outline: none;
         }
         #preview {
             flex: 1;
@@ -48,6 +58,7 @@
         .dark-theme #editor, .dark-theme #preview {
             background-color: #3c3f41;
             color: #e6e6e6;
+            border-color: #555;
         }
         .dark-theme .header {
             background-color: #3c3f41;
@@ -58,16 +69,15 @@
 </head>
 <body>
     <div id="container">
-        <div id="editor-container" style="flex: 1; display: flex; flex-direction: column;">
-            <div class="header">ZenUML Code(WebView)</div>
-            <div id="editor"></div>
+        <div id="editor-container">
+            <div class="header">ZenUML Code</div>
+            <textarea id="editor" spellcheck="false"></textarea>
         </div>
-        <div id="preview-container" style="flex: 1; display: flex; flex-direction: column;">
+        <div id="preview-container">
             <div class="header">Preview</div>
             <div id="preview">
                 <div id="diagram">
                     <p>ZenUML diagram will be rendered here</p>
-                    <p>Sample diagram will appear when code is loaded</p>
                 </div>
             </div>
         </div>
@@ -76,6 +86,8 @@
     <script>
         // Parse the initial data from the server
         let initialData = JSON.parse('$$initialData$$');
+        let lastSavedContent = '';
+        let debounceTimer = null;
 
         // Apply theme
         if (initialData.theme === 'dark') {
@@ -84,16 +96,8 @@
             document.body.classList.add('light-theme');
         }
 
-        // Sample ZenUML code
-        const sampleCode = `@startuml
-title Authentication Sequence
-
-Alice -> Bob: Authentication Request
-Bob --> Alice: Authentication Response
-
-Alice -> Bob: Another authentication Request
-Alice <-- Bob: Another authentication Response
-@enduml`;
+        // Get the editor element
+        const editor = document.getElementById('editor');
 
         // Function to update the preview
         function updatePreview(code) {
@@ -102,18 +106,19 @@ Alice <-- Bob: Another authentication Response
             const lines = code.split('\n');
             let html = '<div style="text-align: left;">';
             html += '<h3>ZenUML Diagram Preview</h3>';
-            html += '<p>This is a placeholder for the actual diagram rendering.</p>';
-            html += '<pre style="background-color: #f8f8f8; padding: 10px; border-radius: 5px;">';
+            html += '<pre style="background-color: ' + (initialData.theme === 'dark' ? '#2d2d2d' : '#f8f8f8') +
+                    '; padding: 10px; border-radius: 5px; color: ' +
+                    (initialData.theme === 'dark' ? '#e6e6e6' : '#000000') + ';">';
 
             for (const line of lines) {
                 if (line.startsWith('@startuml') || line.startsWith('@enduml')) {
-                    html += `<span style="color: #0000ff;">${line}</span>\n`;
+                    html += `<span style="color: ${initialData.theme === 'dark' ? '#6A8759' : '#0000ff'};">${escapeHtml(line)}</span>\n`;
                 } else if (line.startsWith('title ')) {
-                    html += `<span style="color: #ff0000; font-weight: bold;">${line}</span>\n`;
+                    html += `<span style="color: ${initialData.theme === 'dark' ? '#CC7832' : '#ff0000'}; font-weight: bold;">${escapeHtml(line)}</span>\n`;
                 } else if (line.includes('->')) {
-                    html += `<span style="color: #008000;">${line}</span>\n`;
+                    html += `<span style="color: ${initialData.theme === 'dark' ? '#A9B7C6' : '#008000'};">${escapeHtml(line)}</span>\n`;
                 } else {
-                    html += `${line}\n`;
+                    html += `${escapeHtml(line)}\n`;
                 }
             }
 
@@ -121,35 +126,79 @@ Alice <-- Bob: Another authentication Response
             document.getElementById('preview').innerHTML = html;
         }
 
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Function to handle content changes
+        function handleContentChange() {
+            const content = editor.value;
+
+            // Update preview immediately
+            updatePreview(content);
+
+            // Debounce sending updates to IntelliJ to avoid too many updates
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                if (content !== lastSavedContent) {
+                    lastSavedContent = content;
+                    sendToHost({
+                        event: "contentChanged",
+                        code: content
+                    });
+                }
+            }, 300);
+        }
+
+        // Add event listeners to the editor
+        editor.addEventListener('input', handleContentChange);
+        editor.addEventListener('keyup', handleContentChange);
+
         // Function to handle messages from the host
         window.processMessageFromHost = function(messageJson) {
-            const message = JSON.parse(messageJson);
+            try {
+                const message = JSON.parse(messageJson);
+                console.log('Received message from host:', message);
 
-            if (message.action === 'load') {
-                document.getElementById('editor').textContent = message.code;
-                updatePreview(message.code);
-            } else if (message.action === 'update') {
-                document.getElementById('editor').textContent = message.code;
-                updatePreview(message.code);
+                if (message.action === 'load') {
+                    editor.value = message.code || '';
+                    lastSavedContent = message.code || '';
+                    updatePreview(editor.value);
+                } else if (message.action === 'update') {
+                    if (editor.value !== message.code) {
+                        editor.value = message.code || '';
+                        lastSavedContent = message.code || '';
+                        updatePreview(editor.value);
+                    }
+                }
+            } catch (error) {
+                console.error('Error processing message from host:', error);
             }
         };
 
         // Function to send messages to the host
         function sendToHost(message) {
             if (window.sendMessageToHost) {
-                window.sendMessageToHost(JSON.stringify(message));
+                try {
+                    window.sendMessageToHost(JSON.stringify(message));
+                    console.log('Sent message to host:', message);
+                } catch (error) {
+                    console.error('Error sending message to host:', error);
+                }
+            } else {
+                console.warn('sendMessageToHost not available');
             }
         }
 
         // Notify the host that the page is initialized
         window.addEventListener('load', function() {
+            console.log('Page loaded, sending init event');
             sendToHost({
-                event: 'init'
+                event: "init"
             });
-
-            // Load sample code for demonstration
-            document.getElementById('editor').textContent = sampleCode;
-            updatePreview(sampleCode);
         });
     </script>
 </body>
