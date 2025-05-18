@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenUML Viewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        #container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        #editor {
+            flex: 1;
+            border-right: 1px solid #ccc;
+            padding: 10px;
+            font-family: monospace;
+            white-space: pre;
+            overflow: auto;
+        }
+        #preview {
+            flex: 1;
+            padding: 10px;
+            overflow: auto;
+        }
+        .header {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+            font-weight: bold;
+        }
+        .light-theme {
+            background-color: white;
+            color: black;
+        }
+        .dark-theme {
+            background-color: #2b2b2b;
+            color: #e6e6e6;
+        }
+        .dark-theme #editor, .dark-theme #preview {
+            background-color: #3c3f41;
+            color: #e6e6e6;
+        }
+        .dark-theme .header {
+            background-color: #3c3f41;
+            color: #e6e6e6;
+            border-color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="editor-container" style="flex: 1; display: flex; flex-direction: column;">
+            <div class="header">ZenUML Code</div>
+            <div id="editor"></div>
+        </div>
+        <div id="preview-container" style="flex: 1; display: flex; flex-direction: column;">
+            <div class="header">Preview</div>
+            <div id="preview">
+                <div id="diagram">
+                    <p>ZenUML diagram will be rendered here</p>
+                    <p>Sample diagram will appear when code is loaded</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Parse the initial data from the server
+        let initialData = JSON.parse('$$initialData$$');
+
+        // Apply theme
+        if (initialData.theme === 'dark') {
+            document.body.classList.add('dark-theme');
+        } else {
+            document.body.classList.add('light-theme');
+        }
+
+        // Sample ZenUML code
+        const sampleCode = `@startuml
+title Authentication Sequence
+
+Alice -> Bob: Authentication Request
+Bob --> Alice: Authentication Response
+
+Alice -> Bob: Another authentication Request
+Alice <-- Bob: Another authentication Response
+@enduml`;
+
+        // Function to update the preview
+        function updatePreview(code) {
+            // In a real implementation, this would render the ZenUML diagram
+            // For now, we'll just display the code with some formatting
+            const lines = code.split('\n');
+            let html = '<div style="text-align: left;">';
+            html += '<h3>ZenUML Diagram Preview</h3>';
+            html += '<p>This is a placeholder for the actual diagram rendering.</p>';
+            html += '<pre style="background-color: #f8f8f8; padding: 10px; border-radius: 5px;">';
+
+            for (const line of lines) {
+                if (line.startsWith('@startuml') || line.startsWith('@enduml')) {
+                    html += `<span style="color: #0000ff;">${line}</span>\n`;
+                } else if (line.startsWith('title ')) {
+                    html += `<span style="color: #ff0000; font-weight: bold;">${line}</span>\n`;
+                } else if (line.includes('->')) {
+                    html += `<span style="color: #008000;">${line}</span>\n`;
+                } else {
+                    html += `${line}\n`;
+                }
+            }
+
+            html += '</pre></div>';
+            document.getElementById('preview').innerHTML = html;
+        }
+
+        // Function to handle messages from the host
+        window.processMessageFromHost = function(messageJson) {
+            const message = JSON.parse(messageJson);
+
+            if (message.action === 'load') {
+                document.getElementById('editor').textContent = message.code;
+                updatePreview(message.code);
+            } else if (message.action === 'update') {
+                document.getElementById('editor').textContent = message.code;
+                updatePreview(message.code);
+            }
+        };
+
+        // Function to send messages to the host
+        function sendToHost(message) {
+            if (window.sendMessageToHost) {
+                window.sendMessageToHost(JSON.stringify(message));
+            }
+        }
+
+        // Notify the host that the page is initialized
+        window.addEventListener('load', function() {
+            sendToHost({
+                event: 'init'
+            });
+
+            // Load sample code for demonstration
+            document.getElementById('editor').textContent = sampleCode;
+            updatePreview(sampleCode);
+        });
+    </script>
+</body>
+</html>
