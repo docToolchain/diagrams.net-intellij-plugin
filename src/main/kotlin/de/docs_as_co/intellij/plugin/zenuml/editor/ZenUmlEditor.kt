@@ -102,14 +102,9 @@ class ZenUmlEditor(private val project: Project, private val file: VirtualFile) 
      */
     private fun loadContent() {
         try {
-            val document = FileDocumentManager.getInstance().getDocument(file)
-            if (document != null) {
-                val content = document.text
-                LOG.info("Loading content into ZenUML WebView: ${content.take(100)}...")
+            view?.initialized()?.then {
+                val content = file.inputStream.reader().readText()
                 view?.loadCode(content)
-            } else {
-                LOG.warn("Could not get document for file: ${file.path}")
-                statusLabel.text = "Warning: Could not load file content"
             }
         } catch (e: Exception) {
             LOG.error("Error loading content", e)
@@ -192,5 +187,25 @@ class ZenUmlEditor(private val project: Project, private val file: VirtualFile) 
      */
     fun openDevTools() {
         view?.openDevTools()
+    }
+
+    private fun saveFile(content: String) {
+        ApplicationManager.getApplication().invokeLater {
+            ApplicationManager.getApplication().runWriteAction {
+                try {
+                    file.getOutputStream(this).apply {
+                        writer().apply {
+                            write(content)
+                            flush()
+                        }
+                        flush()
+                        close()
+                    }
+                } catch (e: Exception) {
+                    LOG.error("Error saving file content", e)
+                    statusLabel.text = "Error: Failed to save file content"
+                }
+            }
+        }
     }
 }
