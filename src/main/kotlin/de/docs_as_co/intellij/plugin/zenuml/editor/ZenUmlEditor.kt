@@ -23,6 +23,8 @@ import javax.swing.JPanel
 import javax.swing.JLabel
 import java.awt.BorderLayout
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.editor.event.DocumentEvent
+import com.intellij.openapi.editor.event.DocumentListener
 
 /**
  * Editor for ZenUML files.
@@ -37,6 +39,7 @@ class ZenUmlEditor(private val project: Project, private val file: VirtualFile) 
 
     private var view: ZenUmlWebView? = null
     private val statusLabel = JLabel("Initializing ZenUML Editor...")
+    private var documentListenerAdded = false
 
     init {
         LOG.info("Initializing ZenUML Editor for ${file.path}")
@@ -45,6 +48,9 @@ class ZenUmlEditor(private val project: Project, private val file: VirtualFile) 
         panel.add(statusLabel, BorderLayout.NORTH)
 
         try {
+            // Set up document listener to sync changes from text editor
+            setupDocumentListener()
+            
             // Subscribe to changes of the theme
             val settingsConnection = ApplicationManager.getApplication().messageBus.connect(this)
             settingsConnection.subscribe(EditorColorsManager.TOPIC, this)
@@ -206,6 +212,34 @@ class ZenUmlEditor(private val project: Project, private val file: VirtualFile) 
         view?.openDevTools()
     }
 
+    /**
+     * Sets up a document listener to detect changes in the text editor
+     * and sync them to the WebView
+     */
+    private fun setupDocumentListener() {
+        try {
+            // Get the document associated with our file
+            val document = FileDocumentManager.getInstance().getDocument(file)
+            if (document != null && !documentListenerAdded) {
+                document.addDocumentListener(object : DocumentListener {
+                    override fun documentChanged(event: DocumentEvent) {
+                        // When document changes in text editor, update the WebView
+                        ApplicationManager.getApplication().invokeLater {
+                            ApplicationManager.getApplication().runReadAction {
+                                val content = document.text
+                                view?.updateCode(content)
+                            }
+                        }
+                    }
+                })
+                documentListenerAdded = true
+                LOG.info("Document listener added for ${file.path}")
+            }
+        } catch (e: Exception) {
+            LOG.error("Error setting up document listener", e)
+        }
+    }
+    
     private fun saveFile(content: String) {
         ApplicationManager.getApplication().invokeLater {
             ApplicationManager.getApplication().runWriteAction {
