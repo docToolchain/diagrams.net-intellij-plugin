@@ -99,12 +99,23 @@ class ZenUmlEditor(private val project: Project, private val file: VirtualFile) 
 
     /**
      * Load the content from the file into the WebView
+     * Uses proper threading model to avoid read access exceptions
      */
     private fun loadContent() {
         try {
             view?.initialized()?.then {
-                val content = file.inputStream.reader().readText()
-                view?.loadCode(content)
+                // Make sure we're on the EDT thread with read access
+                ApplicationManager.getApplication().invokeLater {
+                    ApplicationManager.getApplication().runReadAction {
+                        try {
+                            val content = file.inputStream.reader().readText()
+                            view?.loadCode(content)
+                        } catch (e: Exception) {
+                            LOG.error("Error reading file content", e)
+                            statusLabel.text = "Error: Failed to read file content"
+                        }
+                    }
+                }
             }
         } catch (e: Exception) {
             LOG.error("Error loading content", e)
@@ -114,13 +125,19 @@ class ZenUmlEditor(private val project: Project, private val file: VirtualFile) 
 
     /**
      * Update the file content when changes are made in the WebView
+     * Uses proper threading model to avoid read access exceptions
      */
     private fun updateFileContent(newContent: String) {
         try {
-            val document = FileDocumentManager.getInstance().getDocument(file)
-            if (document != null && document.text != newContent) {
-                WriteCommandAction.runWriteCommandAction(project) {
-                    document.setText(newContent)
+            // Make sure we're on the EDT thread with read access first
+            ApplicationManager.getApplication().invokeLater {
+                ApplicationManager.getApplication().runReadAction {
+                    val document = FileDocumentManager.getInstance().getDocument(file)
+                    if (document != null && document.text != newContent) {
+                        WriteCommandAction.runWriteCommandAction(project) {
+                            document.setText(newContent)
+                        }
+                    }
                 }
             }
         } catch (e: Exception) {
