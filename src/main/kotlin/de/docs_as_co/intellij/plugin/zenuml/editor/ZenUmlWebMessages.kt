@@ -43,7 +43,8 @@ data class ZenUmlConfig(val theme: String)
     JsonSubTypes.Type(value = IncomingMessage.Response.Export::class, name = "export"),
     JsonSubTypes.Type(value = IncomingMessage.Response.Ack::class, name = "response"),
     JsonSubTypes.Type(value = IncomingMessage.Event.Initialized::class, name = "init"),
-    JsonSubTypes.Type(value = IncomingMessage.Event.ContentChanged::class, name = "contentChanged")
+    JsonSubTypes.Type(value = IncomingMessage.Event.ContentChanged::class, name = "contentChanged"),
+    JsonSubTypes.Type(value = IncomingMessage.Event.Ready::class, name = "ready")
 )
 sealed class IncomingMessage {
     sealed class Response : IncomingMessage() {
@@ -64,6 +65,7 @@ sealed class IncomingMessage {
     sealed class Event : IncomingMessage() {
         object Initialized : Event()
         data class ContentChanged(val code: String) : Event()
+        data class Ready(val message: String? = null) : Event()
     }
 }
 

@@ -1,6 +1,15 @@
+.vscode
+
 .gradle
 /build/
 /bin/
+
+node_modules/
+
+
+# build output
+/src/main/resources/assets/zenuml/
+/src/webview/zenuml/dist
 
 # Ignore Gradle GUI config
 gradle-app.setting
