@@ -51,6 +51,9 @@
         <fileType name="ZenUML" implementationClass="de.docs_as_co.intellij.plugin.zenuml.file.ZenUmlFileType"
                   fieldName="INSTANCE" language="ZenUML" extensions="zenuml;zen;z"/>
         <fileEditorProvider implementation="de.docs_as_co.intellij.plugin.zenuml.editor.ZenUmlEditorProvider" />
+        
+        <!-- Initializer to prevent JavaLibraryModificationTracker warnings -->
+        <postStartupActivity implementation="de.docs_as_co.intellij.plugin.zenuml.ZenUmlInitializer"/>
     </extensions>
 
     <actions>
