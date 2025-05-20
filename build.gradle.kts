@@ -100,10 +100,10 @@ tasks.jar {
             throw GradleException("please init subprojects by execution 'git submodule update --init'")
         }
     }
-    
+
     // Handle duplicates strategy
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    
+
     from("src/webview/drawio/src/main/webapp") {
         include("**/*")
         exclude("index.html")
@@ -125,104 +125,29 @@ tasks.jar {
 tasks.register("buildZenUMLWebView") {
     description = "Build the ZenUML web view with npm and copy to resources"
     group = "build"
-    
+
     doLast {
         // Set working directory to the ZenUML web view
         val zenUmlDir = File(projectDir, "src/webview/zenuml")
-        
+
         // Run npm install
         exec {
             workingDir = zenUmlDir
             commandLine("npm", "install")
         }
-        
+
         // Run npm build
         exec {
             workingDir = zenUmlDir
             commandLine("npm", "run", "build")
         }
-        
+
         // Copy the built files to resources
         copy {
             from("${zenUmlDir}/dist")
             into("src/main/resources/assets/zenuml")
         }
-        
-        // Modify the index.html file to include host communication script
-        val indexHtmlFile = File(projectDir, "src/main/resources/assets/zenuml/index.html")
-        val indexHtml = indexHtmlFile.readText()
-        
-        // Add host communication script right after the title tag
-        val titleEndTag = "</title>"
-        // Escape the $$ in the template
-        val placeholder = "\$\$initialData\$\$"
-        val hostScriptTemplate = """
-            <script type="text/javascript">
-                /**
-                 * This script is used for communication with the host application (IntelliJ/JetBrains IDE)
-                 */
-                
-                // Parse the initial data from the server
-                let initialData;
-                try {
-                    initialData = JSON.parse('$placeholder');
-                } catch (e) {
-                    initialData = { theme: 'light' };
-                    console.error('Error parsing initialData', e);
-                }
 
-                class Host {
-                    listeners = [];
-
-                    constructor() {
-                        window.processMessageFromHost = (message) => {
-                            try {
-                                const msg = typeof message === 'string' ? JSON.parse(message) : message;
-                                console.log('Received message from host:', msg);
-                                for (const listener of this.listeners) {
-                                    listener(msg);
-                                }
-                            } catch (error) {
-                                console.error('Error processing message from host:', error);
-                            }
-                        };
-
-                        let queue = [];
-                        if (window.sendMessageToHost) {
-                            this.sendMessageToHost = window.sendMessageToHost;
-                        } else {
-                            this.sendMessageToHost = (message) => {
-                                queue.push(message);
-                            };
-                            Object.defineProperty(window, "sendMessageToHost", {
-                                get: () => this.sendMessageToHost,
-                                set: (value) => {
-                                    this.sendMessageToHost = value;
-                                    for (const item of queue) {
-                                        this.sendMessageToHost(item);
-                                    }
-                                    queue.length = 0;
-                                },
-                            });
-                        }
-                    }
-
-                    sendMessage(message) {
-                        this.sendMessageToHost(typeof message === "string" ? message : JSON.stringify(message));
-                    }
-
-                    addMessageListener(listener) {
-                        this.listeners.push(listener);
-                    }
-                }
-
-                window.host = new Host();
-            </script>
-        """.trimIndent()
-        
-        val newIndexHtml = indexHtml.replace(titleEndTag, "$titleEndTag\n    $hostScriptTemplate")
-        indexHtmlFile.writeText(newIndexHtml)
-        
         println("ZenUML web view built and copied to resources")
     }
 }
