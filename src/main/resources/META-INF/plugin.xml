@@ -9,7 +9,7 @@
     <!-- Plugin name. It should be short and descriptive and in Title Case.
        Displayed in the "Plugins" settings dialog and the plugin repository Web interface. -->
     <!--suppress PluginXmlCapitalization -->
-    <name>Diagrams.net Integration</name>
+    <name>Diagrams.net Integration with ZenUML Support</name>
     <!-- Description of the plugin.
        Should be short and to the point.
        Start the description with a verb in a present simple form such as
@@ -26,14 +26,14 @@
        The optional "url" attribute specifies the URL of the vendor homepage.
        The optional "email" attribute specifies the e-mail address of the vendor.
        Displayed in the "Plugins" settings dialog and the plugin repository Web interface. -->
-    <vendor url="https://docs-as-co.de" email="ralf.d.mueller@gmail.com">Docs As Code</vendor>
+    <vendor url="https://www.zenuml.com">ZenUML</vendor>
     <!-- Plugin version
        Recommended format is BRANCH.BUILD.FIX (MAJOR.MINOR.FIX)
        Displayed in the "Plugins" settings dialog and the plugin repository Web interface.  -->
     <version>(filled automatically by the build plugin)</version>
     <depends>com.intellij.modules.platform</depends>
     <!-- Minimum and maximum build of IDE compatible with the plugin -->
-    <idea-version since-build="231" />
+    <idea-version since-build="212.5457.46" />
     <depends optional="true" config-file="zenuml-withJava.xml">com.intellij.modules.java</depends>
     <extensions defaultExtensionNs="com.intellij">
         <fileType name="Diagrams.net Diagram" implementationClass="de.docs_as_co.intellij.plugin.drawio.DiagramsNetFileType"
@@ -55,6 +55,16 @@
         
         <!-- Initializer to prevent JavaLibraryModificationTracker warnings -->
         <postStartupActivity implementation="de.docs_as_co.intellij.plugin.zenuml.ZenUmlInitializer"/>
+        
+        <!-- ZenUML Settings -->
+        <applicationConfigurable id="Settings.ZenUml"
+                               bundle="messages.ZenUmlBundle"
+                               groupId="language"
+                               nonDefaultProject="true"
+                               key="zenuml.settings.name"
+                               instance="de.docs_as_co.intellij.plugin.zenuml.settings.ZenUmlSettingsConfigurable">
+        </applicationConfigurable>
+        <applicationService serviceImplementation="de.docs_as_co.intellij.plugin.zenuml.settings.ZenUmlApplicationSettings"/>
     </extensions>
 
     <actions>
