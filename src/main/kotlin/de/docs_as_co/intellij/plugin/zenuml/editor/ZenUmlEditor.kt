@@ -39,8 +39,7 @@ class ZenUmlEditor(private val project: Project, private val file: VirtualFile) 
 
     private var view: ZenUmlWebView? = null
     private val statusLabel = JLabel("Initializing ZenUML Editor...")
-    private var documentListenerAdded = false
-
+    
     init {
         LOG.info("Initializing ZenUML Editor for ${file.path}")
 
@@ -48,9 +47,6 @@ class ZenUmlEditor(private val project: Project, private val file: VirtualFile) 
         panel.add(statusLabel, BorderLayout.NORTH)
 
         try {
-            // Set up document listener to sync changes from text editor
-            setupDocumentListener()
-            
             // Subscribe to changes of the theme
             val settingsConnection = ApplicationManager.getApplication().messageBus.connect(this)
             settingsConnection.subscribe(EditorColorsManager.TOPIC, this)
@@ -73,7 +69,10 @@ class ZenUmlEditor(private val project: Project, private val file: VirtualFile) 
                 // Listen for changes in the WebView content
                 view!!.codeContent.advise(lifetime) { newContent ->
                     if (newContent != null) {
+                        LOG.info("Content changed in webview, updating file. Content length: ${newContent.length}")
                         updateFileContent(newContent)
+                    } else {
+                        LOG.info("Received null content from webview")
                     }
                 }
 
@@ -115,6 +114,7 @@ class ZenUmlEditor(private val project: Project, private val file: VirtualFile) 
                     ApplicationManager.getApplication().runReadAction {
                         try {
                             val content = file.inputStream.reader().readText()
+                            LOG.info("Loading initial content from file: ${file.path}, length: ${content.length}")
                             view?.loadCode(content)
                         } catch (e: Exception) {
                             LOG.error("Error reading file content", e)
@@ -131,24 +131,20 @@ class ZenUmlEditor(private val project: Project, private val file: VirtualFile) 
 
     /**
      * Update the file content when changes are made in the WebView
-     * Uses proper threading model to avoid read access exceptions
+     * Uses direct file writing to ensure changes are saved to disk
      */
     private fun updateFileContent(newContent: String) {
-        try {
-            // Make sure we're on the EDT thread with read access first
-            ApplicationManager.getApplication().invokeLater {
-                ApplicationManager.getApplication().runReadAction {
-                    val document = FileDocumentManager.getInstance().getDocument(file)
-                    if (document != null && document.text != newContent) {
-                        WriteCommandAction.runWriteCommandAction(project) {
-                            document.setText(newContent)
-                        }
+        ApplicationManager.getApplication().invokeLater {
+            ApplicationManager.getApplication().runWriteAction {
+                file.getOutputStream(this).apply {
+                    writer().apply {
+                        write(newContent)
+                        flush()
                     }
+                    flush()
+                    close()
                 }
             }
-        } catch (e: Exception) {
-            LOG.error("Error updating file content", e)
-            statusLabel.text = "Error: Failed to update file content"
         }
     }
 
@@ -210,53 +206,5 @@ class ZenUmlEditor(private val project: Project, private val file: VirtualFile) 
      */
     fun openDevTools() {
         view?.openDevTools()
-    }
-
-    /**
-     * Sets up a document listener to detect changes in the text editor
-     * and sync them to the WebView
-     */
-    private fun setupDocumentListener() {
-        try {
-            // Get the document associated with our file
-            val document = FileDocumentManager.getInstance().getDocument(file)
-            if (document != null && !documentListenerAdded) {
-                document.addDocumentListener(object : DocumentListener {
-                    override fun documentChanged(event: DocumentEvent) {
-                        // When document changes in text editor, update the WebView
-                        ApplicationManager.getApplication().invokeLater {
-                            ApplicationManager.getApplication().runReadAction {
-                                val content = document.text
-                                view?.updateCode(content)
-                            }
-                        }
-                    }
-                })
-                documentListenerAdded = true
-                LOG.info("Document listener added for ${file.path}")
-            }
-        } catch (e: Exception) {
-            LOG.error("Error setting up document listener", e)
-        }
-    }
-    
-    private fun saveFile(content: String) {
-        ApplicationManager.getApplication().invokeLater {
-            ApplicationManager.getApplication().runWriteAction {
-                try {
-                    file.getOutputStream(this).apply {
-                        writer().apply {
-                            write(content)
-                            flush()
-                        }
-                        flush()
-                        close()
-                    }
-                } catch (e: Exception) {
-                    LOG.error("Error saving file content", e)
-                    statusLabel.text = "Error: Failed to save file content"
-                }
-            }
-        }
     }
 }

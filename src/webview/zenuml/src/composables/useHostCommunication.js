@@ -39,7 +39,7 @@ export function useHostCommunication() {
         }
       }
 
-      let queue = []
+      const queue = []
       if (window.sendMessageToHost) {
         this.sendMessageToHost = window.sendMessageToHost
       } else {
@@ -93,12 +93,18 @@ export function useHostCommunication() {
     getHost().sendMessage(message)
   }
 
+  // Simple debounced content change notification
   const notifyContentChanged = (content) => {
-    // Debounce sending updates to avoid too many updates
+    // Don't update if content is empty
+    if (!content || content.trim() === '') {
+      return
+    }
+    
+    // Standard debounce pattern
     clearTimeout(debounceTimer)
     debounceTimer = setTimeout(() => {
       if (content !== lastSavedContent.value) {
-        console.log('Content changed, notifying host')
+        console.log('Content changed, sending update to host')
         lastSavedContent.value = content
         sendToHost({
           event: "contentChanged",

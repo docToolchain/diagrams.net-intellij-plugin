@@ -7,6 +7,7 @@
       spellcheck="false"
       v-model="editorContent"
       @input="handleContentChange"
+      @blur="handleBlur"
     ></textarea>
   </div>
 </template>
@@ -30,6 +31,20 @@ const { notifyContentChanged, messages, getHost } = useHostCommunication()
 const handleContentChange = () => {
   emit('content-change', editorContent.value)
   notifyContentChanged(editorContent.value)
+}
+
+// Force content update on blur to ensure latest changes are saved
+const handleBlur = () => {
+  const content = editorContent.value
+  
+  if (content && content.trim() !== '') {
+    emit('content-change', content)
+    // Force immediate update to host when editor loses focus
+    getHost().sendMessage({
+      event: "contentChanged",
+      code: content
+    })
+  }
 }
 
 // Watch for messages from the host

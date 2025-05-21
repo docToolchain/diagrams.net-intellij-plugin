@@ -38,8 +38,17 @@ class ZenUmlWebView(lifetime: Lifetime, theme: String) : BaseZenUmlWebView(lifet
                 }
             }
             is IncomingMessage.Event.ContentChanged -> {
-                LOG.info("Content changed event received")
+                if (event.code.isEmpty()) {
+                    LOG.warn("Received empty content in ContentChanged event, ignoring")
+                    return
+                }
+                
+                LOG.info("Content changed event received with ${event.code.length} characters")
+                
+                // Always update content immediately to ensure changes are persisted
+                LOG.info("Updating content property for file persistence")
                 _codeContent.set(event.code)
+                lastContent = event.code
             }
             is IncomingMessage.Event.Ready -> {
                 LOG.info("Ready event received: ${event.message}")
@@ -55,22 +64,19 @@ class ZenUmlWebView(lifetime: Lifetime, theme: String) : BaseZenUmlWebView(lifet
 
     /**
      * Load ZenUML code into the web view
+     * This is only used for initial loading, not for syncing text editor changes
      */
     fun loadCode(code: String) {
         LOG.info("Loading code, length: ${code.length}")
-        _codeContent.set(code)
+        
+        // Update lastContent so we don't trigger unnecessary updates
         lastContent = code
+        
+        // Don't set _codeContent here as that would trigger file saves
+        // when we're just loading the initial content
+        
+        // Send the content to the webview
         send(OutgoingMessage.Event.Load(code))
-    }
-
-    /**
-     * Update the ZenUML code in the web view
-     */
-    fun updateCode(code: String) {
-        LOG.info("Updating code, length: ${code.length}")
-        _codeContent.set(code)
-        lastContent = code
-        send(OutgoingMessage.Event.Update(code))
     }
 
     /**

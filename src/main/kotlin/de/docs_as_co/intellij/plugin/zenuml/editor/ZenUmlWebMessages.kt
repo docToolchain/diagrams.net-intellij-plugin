@@ -25,10 +25,6 @@ sealed class OutgoingMessage {
         data class Load(val code: String) : Event() {
             val action = "load"
         }
-
-        data class Update(val code: String) : Event() {
-            val action = "update"
-        }
     }
 }
 
