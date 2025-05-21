@@ -81,12 +81,13 @@ class PsiToDslConverter : JavaRecursiveElementVisitor() {
         if (isWithinForStatement(variable)) return
 
         if (variable.hasInitializer() && variable.initializer !is PsiArrayInitializerExpression) {
-            zenDsl.appendAssignment(
-                replaceArray(withoutTypeParameter(variable.typeElement?.text ?: "")), 
-                variable.name ?: ""
-            )
+            val type = replaceArray(withoutTypeParameter(variable.typeElement?.text?.trim() ?: ""))
+            val name = variable.name ?: ""
+            zenDsl.appendAssignment(type, name)
+            // Add a line break after the declaration
+            zenDsl.closeExpressionAndNewLine()
         } else {
-            zenDsl.comment(replaceArray(variable.text ?: ""))
+            zenDsl.comment(replaceArray(variable.text?.trim() ?: ""))
         }
         
         super.visitLocalVariable(variable)
@@ -108,22 +109,22 @@ class PsiToDslConverter : JavaRecursiveElementVisitor() {
 
     override fun visitMethodCallExpression(expression: PsiMethodCallExpression) {
         LOG.debug("Enter: visitMethodCallExpression: ${expression}")
-        zenDsl.append(expression.methodExpression.text)
-            .openParenthesis()
-            .append(getArgs(expression.argumentList))
-            .closeParenthesis()
+        val methodName = expression.methodExpression.text
+        val args = formatArgs(getArgs(expression.argumentList))
+        
+        zenDsl.appendMethodCall(methodName, args)
+        zenDsl.closeExpressionAndNewLine()
         
         super.visitMethodCallExpression(expression)
     }
 
     override fun visitNewExpression(expression: PsiNewExpression) {
         LOG.debug("Enter: visitNewExpression: ${expression}")
-        zenDsl
-            .append("new ")
-            .append(expression.classReference?.referenceName ?: "")
-            .openParenthesis()
-            .append(getArgs(expression.argumentList))
-            .closeParenthesis()
+        val className = expression.classReference?.referenceName ?: ""
+        val args = formatArgs(getArgs(expression.argumentList))
+        
+        zenDsl.append("new ${className}(${args})")
+        zenDsl.closeExpressionAndNewLine()
         
         super.visitNewExpression(expression)
     }
@@ -154,13 +155,19 @@ class PsiToDslConverter : JavaRecursiveElementVisitor() {
             }
             .collect(Collectors.joining(", "))
     }
+    
+    /**
+     * Format argument list with proper spacing
+     */
+    private fun formatArgs(args: String): String {
+        return args.split(",").joinToString(", ") { it.trim() }
+    }
 
     override fun visitWhileStatement(statement: PsiWhileStatement) {
         LOG.debug("Enter: visitWhileStatement: ${statement}")
-        zenDsl.append("while")
-            .openParenthesis()
-            .append(statement.condition?.text ?: "")
-            .closeParenthesis()
+        val condition = statement.condition?.text?.trim() ?: ""
+        
+        zenDsl.append("while (${condition})")
             .openBlock()
         
         statement.body?.accept(this)
@@ -169,10 +176,9 @@ class PsiToDslConverter : JavaRecursiveElementVisitor() {
     }
 
     override fun visitForStatement(statement: PsiForStatement) {
-        zenDsl.append("for")
-            .openParenthesis()
-            .append(statement.condition?.text ?: "")
-            .closeParenthesis()
+        val condition = statement.condition?.text?.trim() ?: ""
+        
+        zenDsl.append("for (${condition})")
             .openBlock()
         
         statement.body?.accept(this)
@@ -181,10 +187,10 @@ class PsiToDslConverter : JavaRecursiveElementVisitor() {
     }
 
     override fun visitForeachStatement(statement: PsiForeachStatement) {
-        zenDsl.append("for")
-            .openParenthesis()
-            .append("${statement.iterationParameter.name} : ${statement.iteratedValue?.text}")
-            .closeParenthesis()
+        val parameter = statement.iterationParameter.name ?: ""
+        val collection = statement.iteratedValue?.text?.trim() ?: ""
+        
+        zenDsl.append("for (${parameter} : ${collection})")
             .openBlock()
         
         statement.body?.accept(this)
@@ -194,10 +200,9 @@ class PsiToDslConverter : JavaRecursiveElementVisitor() {
 
     override fun visitIfStatement(statement: PsiIfStatement) {
         LOG.debug("Enter: visitIfStatement: ${statement}")
-        zenDsl.append("if")
-            .openParenthesis()
-            .append(statement.condition?.text ?: "")
-            .closeParenthesis()
+        val condition = statement.condition?.text?.trim() ?: ""
+        
+        zenDsl.append("if (${condition})")
             .openBlock()
         
         statement.thenBranch?.accept(this)
@@ -215,10 +220,11 @@ class PsiToDslConverter : JavaRecursiveElementVisitor() {
     }
 
     override fun visitReturnStatement(statement: PsiReturnStatement) {
-        zenDsl.append("return")
+        var returnText = "return"
         statement.returnValue?.let {
-            zenDsl.append(" ${it.text}")
+            returnText += " ${it.text?.trim()}"
         }
+        zenDsl.append(returnText)
         zenDsl.closeExpressionAndNewLine()
         
         super.visitReturnStatement(statement)
@@ -245,10 +251,9 @@ class PsiToDslConverter : JavaRecursiveElementVisitor() {
     }
 
     override fun visitCatchSection(section: PsiCatchSection) {
-        zenDsl.append("catch")
-            .openParenthesis()
-            .append(section.parameter?.text ?: "")
-            .closeParenthesis()
+        val parameter = section.parameter?.text?.trim() ?: ""
+        
+        zenDsl.append("catch (${parameter})")
             .openBlock()
         
         section.catchBlock?.accept(this)

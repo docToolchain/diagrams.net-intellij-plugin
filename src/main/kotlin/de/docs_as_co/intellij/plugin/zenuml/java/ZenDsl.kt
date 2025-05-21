@@ -30,6 +30,11 @@ class ZenDsl {
         stringBuilder.append(type).append(" ").append(name).append(" = ")
         return this
     }
+    
+    fun appendMethodCall(methodName: String, args: String): ZenDsl {
+        stringBuilder.append(methodName).append("(").append(args).append(")")
+        return this
+    }
 
     fun comment(text: String): ZenDsl {
         stringBuilder.append("// ").append(text).append("\n")
