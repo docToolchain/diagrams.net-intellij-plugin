@@ -66,6 +66,9 @@
                                instance="de.docs_as_co.intellij.plugin.zenuml.settings.ZenUmlSettingsConfigurable">
         </applicationConfigurable>
         <applicationService serviceImplementation="de.docs_as_co.intellij.plugin.zenuml.settings.ZenUmlApplicationSettings"/>
+
+        <!-- Analytics Startup -->
+        <postStartupActivity implementation="de.docs_as_co.intellij.plugin.drawio.DrawioAnalyticsStartup"/>
     </extensions>
 
     <actions>

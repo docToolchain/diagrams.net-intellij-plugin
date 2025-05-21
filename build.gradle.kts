@@ -48,6 +48,7 @@ dependencies {
         // Add Java plugin dependencies
         bundledPlugin("com.intellij.java")
     }
+    implementation("com.mixpanel:mixpanel-java:1.5.2")
 }
 
 intellijPlatform {
