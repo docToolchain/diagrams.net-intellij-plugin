@@ -38,13 +38,9 @@ class ZenUmlEditor(private val project: Project, private val file: VirtualFile) 
     private val panel = JPanel(BorderLayout())
 
     private var view: ZenUmlWebView? = null
-    private val statusLabel = JLabel("Initializing ZenUML Editor...")
     
     init {
         LOG.info("Initializing ZenUML Editor for ${file.path}")
-
-        // Add a status label at the top
-        panel.add(statusLabel, BorderLayout.NORTH)
 
         try {
             // Subscribe to changes of the theme
@@ -61,7 +57,6 @@ class ZenUmlEditor(private val project: Project, private val file: VirtualFile) 
 
                 // Add the WebView component to the panel
                 panel.add(view!!.component, BorderLayout.CENTER)
-                statusLabel.text = "ZenUML Editor loaded successfully"
 
                 // Load the initial content
                 loadContent()
@@ -79,10 +74,8 @@ class ZenUmlEditor(private val project: Project, private val file: VirtualFile) 
                 // Listen for initialization
                 view!!.initialized().onSuccess {
                     LOG.info("ZenUML WebView initialized successfully")
-                    statusLabel.text = "ZenUML Editor ready"
                 }.onError { error ->
                     LOG.error("Failed to initialize ZenUML WebView", error)
-                    statusLabel.text = "Error: Failed to initialize ZenUML Editor"
 
                     // Remove the WebView component and show an error message
                     panel.remove(view!!.component)
@@ -92,12 +85,10 @@ class ZenUmlEditor(private val project: Project, private val file: VirtualFile) 
                 }
             } catch (e: Exception) {
                 LOG.error("Error creating ZenUmlWebView", e)
-                statusLabel.text = "Error: Failed to create ZenUML Editor"
                 panel.add(JLabel("Error: ${e.message}"), BorderLayout.CENTER)
             }
         } catch (e: Exception) {
             LOG.error("Error initializing ZenUML Editor", e)
-            statusLabel.text = "Error: Failed to initialize ZenUML Editor"
             panel.add(JLabel("Error: ${e.message}"), BorderLayout.CENTER)
         }
     }
@@ -118,14 +109,12 @@ class ZenUmlEditor(private val project: Project, private val file: VirtualFile) 
                             view?.loadCode(content)
                         } catch (e: Exception) {
                             LOG.error("Error reading file content", e)
-                            statusLabel.text = "Error: Failed to read file content"
                         }
                     }
                 }
             }
         } catch (e: Exception) {
             LOG.error("Error loading content", e)
-            statusLabel.text = "Error: Failed to load content"
         }
     }
 
@@ -162,7 +151,6 @@ class ZenUmlEditor(private val project: Project, private val file: VirtualFile) 
             }
         } catch (e: Exception) {
             LOG.error("Error handling theme change", e)
-            statusLabel.text = "Error: Failed to update theme"
         }
     }
 
