@@ -67,10 +67,14 @@
 
         <!-- ZenUML Actions -->
         <group id="ZenUmlNew" text="ZenUML">
-            <action id="ZenUmlNewFile" class="de.docs_as_co.intellij.plugin.zenuml.actions.ZenUmlCreateFileAction"/>
+            <action id="ZenUmlNewFile" class="de.docs_as_co.intellij.plugin.zenuml.actions.ZenUmlCreateFileAction"
+                    icon="de.docs_as_co.intellij.plugin.zenuml.ZenUmlIcons.SEQUENCE_ICON"/>
             <add-to-group group-id="NewGroup" anchor="before" relative-to-action="NewFromTemplate"/>
         </group>
         <action id="ZenUmlOpenDevtools" text="Open Devtools Window for the current ZenUML Preview"
-                class="de.docs_as_co.intellij.plugin.zenuml.actions.OpenZenUmlDevtoolsAction"/>
+                class="de.docs_as_co.intellij.plugin.zenuml.actions.OpenZenUmlDevtoolsAction"
+                icon="de.docs_as_co.intellij.plugin.zenuml.ZenUmlIcons.PREVIEW_ICON"/>
     </actions>
+
+    <product-descriptor code="PZENUML" release-date="20241230" release-version="20251" optional="true" />
 </idea-plugin>

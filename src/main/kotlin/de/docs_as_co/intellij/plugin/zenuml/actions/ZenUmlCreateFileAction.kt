@@ -8,10 +8,10 @@ import com.intellij.psi.PsiDirectory
 import de.docs_as_co.intellij.plugin.zenuml.ZenUmlIcons
 
 @Suppress("DialogTitleCapitalization")
-class ZenUmlCreateFileAction : CreateFileFromTemplateAction("ZenUML Diagram", "Create a new ZenUML diagram", ZenUmlIcons.ZENUML_ICON), DumbAware {
+class ZenUmlCreateFileAction : CreateFileFromTemplateAction("ZenUML Diagram", "Create a new ZenUML diagram", ZenUmlIcons.SEQUENCE_ICON), DumbAware {
     override fun buildDialog(project: Project, directory: PsiDirectory, builder: CreateFileFromTemplateDialog.Builder) {
         builder.setTitle("New ZenUML Diagram")
-            .addKind("ZenUML Diagram", ZenUmlIcons.ZENUML_ICON, "ZenUML Diagram")
+            .addKind("ZenUML Diagram", ZenUmlIcons.SEQUENCE_ICON, "ZenUML Diagram")
     }
 
     override fun getActionName(directory: PsiDirectory, newName: String, templateName: String): String {

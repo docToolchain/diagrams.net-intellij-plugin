@@ -8,7 +8,7 @@ object ZenUmlFileType : LanguageFileType(ZenUmlLanguage) {
     override fun getName(): String = "ZenUML"
     override fun getDescription(): String = "ZenUML sequence diagram file"
     override fun getDefaultExtension(): String = "zenuml"
-    override fun getIcon(): Icon = ZenUmlIcons.ZENUML_ICON
+    override fun getIcon(): Icon = ZenUmlIcons.SEQUENCE_ICON
 
     // Additional extensions
     val EXTENSIONS = arrayOf("zenuml", "zen", "z")

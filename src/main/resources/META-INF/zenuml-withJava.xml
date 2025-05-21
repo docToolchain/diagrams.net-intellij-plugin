@@ -3,7 +3,7 @@
     <actions>
         <action id="ZenUml.GenerateFromJava" 
                class="de.docs_as_co.intellij.plugin.zenuml.actions.ShowZenUmlFromJavaAction"
-               icon="/icons/zenuml/zenuml.svg"
+               icon="de.docs_as_co.intellij.plugin.zenuml.ZenUmlIcons.SEQUENCE_ICON"
                text="Sequence Diagram from Java" 
                description="Generate ZenUML sequence diagram from the current Java method">
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>

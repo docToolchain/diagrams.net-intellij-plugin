@@ -5,6 +5,7 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.PlatformDataKeys
 import com.intellij.openapi.fileEditor.FileEditor
+import de.docs_as_co.intellij.plugin.zenuml.ZenUmlIcons
 import de.docs_as_co.intellij.plugin.zenuml.editor.ZenUmlEditor
 
 /**
@@ -12,6 +13,10 @@ import de.docs_as_co.intellij.plugin.zenuml.editor.ZenUmlEditor
  * This allows debugging the WebView component of the ZenUML editor.
  */
 class OpenZenUmlDevtoolsAction : AnAction() {
+    init {
+        templatePresentation.icon = ZenUmlIcons.PREVIEW_ICON
+    }
+    
     override fun actionPerformed(event: AnActionEvent) {
         val fileEditor: FileEditor? = event.getData(PlatformDataKeys.FILE_EDITOR)
         if (fileEditor is ZenUmlEditor) {

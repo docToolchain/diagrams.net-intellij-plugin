@@ -11,11 +11,16 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiMethod
+import de.docs_as_co.intellij.plugin.zenuml.ZenUmlIcons
 import de.docs_as_co.intellij.plugin.zenuml.editor.ZenUmlFileCreator
 import de.docs_as_co.intellij.plugin.zenuml.java.PsiToDslConverter
 import de.docs_as_co.intellij.plugin.zenuml.java.ZenUmlJavaService
 
 class ShowZenUmlFromJavaAction : AnAction() {
+
+    init {
+        templatePresentation.icon = ZenUmlIcons.SEQUENCE_ICON
+    }
 
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
