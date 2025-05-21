@@ -28,7 +28,7 @@ body {
   --bg-color: #2b2b2b;
   --text-color: #e6e6e6;
   --border-color: #555;
-  --header-bg: #3c3f41;
+  --header-bg: #2588ca;
   --editor-bg: #3c3f41;
   --preview-bg: #3c3f41;
   --resizer-hover: #0078d7;
@@ -55,13 +55,6 @@ body {
   width: 100%;
 }
 
-.header {
-  background-color: var(--header-bg);
-  padding: 10px;
-  border-bottom: 1px solid var(--border-color);
-  font-weight: bold;
-}
-
 .editor-content {
   flex: 1;
   padding: 10px;
@@ -84,4 +77,3 @@ body {
   overflow: auto;
 }
 
- 
