@@ -1,26 +1,43 @@
 <template>
   <div :class="theme">
-    <div class="container">
-      <Editor
-        :initial-content="content"
-        @content-change="handleContentChange"
-      />
-      <Viewer :content="content" />
-    </div>
+    <Splitpanes class="workspace" :horizontal="isMobile">
+      <Pane min-size="20" :size="initialEditorSize">
+        <Editor
+          :initial-content="content"
+          @content-change="handleContentChange"
+        />
+      </Pane>
+      <Pane min-size="20">
+        <Viewer :content="content" />
+      </Pane>
+    </Splitpanes>
   </div>
 </template>
 
 <script setup>
-import { ref, inject, onMounted } from 'vue'
+import { ref, inject, onMounted, computed } from 'vue'
 import Editor from './components/Editor.vue'
 import Viewer from './components/Viewer.vue'
 import { useHostCommunication } from './composables/useHostCommunication'
+import { Splitpanes, Pane } from 'splitpanes'
+import 'splitpanes/dist/splitpanes.css'
 
 // Get initial theme from injected data
 const initialData = inject('initialData', { theme: 'light' })
 const theme = ref(initialData.theme === 'dark' ? 'dark-theme' : 'light-theme')
 const content = ref('')
 const { messages, sendToHost, getHost } = useHostCommunication()
+
+// Responsive handling
+const isMobile = ref(window.innerWidth <= 768)
+const initialEditorSize = ref(50)
+
+// Update isMobile value on window resize
+onMounted(() => {
+  window.addEventListener('resize', () => {
+    isMobile.value = window.innerWidth <= 768
+  })
+})
 
 // Handle content changes from editor
 const handleContentChange = (newContent) => {
@@ -35,7 +52,7 @@ const handleContentChange = (newContent) => {
 // Set up host communication
 onMounted(() => {
   console.log('App mounted, setting up host communication')
-  
+
   // Set up initial theme
   document.body.classList.add(theme.value)
 
@@ -53,7 +70,7 @@ onMounted(() => {
 
     // Check for string message that needs parsing
     const msg = typeof message === 'string' ? JSON.parse(message) : message
-    
+
     // Handle initial content loading
     if (msg.action === 'load' && msg.code) {
       console.log('Received file content:', msg.code)
@@ -62,7 +79,7 @@ onMounted(() => {
   }
 
   host.addMessageListener(handleHostMessage)
-  
+
   // Explicitly request content from the host after initialization
   setTimeout(() => {
     console.log('Requesting content from host')
@@ -93,5 +110,18 @@ User -> UI.click() {
 </script>
 
 <style>
-/* Global styles in main.css */
+/* Override only necessary splitpanes styling to match theme */
+.splitpanes__splitter {
+  background-color: var(--border-color) !important;
+}
+
+.splitpanes__splitter:hover {
+  background-color: var(--resizer-hover, #0078d7) !important;
+}
+
+/* Fix container styling */
+.workspace {
+  height: 100vh;
+  overflow: hidden;
+}
 </style>

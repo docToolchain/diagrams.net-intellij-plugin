@@ -21,6 +21,7 @@ body {
   --header-bg: #f5f5f5;
   --editor-bg: white;
   --preview-bg: white;
+  --resizer-hover: #0078d7;
 }
 
 .dark-theme {
@@ -30,6 +31,7 @@ body {
   --header-bg: #3c3f41;
   --editor-bg: #3c3f41;
   --preview-bg: #3c3f41;
+  --resizer-hover: #0078d7;
 }
 
 body {
@@ -43,18 +45,14 @@ body {
   flex-direction: column;
 }
 
-.container {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-}
-
+/* Panel containers */
 .editor-container, .preview-container {
-  flex: 1;
   display: flex;
   flex-direction: column;
   border: 1px solid var(--border-color);
   overflow: hidden;
+  height: 100%;
+  width: 100%;
 }
 
 .header {
@@ -86,14 +84,4 @@ body {
   overflow: auto;
 }
 
-/* Mobile responsiveness */
-@media (max-width: 768px) {
-  .container {
-    flex-direction: column;
-  }
-  
-  .editor-container, .preview-container {
-    flex: none;
-    height: 50%;
-  }
-} 
+ 
