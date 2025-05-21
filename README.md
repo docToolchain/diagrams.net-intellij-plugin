@@ -73,4 +73,23 @@ For development purpose, clone the project locally and start it with the command
 This will build the plugin and start an Instance of IntelliJ with the plugin already installed.
 You can even start this in debug mode.
 
+## Environment Variables
+
+This project requires the `MIXPANEL_PROJECT_TOKEN` to be set as a system environment variable for analytics to work.
+
+### Setting the environment variable
+- On macOS/Linux (zsh/bash):
+  ```sh
+  export MIXPANEL_PROJECT_TOKEN=your_token_here
+  ```
+- On Windows (cmd):
+  ```cmd
+  set MIXPANEL_PROJECT_TOKEN=your_token_here
+  ```
+- In IntelliJ IDEA, you can set environment variables in your Run/Debug Configuration under the "Environment variables" field.
+
+### Note
+- Do not commit secrets to version control.
+- For production or CI/CD, ensure the environment variable is set in your deployment environment.
+
 

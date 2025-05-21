@@ -15,7 +15,8 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 object Analytics {
-    private const val PROJECT_TOKEN = ""
+    private val PROJECT_TOKEN: String = System.getenv("MIXPANEL_PROJECT_TOKEN")
+        ?: throw IllegalStateException("MIXPANEL_PROJECT_TOKEN environment variable not set")
     private const val USER_ID_KEY = "diagramly.analytics.user.id"
     private val messageBuilder = MessageBuilder(PROJECT_TOKEN)
     private val mixpanel = MixpanelAPI()
