@@ -1,0 +1,13 @@
+<!-- Java-specific actions for ZenUML -->
+<idea-plugin>
+    <actions>
+        <action id="ZenUml.GenerateFromJava" 
+               class="de.docs_as_co.intellij.plugin.zenuml.actions.ShowZenUmlFromJavaAction"
+               icon="/icons/zenuml/zenuml.svg"
+               text="Sequence Diagram from Java" 
+               description="Generate ZenUML sequence diagram from the current Java method">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
+    </actions>
+</idea-plugin> 

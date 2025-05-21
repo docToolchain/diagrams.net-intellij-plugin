@@ -44,6 +44,9 @@ dependencies {
         jetbrainsRuntime()
         pluginVerifier()
         testFramework(TestFrameworkType.Platform)
+        
+        // Add Java plugin dependencies
+        bundledPlugin("com.intellij.java")
     }
 }
 
