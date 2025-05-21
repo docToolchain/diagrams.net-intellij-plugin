@@ -5,9 +5,11 @@ package de.docs_as_co.intellij.plugin.zenuml.java
  */
 class ZenDsl {
     private val stringBuilder = StringBuilder()
-    private var blockEntered = false
+    private var indentationLevel = 0
+    private val tabSize = 2
 
     fun append(str: String): ZenDsl {
+        ensureIndent()
         if (str.isNotBlank()) {
             stringBuilder.append(str)
         }
@@ -16,28 +18,33 @@ class ZenDsl {
 
     fun appendParams(params: String): ZenDsl {
         stringBuilder.append("(").append(params).append(")")
-        stringBuilder.append(" {\n")
-        blockEntered = true
-        return this
+        return openBlock()
     }
 
     fun appendParticipant(name: String): ZenDsl {
+        ensureIndent()
         stringBuilder.append(name).append(".")
         return this
     }
 
     fun appendAssignment(type: String, name: String): ZenDsl {
+        ensureIndent()
         stringBuilder.append(type).append(" ").append(name).append(" = ")
         return this
     }
     
     fun appendMethodCall(methodName: String, args: String): ZenDsl {
+        ensureIndent()
         stringBuilder.append(methodName).append("(").append(args).append(")")
         return this
     }
 
     fun comment(text: String): ZenDsl {
-        stringBuilder.append("// ").append(text).append("\n")
+        ensureIndent()
+        text.split("\n").forEach { line ->
+            stringBuilder.append("// ").append(line)
+            newLine()
+        }
         return this
     }
 
@@ -52,27 +59,44 @@ class ZenDsl {
     }
 
     fun closeExpressionAndNewLine(): ZenDsl {
-        if (blockEntered) {
-            stringBuilder.append("\n")
-        }
+        stringBuilder.append("")
+        newLine()
         return this
     }
 
     fun openBlock(): ZenDsl {
-        stringBuilder.append(" {\n")
-        blockEntered = true
+        stringBuilder.append(" {")
+        newLine()
+        indentationLevel++
         return this
     }
 
     fun closeBlock(): ZenDsl {
-        stringBuilder.append("}\n")
-        blockEntered = false
+        indentationLevel--
+        ensureIndent()
+        stringBuilder.append("}")
+        newLine()
+        return this
+    }
+
+    private fun newLine(): ZenDsl {
+        stringBuilder.append("\n")
+        return this
+    }
+
+    private fun ensureIndent(): ZenDsl {
+        if (stringBuilder.isNotEmpty() && stringBuilder.last() == '\n') {
+            val indentation = " ".repeat(indentationLevel * tabSize)
+            stringBuilder.append(indentation)
+        }
         return this
     }
 
     fun getDsl(): String {
-        if (blockEntered) {
-            closeBlock()
+        if (indentationLevel > 0) {
+            while (indentationLevel > 0) {
+                closeBlock()
+            }
         }
         return stringBuilder.toString()
     }

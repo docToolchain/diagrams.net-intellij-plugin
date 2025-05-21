@@ -83,8 +83,12 @@ class PsiToDslConverter : JavaRecursiveElementVisitor() {
         if (variable.hasInitializer() && variable.initializer !is PsiArrayInitializerExpression) {
             val type = replaceArray(withoutTypeParameter(variable.typeElement?.text?.trim() ?: ""))
             val name = variable.name ?: ""
+            
+            // For variable initialization, handle the right side as an expression
+            val initializerText = variable.initializer?.text?.trim() ?: ""
+            
             zenDsl.appendAssignment(type, name)
-            // Add a line break after the declaration
+            zenDsl.append(initializerText)
             zenDsl.closeExpressionAndNewLine()
         } else {
             zenDsl.comment(replaceArray(variable.text?.trim() ?: ""))
