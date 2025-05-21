@@ -5,11 +5,11 @@
     <!-- Unique identifier of the plugin. It should be FQN.
        It cannot be changed between the plugin versions.
        If not specified, <name> will be used (not recommended). -->
-    <id>de.docs_as_co.intellij.plugin.diagramsnet</id>
+    <id>com.zenuml.jetbrains</id>
     <!-- Plugin name. It should be short and descriptive and in Title Case.
        Displayed in the "Plugins" settings dialog and the plugin repository Web interface. -->
     <!--suppress PluginXmlCapitalization -->
-    <name>Diagrams.net Integration with ZenUML Support</name>
+    <name>ZenUML Support</name>
     <!-- Description of the plugin.
        Should be short and to the point.
        Start the description with a verb in a present simple form such as
@@ -21,7 +21,8 @@
        Don't mention the IDE compatibility. E.g., don't say "Adds support to IntelliJ IDEA for..."
        Displayed in the "Plugins" settings dialog and the plugin repository Web interface.
        Simple HTML elements can be included between <![CDATA[  ]]> tags.  -->
-    <description>(filled automatically by the build plugin)</description>
+    <description>(filled automatically by the build plugin: patchPluginXml.pluginDescription)</description>
+    <change-notes>(filled automatically by the build plugin with data from README.md)</change-notes>
     <!-- The vendor of the plugin.
        The optional "url" attribute specifies the URL of the vendor homepage.
        The optional "email" attribute specifies the e-mail address of the vendor.
