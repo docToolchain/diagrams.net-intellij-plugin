@@ -1,13 +1,13 @@
 <template>
   <div :class="theme">
     <Splitpanes class="workspace" :horizontal="isMobile">
-      <Pane min-size="20" :size="initialEditorSize">
+      <Pane min-size="20" :size="30">
         <Editor
           :initial-content="content"
           @content-change="handleContentChange"
         />
       </Pane>
-      <Pane min-size="20">
+      <Pane min-size="20" :size="70">
         <Viewer :content="content" />
       </Pane>
     </Splitpanes>
@@ -15,7 +15,7 @@
 </template>
 
 <script setup>
-import { ref, inject, onMounted, computed } from 'vue'
+import { ref, inject, onMounted } from 'vue'
 import Editor from './components/Editor.vue'
 import Viewer from './components/Viewer.vue'
 import { useHostCommunication } from './composables/useHostCommunication'
@@ -26,12 +26,10 @@ import 'splitpanes/dist/splitpanes.css'
 const initialData = inject('initialData', { theme: 'light' })
 const theme = ref(initialData.theme === 'dark' ? 'dark-theme' : 'light-theme')
 const content = ref('')
-const { messages, sendToHost, getHost } = useHostCommunication()
+const { sendToHost, getHost } = useHostCommunication()
 
 // Responsive handling
 const isMobile = ref(window.innerWidth <= 768)
-const initialEditorSize = ref(50)
-
 // Update isMobile value on window resize
 onMounted(() => {
   window.addEventListener('resize', () => {
@@ -113,6 +111,8 @@ User -> UI.click() {
 /* Override only necessary splitpanes styling to match theme */
 .splitpanes__splitter {
   background-color: var(--border-color) !important;
+  width: 4px !important;
+  min-width: 4px !important;
 }
 
 .splitpanes__splitter:hover {
