@@ -90,5 +90,5 @@
                 icon="de.docs_as_co.intellij.plugin.zenuml.ZenUmlIcons.PREVIEW_ICON"/>
     </actions>
 
-    <product-descriptor code="PZENUML" release-date="20250522" release-version="20251" optional="true" />
+    <product-descriptor code="PZENUML" release-date="20250522" release-version="20255" optional="true" />
 </idea-plugin>
