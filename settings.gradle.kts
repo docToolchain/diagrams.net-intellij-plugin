@@ -1,1 +1,1 @@
-rootProject.name = "diagrams.net-intellij-plugin"
+rootProject.name = "zenuml-intellij-plugin"
