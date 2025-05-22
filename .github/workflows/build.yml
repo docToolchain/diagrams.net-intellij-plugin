@@ -136,19 +136,9 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: plugin-artifact
-          path: ./artifact
-
-      # Debug step to verify artifact name and location
-      - name: Debug Artifact
-        run: |
-          echo "Artifact name from outputs: ${{ needs.build.outputs.artifact }}"
-          echo "Files in download directory:"
-          ls -la ./artifact
-          echo "Files in current directory:"
-          ls -la ./
 
       # Upload artifact as a release asset
       - name: Upload Release Asset
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload v${{ needs.build.outputs.version }} ./artifact/${{ needs.build.outputs.artifact }}
+        run: gh release upload v${{ needs.build.outputs.version }} ./${{ needs.build.outputs.artifact }}
