@@ -27,6 +27,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: write
+
+
 jobs:
 
   # Build plugin with buildPlugin Gradle task and provide the artifact for the next workflow jobs
