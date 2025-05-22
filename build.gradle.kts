@@ -44,7 +44,11 @@ dependencies {
         jetbrainsRuntime()
         pluginVerifier()
         testFramework(TestFrameworkType.Platform)
+        
+        // Add Java plugin dependencies
+        bundledPlugin("com.intellij.java")
     }
+    implementation("com.mixpanel:mixpanel-java:1.5.2")
 }
 
 intellijPlatform {
@@ -100,6 +104,10 @@ tasks.jar {
             throw GradleException("please init subprojects by execution 'git submodule update --init'")
         }
     }
+
+    // Handle duplicates strategy
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
     from("src/webview/drawio/src/main/webapp") {
         include("**/*")
         exclude("index.html")
@@ -109,6 +117,48 @@ tasks.jar {
         include("index.html")
         into("assets")
     }
+    from("src/webview/zenuml") {
+        include("**/*")
+        // Exclude build artifacts and files already in resources
+        exclude("index.html", "dist/**", "node_modules/**", "src/**")
+        into("assets/zenuml")
+    }
+}
+
+// Custom task to build ZenUML web view and copy to resources
+tasks.register("buildZenUMLWebView") {
+    description = "Build the ZenUML web view with npm and copy to resources"
+    group = "build"
+
+    doLast {
+        // Set working directory to the ZenUML web view
+        val zenUmlDir = File(projectDir, "src/webview/zenuml")
+
+        // Run npm install
+        exec {
+            workingDir = zenUmlDir
+            commandLine("npm", "install")
+        }
+
+        // Run npm build
+        exec {
+            workingDir = zenUmlDir
+            commandLine("npm", "run", "build")
+        }
+
+        // Copy the built files to resources
+        copy {
+            from("${zenUmlDir}/dist")
+            into("src/main/resources/assets/zenuml")
+        }
+
+        println("ZenUML web view built and copied to resources")
+    }
+}
+
+// Make jar depend on buildZenUMLWebView
+tasks.jar {
+    dependsOn("buildZenUMLWebView")
 }
 
 java {

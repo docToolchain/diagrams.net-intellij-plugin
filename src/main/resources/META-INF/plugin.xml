@@ -5,11 +5,11 @@
     <!-- Unique identifier of the plugin. It should be FQN.
        It cannot be changed between the plugin versions.
        If not specified, <name> will be used (not recommended). -->
-    <id>de.docs_as_co.intellij.plugin.diagramsnet</id>
+    <id>com.zenuml.jetbrains</id>
     <!-- Plugin name. It should be short and descriptive and in Title Case.
        Displayed in the "Plugins" settings dialog and the plugin repository Web interface. -->
     <!--suppress PluginXmlCapitalization -->
-    <name>Diagrams.net Integration</name>
+    <name>ZenUML Support</name>
     <!-- Description of the plugin.
        Should be short and to the point.
        Start the description with a verb in a present simple form such as
@@ -21,19 +21,21 @@
        Don't mention the IDE compatibility. E.g., don't say "Adds support to IntelliJ IDEA for..."
        Displayed in the "Plugins" settings dialog and the plugin repository Web interface.
        Simple HTML elements can be included between <![CDATA[  ]]> tags.  -->
-    <description>(filled automatically by the build plugin)</description>
+    <description>(filled automatically by the build plugin: patchPluginXml.pluginDescription)</description>
+    <change-notes>(filled automatically by the build plugin with data from README.md)</change-notes>
     <!-- The vendor of the plugin.
        The optional "url" attribute specifies the URL of the vendor homepage.
        The optional "email" attribute specifies the e-mail address of the vendor.
        Displayed in the "Plugins" settings dialog and the plugin repository Web interface. -->
-    <vendor url="https://docs-as-co.de" email="ralf.d.mueller@gmail.com">Docs As Code</vendor>
+    <vendor url="https://www.zenuml.com">ZenUML</vendor>
     <!-- Plugin version
        Recommended format is BRANCH.BUILD.FIX (MAJOR.MINOR.FIX)
        Displayed in the "Plugins" settings dialog and the plugin repository Web interface.  -->
     <version>(filled automatically by the build plugin)</version>
     <depends>com.intellij.modules.platform</depends>
     <!-- Minimum and maximum build of IDE compatible with the plugin -->
-    <idea-version since-build="231" />
+    <idea-version since-build="212.5457.46" />
+    <depends optional="true" config-file="zenuml-withJava.xml">com.intellij.modules.java</depends>
     <extensions defaultExtensionNs="com.intellij">
         <fileType name="Diagrams.net Diagram" implementationClass="de.docs_as_co.intellij.plugin.drawio.DiagramsNetFileType"
                   fieldName="INSTANCE" language="Diagrams.net" extensions="drawio;drawio.svg;drawio.png;drawio.xml;dio;dio.svg;dio.png;dio.xml"/>
@@ -46,6 +48,27 @@
                                  key="settings.diagrams.name"
                                  instance="de.docs_as_co.intellij.plugin.drawio.settings.DiagramsConfigurable" />
         <applicationService serviceImplementation="de.docs_as_co.intellij.plugin.drawio.settings.DiagramsApplicationSettings" />
+
+        <!-- ZenUML Extensions -->
+        <fileType name="ZenUML" implementationClass="de.docs_as_co.intellij.plugin.zenuml.file.ZenUmlFileType"
+                  fieldName="INSTANCE" language="ZenUML" extensions="zenuml;zen;z"/>
+        <fileEditorProvider implementation="de.docs_as_co.intellij.plugin.zenuml.editor.ZenUmlEditorProvider" />
+
+        <!-- Initializer to prevent JavaLibraryModificationTracker warnings -->
+        <postStartupActivity implementation="de.docs_as_co.intellij.plugin.zenuml.ZenUmlInitializer"/>
+
+        <!-- ZenUML Settings -->
+        <applicationConfigurable id="Settings.ZenUml"
+                               bundle="messages.ZenUmlBundle"
+                               groupId="language"
+                               nonDefaultProject="true"
+                               key="zenuml.settings.name"
+                               instance="de.docs_as_co.intellij.plugin.zenuml.settings.ZenUmlSettingsConfigurable">
+        </applicationConfigurable>
+        <applicationService serviceImplementation="de.docs_as_co.intellij.plugin.zenuml.settings.ZenUmlApplicationSettings"/>
+
+        <!-- Analytics Startup -->
+        <postStartupActivity implementation="de.docs_as_co.intellij.plugin.drawio.DrawioAnalyticsStartup"/>
     </extensions>
 
     <actions>
@@ -55,5 +78,17 @@
         </group>
         <action id="DiagramsNetOpenDevtools" text="Open Devtools Window for the current Diagrams.net Preview"
                 class="de.docs_as_co.intellij.plugin.drawio.actions.OpenDevtoolsAction"/>
+
+        <!-- ZenUML Actions -->
+        <group id="ZenUmlNew" text="ZenUML">
+            <action id="ZenUmlNewFile" class="de.docs_as_co.intellij.plugin.zenuml.actions.ZenUmlCreateFileAction"
+                    icon="de.docs_as_co.intellij.plugin.zenuml.ZenUmlIcons.SEQUENCE_ICON"/>
+            <add-to-group group-id="NewGroup" anchor="before" relative-to-action="NewFromTemplate"/>
+        </group>
+        <action id="ZenUmlOpenDevtools" text="Open Devtools Window for the current ZenUML Preview"
+                class="de.docs_as_co.intellij.plugin.zenuml.actions.OpenZenUmlDevtoolsAction"
+                icon="de.docs_as_co.intellij.plugin.zenuml.ZenUmlIcons.PREVIEW_ICON"/>
     </actions>
+
+    <product-descriptor code="PZENUML" release-date="20250522" release-version="20255" optional="true" />
 </idea-plugin>

@@ -20,6 +20,7 @@ import de.docs_as_co.intellij.plugin.drawio.settings.DiagramsUiMode
 import de.docs_as_co.intellij.plugin.drawio.settings.DiagramsUiTheme
 import java.beans.PropertyChangeListener
 import javax.swing.JComponent
+import de.docs_as_co.intellij.plugin.drawio.utils.Analytics
 
 
 class DiagramsEditor(private val project: Project, private val file: VirtualFile) : FileEditor, EditorColorsListener, DumbAware,
@@ -45,6 +46,16 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
 
         view = DiagramsWebView(lifetime, uiThemeFromConfig().key, uiModeFromConfig().key)
         initView()
+
+        // Analytics: track editor opened
+        Analytics.trackEvent(
+            "editor_opened",
+            mapOf(
+                "file_extension" to file.extension,
+                "project_name" to project.name,
+                "plugin_version" to javaClass.`package`?.implementationVersion
+            )
+        )
     }
 
     private fun uiThemeFromConfig(): DiagramsUiTheme {
@@ -123,6 +134,15 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
                     flush()
                     close()
                 }
+                // Analytics: track diagram saved
+                Analytics.trackEvent(
+                    "diagram_saved",
+                    mapOf(
+                        "file_extension" to file.extension,
+                        "project_name" to project.name,
+                        "file_size" to data.size
+                    )
+                )
             }
         }
     }

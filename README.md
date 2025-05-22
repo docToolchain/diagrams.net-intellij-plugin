@@ -5,11 +5,27 @@
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/15635-diagrams-net-integration.svg)](https://plugins.jetbrains.com/plugin/15635-diagrams-net-integration)
 
 <!-- Plugin description -->
-This unofficial extension integrates [diagrams.net](https://app.diagrams.net/) (formerly known as draw.io) directly into IntelliJ and other JetBrains IDEs based on it like PyCharm, RubyMine and WebStorm.
-It supports diagram files with the extensions `.drawio.(svg|png|xml)` and `.dio.(svg|png|xml)`.
-It also auto-detects editable PNGs and SVGs created with diagrams.net.
+This official extension integrates [ZenUML](https://ZenUML.com/) directly into all JetBrains IDEs.
+It supports ZenUML diagram files with the extensions `.z`, `.zen` and `.zenuml`.
 
-The editor uses an offline version of diagrams.net by default, therefore it works without an internet connection and content stays local in your IDE.
+The editor uses an offline version of ZenUML renderer, therefore it works without an internet connection and content stays local in your IDE.
+
+# Free
+* Full support of [ZenUML DSL](https://zenuml.atlassian.net/wiki/spaces/Doc/pages/518848513/Sequence+diagram+syntax)
+  * Sync and Async messages
+  * Creation, Return/Reply messages
+  * Alt, Loop, Par, try/catch/finally fragments
+* Live preview of your diagrams
+* Cloud and other common icons (EC2, Lambda, Database, Boundary, etc.)
+
+# Paid
+
+Generate ZenUML diagram from Java code only on Intellij IDEA.
+
+# Hacking / reverse engineering
+To enable DevTools,
+1. Open menu item **Help > Find action...** and search for "Registry..."
+2. Enable "ide.browser.jcef.contextMenu.devTools.enabled"
 <!-- Plugin description end -->
 
 ## About
@@ -56,5 +72,24 @@ For development purpose, clone the project locally and start it with the command
 
 This will build the plugin and start an Instance of IntelliJ with the plugin already installed.
 You can even start this in debug mode.
+
+## Environment Variables
+
+This project requires the `MIXPANEL_PROJECT_TOKEN` to be set as a system environment variable for analytics to work.
+
+### Setting the environment variable
+- On macOS/Linux (zsh/bash):
+  ```sh
+  export MIXPANEL_PROJECT_TOKEN=your_token_here
+  ```
+- On Windows (cmd):
+  ```cmd
+  set MIXPANEL_PROJECT_TOKEN=your_token_here
+  ```
+- In IntelliJ IDEA, you can set environment variables in your Run/Debug Configuration under the "Environment variables" field.
+
+### Note
+- Do not commit secrets to version control.
+- For production or CI/CD, ensure the environment variable is set in your deployment environment.
 
 

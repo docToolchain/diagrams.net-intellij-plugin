@@ -1,5 +1,15 @@
+.vscode
+
 .gradle
 /build/
+/bin/
+
+node_modules/
+
+
+# build output
+/src/main/resources/assets/zenuml/
+/src/webview/zenuml/dist
 
 # Ignore Gradle GUI config
 gradle-app.setting
@@ -18,6 +28,10 @@ gradle-app.setting
 
 /.idea/*
 *.iml
+.intellijPlatform
+
+.kotlin/sessions
+
 # These are the run configurations you marked as "shared"
 # This allows you to share them with fellow developers.
 !/.idea/runConfigurations

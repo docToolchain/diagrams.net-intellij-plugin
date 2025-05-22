@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenUML Editor111</title>
+
+    <script type="text/javascript">
+      // Parse the initial data from the server
+      let initialData;
+      try {
+        initialData = JSON.parse('\$\$initialData\$\$');
+      } catch (e) {
+        initialData = {theme: 'light'};
+        console.error('Error parsing initialData', e);
+      }
+
+      class Host {
+        listeners = [];
+
+        constructor() {
+          window.processMessageFromHost = (message) => {
+            try {
+              const msg = typeof message === 'string' ? JSON.parse(message) : message;
+              console.log('Received message from host:', msg);
+              for (const listener of this.listeners) {
+                listener(msg);
+              }
+            } catch (error) {
+              console.error('Error processing message from host:', error);
+            }
+          };
+
+          let queue = [];
+          if (window.sendMessageToHost) {
+            this.sendMessageToHost = window.sendMessageToHost;
+          } else {
+            this.sendMessageToHost = (message) => {
+              queue.push(message);
+            };
+            Object.defineProperty(window, "sendMessageToHost", {
+              get: () => this.sendMessageToHost,
+              set: (value) => {
+                this.sendMessageToHost = value;
+                for (const item of queue) {
+                  this.sendMessageToHost(item);
+                }
+                queue.length = 0;
+              },
+            });
+          }
+        }
+
+        sendMessage(message) {
+          this.sendMessageToHost(typeof message === "string" ? message : JSON.stringify(message));
+        }
+
+        addMessageListener(listener) {
+          this.listeners.push(listener);
+        }
+      }
+
+      window.host = new Host();
+    </script>
+
+</head>
+<body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>

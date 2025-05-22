@@ -36,6 +36,7 @@ class DiagramsApplicationSettings : PersistentStateComponent<DiagramsApplication
     class State {
         @Property(surroundWithTag = false)
         var myPreviewSettings = DiagramsSettings.DEFAULT
+        var analyticsEnabled: Boolean = true
     }
 
     companion object {
