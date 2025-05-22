@@ -1,6 +1,5 @@
 <template>
   <div class="preview-container">
-    <div class="header">Preview</div>
     <div class="preview-content">
       <div ref="zenumlRef" class="zenuml-container"></div>
     </div>
@@ -51,18 +50,18 @@ const renderDiagram = async () => {
 
   try {
     const ZenUml = await loadZenUml()
-    
+
     if (!zenumlInstance.value) {
       zenumlInstance.value = new ZenUml(zenumlRef.value)
     }
-    
+
     // Get theme preferences
     const id = 'local' // Use appropriate ID if available
     const globalTheme = localStorage.getItem(getThemeStorageKey("global"))
     const scopeTheme = id
       ? localStorage.getItem(getThemeStorageKey(id))
       : sessionStorage.getItem(getThemeStorageKey())
-    
+
     // Render diagram with options
     await zenumlInstance.value.render(props.content, {
       theme: scopeTheme || globalTheme || (initialData.theme === 'dark' ? 'theme-dark' : 'theme-default'),
@@ -110,7 +109,7 @@ watch(() => props.content, () => {
 onMounted(async () => {
   // Apply theme class to body
   document.body.classList.add(initialData.theme === 'dark' ? 'dark-theme' : 'light-theme')
-  
+
   // Initial render if content available
   if (props.content) {
     await renderDiagram()
@@ -127,4 +126,4 @@ onMounted(async () => {
   height: 100%;
   min-height: 300px;
 }
-</style> 
+</style>

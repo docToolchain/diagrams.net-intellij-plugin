@@ -1,20 +1,15 @@
 <template>
   <div class="editor-container">
-    <div class="header">ZenUML Code</div>
-    <textarea
-      ref="editorElement"
-      class="editor-content"
-      spellcheck="false"
-      v-model="editorContent"
-      @input="handleContentChange"
-      @blur="handleBlur"
-    ></textarea>
+    <div ref="editorElement" class="editor-content"></div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, defineProps, defineEmits, onMounted } from 'vue'
-import { useHostCommunication } from '../composables/useHostCommunication'
+import {ref, watch, defineProps, defineEmits, onMounted, onBeforeUnmount, computed} from 'vue'
+import {baseExtensionsFactory, zenumlExtensions} from "./extensions";
+import {EditorView} from '@codemirror/view'
+import {Compartment, EditorState} from '@codemirror/state'
+import {useHostCommunication} from '../composables/useHostCommunication'
 
 const props = defineProps({
   initialContent: {
@@ -25,27 +20,43 @@ const props = defineProps({
 
 const emit = defineEmits(['content-change'])
 const editorContent = ref(props.initialContent)
-const editorElement = ref(null)
+const editorElement = ref()
+const cmView = ref(null)
 const { notifyContentChanged, messages, getHost } = useHostCommunication()
 
-const handleContentChange = () => {
-  emit('content-change', editorContent.value)
-  notifyContentChanged(editorContent.value)
-}
+// Create a compartment for diagram-specific extensions
+const diagramCompartment = new Compartment()
 
-// Force content update on blur to ensure latest changes are saved
-const handleBlur = () => {
-  const content = editorContent.value
-  
-  if (content && content.trim() !== '') {
-    emit('content-change', content)
-    // Force immediate update to host when editor loses focus
-    getHost().sendMessage({
-      event: "contentChanged",
-      code: content
-    })
+const updateContent = (newContent) => {
+  if (newContent !== editorContent.value) {
+    editorContent.value = newContent
+    emit('content-change', newContent)
+    notifyContentChanged(newContent)
   }
 }
+
+const onEditorCodeChange = (newCode) => {
+  updateContent(newCode)
+}
+
+const baseExtensions = computed(() => baseExtensionsFactory(onEditorCodeChange))
+
+onMounted(() => {
+  cmView.value = new EditorView({
+    state: EditorState.create({
+      doc: editorContent.value,
+      extensions: [
+        ...baseExtensions.value,
+        diagramCompartment.of(zenumlExtensions)
+      ]
+    }),
+    parent: editorElement.value,
+  })
+})
+
+onBeforeUnmount(() => {
+  if (cmView.value) cmView.value.destroy()
+})
 
 // Watch for messages from the host
 watch(messages, (newMessages) => {
@@ -54,6 +65,11 @@ watch(messages, (newMessages) => {
     if (latestMessage.action === 'load' || latestMessage.action === 'update') {
       if (latestMessage.code !== editorContent.value) {
         editorContent.value = latestMessage.code || ''
+        if (cmView.value) {
+          cmView.value.dispatch({
+            changes: { from: 0, to: cmView.value.state.doc.length, insert: editorContent.value }
+          })
+        }
         emit('content-change', editorContent.value)
       }
     }
@@ -63,21 +79,30 @@ watch(messages, (newMessages) => {
 // Listen for host messages directly
 onMounted(() => {
   const host = getHost()
-  
-  // Add listener for host messages
   const messageListener = (message) => {
     if (message.action === 'load' || message.action === 'update') {
       if (message.code !== editorContent.value) {
         editorContent.value = message.code || ''
+        if (cmView.value) {
+          cmView.value.dispatch({
+            changes: { from: 0, to: cmView.value.state.doc.length, insert: editorContent.value }
+          })
+        }
         emit('content-change', editorContent.value)
       }
     }
   }
-  
   host.addMessageListener(messageListener)
 })
 </script>
 
 <style scoped>
 /* Styles are in main.css */
-</style> 
+:deep(.cm-editor) {
+  min-height: 200px;
+  font-family: Menlo, 'Fira Code', Monaco, source-code-pro, "Ubuntu Mono", "DejaVu sans mono", Consolas, monospace;
+  font-size: 15px;
+  height: 100% !important;
+  width: 100%;
+}
+</style>

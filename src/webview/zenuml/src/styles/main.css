@@ -57,7 +57,6 @@ body {
 
 .editor-content {
   flex: 1;
-  padding: 10px;
   font-family: monospace;
   background-color: var(--editor-bg);
   color: var(--text-color);
