@@ -1,1 +1,15 @@
-A.method
+@EC2 BookLibService
+BookLibService.Borrow(id) {
+  User = Session.GetUser()
+  if(User.isActive) {
+    try {
+      BookRepository.Update(id, onLoan, User)
+      receipt = new Receipt(id, dueDate)
+    } catch (BookNotFoundException) {
+      ErrorService.onException(BookNotFoundException)
+    } finally {
+      Connection.close()
+    }
+  }
+  return receipt
+}
