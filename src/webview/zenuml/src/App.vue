@@ -99,7 +99,7 @@ onMounted(() => {
 
 User -> UI.click() {
   Controller.process() {
-
+    Database.save()
   }
 }`
     }

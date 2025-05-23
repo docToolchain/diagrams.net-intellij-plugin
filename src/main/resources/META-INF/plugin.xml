@@ -1,7 +1,7 @@
 <!-- https://jetbrains.org/intellij/sdk/docs/basics/plugin_structure/plugin_configuration_file.html -->
 
 <!-- `url` specifies the URL of the plugin homepage (can be opened from "Plugins" settings dialog) -->
-<idea-plugin url="https://github.com/docToolchain/diragrams.net-intellij-plugin#readme">
+<idea-plugin url="https://github.com/zenuml/zenuml-intellij-plugin#readme">
     <!-- Unique identifier of the plugin. It should be FQN.
        It cannot be changed between the plugin versions.
        If not specified, <name> will be used (not recommended). -->
@@ -37,18 +37,6 @@
     <idea-version since-build="212.5457.46" />
     <depends optional="true" config-file="zenuml-withJava.xml">com.intellij.modules.java</depends>
     <extensions defaultExtensionNs="com.intellij">
-        <fileType name="Diagrams.net Diagram" implementationClass="de.docs_as_co.intellij.plugin.drawio.DiagramsNetFileType"
-                  fieldName="INSTANCE" language="Diagrams.net" extensions="drawio;drawio.svg;drawio.png;drawio.xml;dio;dio.svg;dio.png;dio.xml"/>
-        <fileEditorProvider implementation="de.docs_as_co.intellij.plugin.drawio.editor.DiagramsEditorProvider" />
-        <iconProvider implementation="de.docs_as_co.intellij.plugin.drawio.icons.DiagramsEditorIconProvider" />
-        <applicationConfigurable id="Settings.DiagramsNet.Preview"
-                                 bundle="messages.DiagramsNetBundle"
-                                 groupId="language"
-                                 nonDefaultProject="true"
-                                 key="settings.diagrams.name"
-                                 instance="de.docs_as_co.intellij.plugin.drawio.settings.DiagramsConfigurable" />
-        <applicationService serviceImplementation="de.docs_as_co.intellij.plugin.drawio.settings.DiagramsApplicationSettings" />
-
         <!-- ZenUML Extensions -->
         <fileType name="ZenUML" implementationClass="de.docs_as_co.intellij.plugin.zenuml.file.ZenUmlFileType"
                   fieldName="INSTANCE" language="ZenUML" extensions="zenuml;zen;z"/>
@@ -66,19 +54,9 @@
                                instance="de.docs_as_co.intellij.plugin.zenuml.settings.ZenUmlSettingsConfigurable">
         </applicationConfigurable>
         <applicationService serviceImplementation="de.docs_as_co.intellij.plugin.zenuml.settings.ZenUmlApplicationSettings"/>
-
-        <!-- Analytics Startup -->
-        <postStartupActivity implementation="de.docs_as_co.intellij.plugin.drawio.DrawioAnalyticsStartup"/>
     </extensions>
 
     <actions>
-        <group id="DiagramsNetNew" text="DiagramsNet">
-            <action id="DiagramsNetNewFile" class="de.docs_as_co.intellij.plugin.drawio.actions.DiagramCreateFileAction"/>
-            <add-to-group group-id="NewGroup" anchor="before" relative-to-action="NewFromTemplate"/>
-        </group>
-        <action id="DiagramsNetOpenDevtools" text="Open Devtools Window for the current Diagrams.net Preview"
-                class="de.docs_as_co.intellij.plugin.drawio.actions.OpenDevtoolsAction"/>
-
         <!-- ZenUML Actions -->
         <group id="ZenUmlNew" text="ZenUML">
             <action id="ZenUmlNewFile" class="de.docs_as_co.intellij.plugin.zenuml.actions.ZenUmlCreateFileAction"
