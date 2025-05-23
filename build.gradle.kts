@@ -44,7 +44,7 @@ dependencies {
         jetbrainsRuntime()
         pluginVerifier()
         testFramework(TestFrameworkType.Platform)
-        
+
         // Add Java plugin dependencies
         bundledPlugin("com.intellij.java")
     }
@@ -149,7 +149,7 @@ tasks.register("buildZenUMLWebView") {
         // Copy the built files to resources
         copy {
             from("${zenUmlDir}/dist")
-            into("src/main/resources/assets/zenuml")
+            into("${projectDir}/src/main/resources/assets/zenuml")
         }
 
         println("ZenUML web view built and copied to resources")
