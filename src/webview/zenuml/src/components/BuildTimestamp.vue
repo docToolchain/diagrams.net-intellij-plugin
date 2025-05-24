@@ -1,6 +1,5 @@
 <template>
   <div class="build-timestamp" :title="`Built at: ${buildTimestamp}`">
-    <span class="timestamp-icon">🕒</span>
     <span class="timestamp-text">{{ formatTimestamp(buildTimestamp) }}</span>
   </div>
 </template>
@@ -13,7 +12,7 @@ const buildTimestamp = import.meta.env.VITE_BUILD_TIMESTAMP || 'Development'
 
 const formatTimestamp = (timestamp) => {
   if (timestamp === 'Development') {
-    return 'Dev'
+    return '1970-01-01T00:00:00.000Z'
   }
 
   try {
@@ -43,38 +42,30 @@ const formatTimestamp = (timestamp) => {
 .build-timestamp {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
-  font-size: 11px;
-  color: var(--text-muted, #888);
-  background: var(--background-secondary, #f5f5f5);
-  border-radius: 4px;
-  border: 1px solid var(--border-color, #ddd);
+  gap: 2px;
+  padding: 2px 4px;
+  font-size: 9px;
+  color: var(--text-muted, #ccc);
   white-space: nowrap;
   user-select: none;
   cursor: default;
-  opacity: 0.7;
-  transition: opacity 0.2s ease;
-}
-
-.build-timestamp:hover {
-  opacity: 1;
+  opacity: 0.4;
 }
 
 .timestamp-icon {
-  font-size: 10px;
-  opacity: 0.6;
+  font-size: 8px;
+  opacity: 0.8;
 }
 
 .timestamp-text {
   font-family: monospace;
-  font-size: 10px;
+  font-size: 8px;
+  font-weight: 300;
 }
 
 /* Dark theme support */
 :global(.dark-theme) .build-timestamp {
-  background: var(--background-secondary, #2d2d2d);
-  color: var(--text-muted, #aaa);
-  border-color: var(--border-color, #444);
+  color: var(--text-muted, #666);
+  opacity: 0.4;
 }
 </style>

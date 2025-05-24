@@ -1,8 +1,7 @@
 <template>
   <div class="editor-container">
-    <div ref="editorElement" class="editor-content"></div>
-    <div class="editor-footer">
-      <BuildTimestamp />
+    <div ref="editorElement" class="editor-content">
+      <BuildTimestamp class="editor-timestamp" />
     </div>
   </div>
 </template>
@@ -107,24 +106,17 @@ onMounted(() => {
   height: 100%;
 }
 
-.editor-footer {
-  display: flex;
-  justify-content: flex-end;
-  padding: 4px 8px;
-  border-top: 1px solid var(--border-color, #ddd);
-  background: var(--background-primary, #fff);
-  flex-shrink: 0;
-}
-
 .editor-content {
   flex: 1;
   min-height: 0;
+  position: relative;
 }
 
-/* Dark theme support */
-:global(.dark-theme) .editor-footer {
-  background: var(--background-primary, #1e1e1e);
-  border-top-color: var(--border-color, #444);
+.editor-timestamp {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  z-index: 10;
 }
 
 /* Styles are in main.css */
