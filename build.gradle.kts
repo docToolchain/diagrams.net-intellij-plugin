@@ -2,6 +2,8 @@ import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask
+import java.text.SimpleDateFormat
+import java.util.Date
 
 fun properties(key: String) = providers.gradleProperty(key)
 fun environment(key: String) = providers.environmentVariable(key)
@@ -128,6 +130,16 @@ tasks.register("buildZenUMLWebView") {
     description = "Build the ZenUML web view with npm and copy to resources"
     group = "build"
 
+    // Define inputs - when these files change, the task should re-run
+    inputs.dir("src/webview/zenuml/src")
+    inputs.file("src/webview/zenuml/package.json")
+    inputs.file("src/webview/zenuml/package-lock.json")
+    inputs.file("src/webview/zenuml/vite.config.js")
+    inputs.file("src/webview/zenuml/index.html")
+
+    // Define outputs - what this task produces
+    outputs.dir("src/main/resources/assets/zenuml")
+
     doLast {
         // Set working directory to the ZenUML web view
         val zenUmlDir = File(projectDir, "src/webview/zenuml")
@@ -156,6 +168,11 @@ tasks.register("buildZenUMLWebView") {
 
 // Make jar depend on buildZenUMLWebView
 tasks.jar {
+    dependsOn("buildZenUMLWebView")
+}
+
+tasks.processResources {
+    // Add the plugin version to the plugin.xml file
     dependsOn("buildZenUMLWebView")
 }
 
