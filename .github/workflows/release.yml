@@ -38,6 +38,10 @@ jobs:
           PRE_RELEASE: ${{ github.event.release.prerelease }}
         run: ./gradlew publishPlugin
 
+      # List all files in the project (excluding node_modules)
+      - name: List Project Files
+        run: find . -type f -not -path "*/node_modules/*" | sort
+
   # Patch changelog, commit and push to the current repository
   changelog:
     name: Update Changelog
