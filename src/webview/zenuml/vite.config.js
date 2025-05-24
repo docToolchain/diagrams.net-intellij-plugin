@@ -14,5 +14,9 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true
+  },
+  define: {
+    // Make build timestamp available as a global constant
+    __BUILD_TIMESTAMP__: JSON.stringify(process.env.VITE_BUILD_TIMESTAMP || 'Development')
   }
 }) 

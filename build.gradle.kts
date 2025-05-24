@@ -141,6 +141,9 @@ tasks.register("buildZenUMLWebView") {
     outputs.dir("src/main/resources/assets/zenuml")
 
     doLast {
+        // Generate build timestamp in ISO 8601 format (JavaScript-friendly)
+        val buildTimestamp = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX").format(Date())
+        
         // Set working directory to the ZenUML web view
         val zenUmlDir = File(projectDir, "src/webview/zenuml")
 
@@ -150,9 +153,10 @@ tasks.register("buildZenUMLWebView") {
             commandLine("npm", "install")
         }
 
-        // Run npm build
+        // Run npm build with timestamp environment variable
         exec {
             workingDir = zenUmlDir
+            environment("VITE_BUILD_TIMESTAMP", buildTimestamp)
             commandLine("npm", "run", "build")
         }
 
@@ -162,7 +166,7 @@ tasks.register("buildZenUMLWebView") {
             into("${projectDir}/src/main/resources/assets/zenuml")
         }
 
-        println("ZenUML web view built and copied to resources")
+        println("ZenUML web view built and copied to resources (built at: $buildTimestamp)")
     }
 }
 
