@@ -117,10 +117,8 @@ tasks.jar {
         include("index.html")
         into("assets")
     }
-    from("src/webview/zenuml") {
+    from("src/webview/zenuml/dist") {
         include("**/*")
-        // Exclude build artifacts and files already in resources
-        exclude("index.html", "dist/**", "node_modules/**", "src/**")
         into("assets/zenuml")
     }
 }
