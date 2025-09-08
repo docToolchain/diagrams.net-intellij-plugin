@@ -12,7 +12,7 @@ plugins {
     // Kotlin support
     id("org.jetbrains.kotlin.jvm") version "2.2.10"
     // gradle-intellij-plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
-    id("org.jetbrains.intellij.platform") version "2.7.2"
+    id("org.jetbrains.intellij.platform") version "2.9.0"
     // gradle-changelog-plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
     id("org.jetbrains.changelog") version "2.3.0"
 }
