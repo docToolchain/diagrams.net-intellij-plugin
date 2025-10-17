@@ -57,4 +57,73 @@ For development purpose, clone the project locally and start it with the command
 This will build the plugin and start an Instance of IntelliJ with the plugin already installed.
 You can even start this in debug mode.
 
+## MCP Integration (Model Context Protocol)
+
+This plugin exposes a Model Context Protocol (MCP) server that allows AI assistants like Claude to interact with diagrams in your IDE. The MCP server provides tools to create, list, view, and update diagrams programmatically.
+
+### Features
+
+The MCP server provides the following tools:
+- `create_diagram` - Create a new diagram file (supports .drawio.svg, .drawio.png, .drawio.xml)
+- `list_diagrams` - List all open diagrams in the IDE
+- `get_diagram_by_id` - Retrieve XML content of a specific diagram
+- `update_diagram` - Update diagram content and save changes
+
+### Configuration
+
+The plugin automatically starts an HTTP server on port 8765 (configurable in settings). Two integration methods are available:
+
+#### Method 1: Direct SSE Integration (Claude Code)
+
+Claude Code supports HTTP/SSE MCP servers natively. Add this to your MCP settings:
+
+```json
+{
+  "mcpServers": {
+    "diagrams-net-intellij": {
+      "url": "http://localhost:8765/mcp/sse"
+    }
+  }
+}
+```
+
+#### Method 2: Python Wrapper (Claude Desktop)
+
+Claude Desktop requires stdio-based MCP servers. Use the included Python wrapper:
+
+1. Add to `claude_desktop_config.json`:
+```json
+{
+  "mcpServers": {
+    "diagrams-net-intellij": {
+      "command": "python3",
+      "args": ["/path/to/diagrams.net-intellij-plugin/mcp-server-wrapper.py", "8765"]
+    }
+  }
+}
+```
+
+2. Ensure the IntelliJ IDE with the plugin is running
+3. Restart Claude Desktop to load the MCP server
+
+### Multiple IDE Instances
+
+To use multiple IDE instances simultaneously, configure each instance to use a different port in the plugin settings, then update your MCP configuration accordingly.
+
+### REST API
+
+The plugin also exposes a REST API for direct HTTP access:
+
+- `GET /api/status` - Server status
+- `POST /api/diagrams` - Create new diagram
+- `GET /api/diagrams` - List all diagrams
+- `GET /api/diagrams/{id}` - Get diagram by ID
+- `PUT /api/diagrams/{id}` - Update diagram content
+- `GET /api/mcp/info` - MCP tool definitions
+
+Example:
+```bash
+curl http://localhost:8765/api/status
+```
+
 

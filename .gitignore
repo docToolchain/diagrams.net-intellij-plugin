@@ -28,3 +28,9 @@ gradle-app.setting
 !/.idea/externalDependencies.xml
 out
 .sdkmanrc
+
+# Ignore CLAUDE working directory
+.claude/
+
+# Ignore IntelliJ Platform cache
+.intellijPlatform/

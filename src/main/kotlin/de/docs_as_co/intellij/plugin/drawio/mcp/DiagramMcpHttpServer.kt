@@ -1,0 +1,957 @@
+package de.docs_as_co.intellij.plugin.drawio.mcp
+
+import com.intellij.openapi.diagnostic.Logger
+import io.ktor.http.*
+import io.ktor.serialization.gson.*
+import io.ktor.server.application.*
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
+import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.plugins.cors.routing.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.launch
+import java.util.concurrent.ConcurrentHashMap
+
+/**
+ * MCP SSE Session for managing client connections
+ */
+data class McpSession(
+    val sessionId: String,
+    val messageChannel: Channel<String>,
+    val createdAt: Long = System.currentTimeMillis()
+)
+
+/**
+ * HTTP server using Ktor that exposes the MCP REST API and SSE transport.
+ */
+class DiagramMcpHttpServer(private val port: Int, private val service: DiagramMcpService) {
+    private val LOG = Logger.getInstance(DiagramMcpHttpServer::class.java)
+    private var server: NettyApplicationEngine? = null
+    private val sessions = ConcurrentHashMap<String, McpSession>()
+
+    fun start() {
+        LOG.info("Starting MCP HTTP server on port $port")
+
+        server = embeddedServer(Netty, port = port, host = "127.0.0.1") {
+            install(ContentNegotiation) {
+                gson {
+                    setPrettyPrinting()
+                    serializeNulls() // Include null values in JSON output
+                }
+            }
+
+            install(CORS) {
+                // Allow all origins for local development
+                anyHost()
+
+                // Allow common headers
+                allowHeader(HttpHeaders.ContentType)
+                allowHeader(HttpHeaders.Authorization)
+
+                // Allow common methods
+                allowMethod(HttpMethod.Get)
+                allowMethod(HttpMethod.Post)
+                allowMethod(HttpMethod.Put)
+                allowMethod(HttpMethod.Delete)
+                allowMethod(HttpMethod.Options)
+            }
+
+            routing {
+                // MCP SSE Transport endpoints
+                route("/mcp") {
+                    // SSE endpoint for server-to-client messages
+                    get("/sse") {
+                        handleMcpSseConnection(call)
+                    }
+
+                    // POST endpoint for client-to-server messages
+                    post("/messages/{sessionId}") {
+                        val sessionId = call.parameters["sessionId"]
+                        if (sessionId != null) {
+                            handleMcpMessage(call, sessionId)
+                        } else {
+                            call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing session ID"))
+                        }
+                    }
+                }
+            }
+
+            routing {
+                // Health check / root
+                get("/") {
+                    call.respondText("diagrams.net MCP Server - Running", ContentType.Text.Plain)
+                }
+
+                // API routes
+                route("/api") {
+                    // Server status endpoint
+                    get("/status") {
+                        handleStatus(call)
+                    }
+
+                    // Diagram routes
+                    route("/diagrams") {
+                        // Create new diagram
+                        post {
+                            handleCreateDiagram(call)
+                        }
+
+                        // List all diagrams
+                        get {
+                            handleListDiagrams(call)
+                        }
+
+                        // Get diagram by ID
+                        get("/{id}") {
+                            val id = call.parameters["id"]
+                            if (id != null) {
+                                handleGetDiagram(call, id)
+                            } else {
+                                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing diagram ID"))
+                            }
+                        }
+
+                        // Update diagram by ID
+                        put("/{id}") {
+                            val id = call.parameters["id"]
+                            if (id != null) {
+                                handleUpdateDiagram(call, id)
+                            } else {
+                                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing diagram ID"))
+                            }
+                        }
+
+                        // Find diagram by path
+                        get("/by-path") {
+                            val path = call.request.queryParameters["path"]
+                            if (path != null) {
+                                handleFindByPath(call, path)
+                            } else {
+                                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing path parameter"))
+                            }
+                        }
+                    }
+
+                    // MCP info endpoint
+                    get("/mcp/info") {
+                        handleMcpInfo(call)
+                    }
+                }
+            }
+        }.start(wait = false)
+
+        LOG.info("MCP HTTP server started successfully on port $port")
+    }
+
+    private suspend fun handleStatus(call: ApplicationCall) {
+        val response = mapOf(
+            "status" to "running",
+            "port" to port,
+            "version" to "0.2.7", // TODO: get from plugin.xml
+            "openDiagrams" to service.listDiagrams().size
+        )
+        call.respond(HttpStatusCode.OK, response)
+    }
+
+    private suspend fun handleCreateDiagram(call: ApplicationCall) {
+        try {
+            val requestBody = call.receive<Map<String, Any>>()
+            val projectName = requestBody["project"] as? String
+            val relativePath = requestBody["path"] as? String
+            val fileType = (requestBody["fileType"] as? String) ?: "svg"
+            val initialContent = requestBody["content"] as? String
+
+            if (projectName == null || relativePath == null) {
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    mapOf(
+                        "error" to "Missing required parameters",
+                        "code" to "MISSING_PARAMETERS",
+                        "message" to "Both 'project' and 'path' are required"
+                    )
+                )
+                return
+            }
+
+            // Validate file type
+            if (fileType !in listOf("svg", "png", "xml")) {
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    mapOf(
+                        "error" to "Invalid file type",
+                        "code" to "INVALID_FILE_TYPE",
+                        "message" to "File type must be 'svg', 'png', or 'xml'"
+                    )
+                )
+                return
+            }
+
+            // Ensure the path has the correct extension
+            val normalizedPath = if (!relativePath.endsWith(".drawio.$fileType")) {
+                val baseName = relativePath.removeSuffix(".drawio.svg")
+                    .removeSuffix(".drawio.png")
+                    .removeSuffix(".drawio.xml")
+                    .removeSuffix(".svg")
+                    .removeSuffix(".png")
+                    .removeSuffix(".xml")
+                "$baseName.drawio.$fileType"
+            } else {
+                relativePath
+            }
+
+            // Find the project
+            val project = com.intellij.openapi.project.ProjectManager.getInstance().openProjects
+                .firstOrNull { it.name == projectName }
+
+            if (project == null) {
+                call.respond(
+                    HttpStatusCode.NotFound,
+                    mapOf(
+                        "error" to "Project not found",
+                        "code" to "PROJECT_NOT_FOUND",
+                        "message" to "No open project found with name: $projectName"
+                    )
+                )
+                return
+            }
+
+            // Create the diagram
+            val editorRef = service.createDiagram(project, normalizedPath, fileType, initialContent)
+
+            if (editorRef == null) {
+                call.respond(
+                    HttpStatusCode.InternalServerError,
+                    mapOf(
+                        "error" to "Failed to create diagram",
+                        "code" to "CREATE_FAILED",
+                        "message" to "Could not create diagram at path: $normalizedPath"
+                    )
+                )
+                return
+            }
+
+            // Generate ID
+            val id = Integer.toHexString(editorRef.file.path.hashCode())
+
+            call.respond(
+                HttpStatusCode.Created,
+                mapOf(
+                    "success" to true,
+                    "id" to id,
+                    "filePath" to editorRef.file.path,
+                    "relativePath" to normalizedPath,
+                    "fileName" to editorRef.file.name,
+                    "fileType" to fileType,
+                    "message" to "Diagram created successfully"
+                )
+            )
+        } catch (e: Exception) {
+            LOG.error("Failed to create diagram", e)
+            call.respond(
+                HttpStatusCode.InternalServerError,
+                mapOf(
+                    "error" to "Internal server error",
+                    "code" to "INTERNAL_ERROR",
+                    "message" to "Failed to create diagram: ${e.message}"
+                )
+            )
+        }
+    }
+
+    private suspend fun handleListDiagrams(call: ApplicationCall) {
+        val diagrams = service.listDiagrams()
+        call.respond(HttpStatusCode.OK, mapOf("diagrams" to diagrams))
+    }
+
+    private suspend fun handleGetDiagram(call: ApplicationCall, id: String) {
+        val editorRef = service.getEditor(id)
+        if (editorRef != null) {
+            // Try to get XML from editor first (cached from last AutoSave event),
+            // then fall back to reading from file
+            var xml = editorRef.editor.getXmlContent()
+
+            if (xml == null) {
+                // XML not yet loaded in editor, read directly from file
+                LOG.info("Cached XML not available for $id, reading from file...")
+                try {
+                    // Refresh the virtual file to ensure we get the latest content from disk
+                    editorRef.file.refresh(false, false)
+                    xml = String(editorRef.file.contentsToByteArray(), Charsets.UTF_8)
+                } catch (e: Exception) {
+                    LOG.warn("Failed to read file content for diagram $id", e)
+                }
+            }
+
+            val relativePath = getRelativePath(editorRef.project, editorRef.file)
+
+            val response = mapOf(
+                "id" to id,
+                "filePath" to editorRef.file.path,
+                "relativePath" to relativePath,
+                "fileName" to editorRef.file.name,
+                "fileType" to getFileType(editorRef.file),
+                "project" to editorRef.project.name,
+                "xml" to xml,
+                "isModified" to false,
+                "metadata" to mapOf(
+                    "pages" to 1, // TODO: Parse XML to count pages
+                    "lastModified" to editorRef.file.timeStamp
+                )
+            )
+            call.respond(HttpStatusCode.OK, response)
+        } else {
+            call.respond(
+                HttpStatusCode.NotFound,
+                mapOf(
+                    "error" to "Diagram not found",
+                    "code" to "DIAGRAM_NOT_FOUND",
+                    "message" to "No diagram found with ID: $id"
+                )
+            )
+        }
+    }
+
+    private fun getRelativePath(project: com.intellij.openapi.project.Project, file: com.intellij.openapi.vfs.VirtualFile): String {
+        val projectPath = project.basePath ?: return file.path
+        val filePath = file.path
+        return if (filePath.startsWith(projectPath)) {
+            filePath.substring(projectPath.length + 1)
+        } else {
+            filePath
+        }
+    }
+
+    private fun getFileType(file: com.intellij.openapi.vfs.VirtualFile): String {
+        return when {
+            file.name.endsWith(".svg") -> "svg"
+            file.name.endsWith(".png") -> "png"
+            file.name.endsWith(".xml") -> "xml"
+            else -> "unknown"
+        }
+    }
+
+    private suspend fun handleUpdateDiagram(call: ApplicationCall, id: String) {
+        val editorRef = service.getEditor(id)
+        if (editorRef == null) {
+            call.respond(
+                HttpStatusCode.NotFound,
+                mapOf(
+                    "error" to "Diagram not found",
+                    "code" to "DIAGRAM_NOT_FOUND",
+                    "message" to "No diagram found with ID: $id"
+                )
+            )
+            return
+        }
+
+        try {
+            val requestBody = call.receive<Map<String, Any>>()
+            val xml = requestBody["xml"] as? String
+            val autoSave = requestBody["autoSave"] as? Boolean ?: true
+
+            if (xml == null) {
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    mapOf(
+                        "error" to "Missing XML",
+                        "code" to "MISSING_XML",
+                        "message" to "The 'xml' field is required in the request body"
+                    )
+                )
+                return
+            }
+
+            // Update the diagram content and save to file
+            if (autoSave) {
+                editorRef.editor.updateAndSaveXmlContent(xml)
+            } else {
+                editorRef.editor.updateXmlContent(xml)
+            }
+
+            call.respond(
+                HttpStatusCode.OK,
+                mapOf(
+                    "success" to true,
+                    "id" to id,
+                    "message" to "Diagram updated successfully",
+                    "autoSaved" to autoSave
+                )
+            )
+        } catch (e: Exception) {
+            call.respond(
+                HttpStatusCode.InternalServerError,
+                mapOf(
+                    "error" to "Update failed",
+                    "code" to "UPDATE_FAILED",
+                    "message" to "Failed to update diagram: ${e.message}"
+                )
+            )
+        }
+    }
+
+    private suspend fun handleFindByPath(call: ApplicationCall, path: String) {
+        // TODO: Implement path-based lookup
+        call.respond(
+            HttpStatusCode.NotImplemented,
+            mapOf(
+                "error" to "Not yet implemented",
+                "message" to "Path-based lookup will be implemented in Phase 3"
+            )
+        )
+    }
+
+    private suspend fun handleMcpInfo(call: ApplicationCall) {
+        val response = mapOf(
+            "name" to "diagrams-net-intellij-mcp",
+            "version" to "0.2.7",
+            "description" to "MCP server for diagrams.net integration in IntelliJ IDEA",
+            "port" to port,
+            "tools" to listOf(
+                mapOf(
+                    "name" to "create_diagram",
+                    "description" to "Create a new diagram file and open it in IntelliJ IDEA. Supports SVG (with embedded XML), PNG, and plain XML formats. Default file extensions: .drawio.svg, .drawio.png, .drawio.xml",
+                    "inputSchema" to mapOf(
+                        "type" to "object",
+                        "properties" to mapOf(
+                            "project" to mapOf(
+                                "type" to "string",
+                                "description" to "The name of the project to create the diagram in"
+                            ),
+                            "path" to mapOf(
+                                "type" to "string",
+                                "description" to "The relative path from project root (e.g., 'diagrams/my-diagram.drawio.svg'). Extension will be normalized to .drawio.svg, .drawio.png, or .drawio.xml based on fileType"
+                            ),
+                            "fileType" to mapOf(
+                                "type" to "string",
+                                "enum" to listOf("svg", "png", "xml"),
+                                "description" to "The file type: 'svg' (default, embedded XML), 'png', or 'xml'",
+                                "default" to "svg"
+                            ),
+                            "content" to mapOf(
+                                "type" to "string",
+                                "description" to "Optional initial XML content for the diagram. If not provided, an empty diagram will be created"
+                            )
+                        ),
+                        "required" to listOf("project", "path")
+                    )
+                ),
+                mapOf(
+                    "name" to "list_diagrams",
+                    "description" to "List all currently open diagram files in IntelliJ IDEA",
+                    "inputSchema" to mapOf(
+                        "type" to "object",
+                        "properties" to mapOf<String, Any>()
+                    )
+                ),
+                mapOf(
+                    "name" to "get_diagram_by_id",
+                    "description" to "Get the XML content of a specific diagram by its ID",
+                    "inputSchema" to mapOf(
+                        "type" to "object",
+                        "properties" to mapOf(
+                            "id" to mapOf(
+                                "type" to "string",
+                                "description" to "The unique identifier of the diagram"
+                            )
+                        ),
+                        "required" to listOf("id")
+                    )
+                ),
+                mapOf(
+                    "name" to "update_diagram",
+                    "description" to "Update the XML content of a diagram and display it in the editor",
+                    "inputSchema" to mapOf(
+                        "type" to "object",
+                        "properties" to mapOf(
+                            "id" to mapOf(
+                                "type" to "string",
+                                "description" to "The unique identifier of the diagram"
+                            ),
+                            "xml" to mapOf(
+                                "type" to "string",
+                                "description" to "The new XML content for the diagram"
+                            )
+                        ),
+                        "required" to listOf("id", "xml")
+                    )
+                )
+            )
+        )
+        call.respond(HttpStatusCode.OK, response)
+    }
+
+    /**
+     * Handle MCP SSE connection - establishes an SSE stream for server-to-client messages.
+     */
+    private suspend fun handleMcpSseConnection(call: ApplicationCall) {
+        // Generate unique session ID
+        val sessionId = java.util.UUID.randomUUID().toString()
+        val messageChannel = Channel<String>(Channel.UNLIMITED)
+        val session = McpSession(sessionId, messageChannel)
+
+        sessions[sessionId] = session
+        LOG.info("New MCP SSE session created: $sessionId")
+
+        call.response.headers.append(HttpHeaders.ContentType, "text/event-stream")
+        call.response.headers.append(HttpHeaders.CacheControl, "no-cache")
+        call.response.headers.append(HttpHeaders.Connection, "keep-alive")
+
+        try {
+            call.respondOutputStream(ContentType.Text.EventStream) {
+                val writer = this.writer()
+
+                // Send endpoint event as first message
+                val endpointEvent = mapOf(
+                    "jsonrpc" to "2.0",
+                    "method" to "endpoint",
+                    "params" to mapOf(
+                        "endpoint" to "http://127.0.0.1:$port/mcp/messages/$sessionId"
+                    )
+                )
+                val eventData = com.google.gson.Gson().toJson(endpointEvent)
+                writer.write("data: $eventData\n\n")
+                writer.flush()
+
+                // Keep connection open and send messages from channel
+                for (message in messageChannel) {
+                    writer.write("data: $message\n\n")
+                    writer.flush()
+                }
+            }
+        } catch (e: Exception) {
+            LOG.warn("SSE connection closed for session $sessionId", e)
+        } finally {
+            sessions.remove(sessionId)
+            messageChannel.close()
+            LOG.info("MCP SSE session closed: $sessionId")
+        }
+    }
+
+    /**
+     * Handle incoming MCP message from client via POST.
+     */
+    private suspend fun handleMcpMessage(call: ApplicationCall, sessionId: String) {
+        val session = sessions[sessionId]
+        if (session == null) {
+            call.respond(
+                HttpStatusCode.NotFound,
+                mapOf(
+                    "jsonrpc" to "2.0",
+                    "error" to mapOf(
+                        "code" to -32001,
+                        "message" to "Session not found: $sessionId"
+                    )
+                )
+            )
+            return
+        }
+
+        try {
+            val request = call.receive<Map<String, Any>>()
+            val method = request["method"] as? String
+            val requestId = request["id"]
+            val params = request["params"] as? Map<String, Any> ?: emptyMap()
+
+            LOG.info("Received MCP message: method=$method, id=$requestId")
+
+            val response = when (method) {
+                "initialize" -> handleMcpInitialize(requestId)
+                "tools/list" -> handleMcpToolsList(requestId)
+                "tools/call" -> {
+                    val toolName = params["name"] as? String
+                    val arguments = params["arguments"] as? Map<String, Any> ?: emptyMap()
+                    handleMcpToolCall(requestId, toolName, arguments)
+                }
+                else -> mapOf(
+                    "jsonrpc" to "2.0",
+                    "id" to requestId,
+                    "error" to mapOf(
+                        "code" to -32601,
+                        "message" to "Method not found: $method"
+                    )
+                )
+            }
+
+            call.respond(HttpStatusCode.OK, response)
+        } catch (e: Exception) {
+            LOG.error("Error processing MCP message", e)
+            call.respond(
+                HttpStatusCode.InternalServerError,
+                mapOf(
+                    "jsonrpc" to "2.0",
+                    "error" to mapOf(
+                        "code" to -32603,
+                        "message" to "Internal error: ${e.message}"
+                    )
+                )
+            )
+        }
+    }
+
+    /**
+     * Handle MCP initialize request.
+     */
+    private fun handleMcpInitialize(requestId: Any?): Map<String, Any?> {
+        return mapOf(
+            "jsonrpc" to "2.0",
+            "id" to requestId,
+            "result" to mapOf(
+                "protocolVersion" to "2024-11-05",
+                "capabilities" to mapOf(
+                    "tools" to emptyMap<String, Any>()
+                ),
+                "serverInfo" to mapOf(
+                    "name" to "diagrams-net-intellij-mcp",
+                    "version" to "0.2.7"
+                )
+            )
+        )
+    }
+
+    /**
+     * Handle MCP tools/list request.
+     */
+    private fun handleMcpToolsList(requestId: Any?): Map<String, Any?> {
+        val tools = listOf(
+            mapOf(
+                "name" to "create_diagram",
+                "description" to "Create a new diagram file and open it in IntelliJ IDEA. Supports SVG (with embedded XML), PNG, and plain XML formats. Default file extensions: .drawio.svg, .drawio.png, .drawio.xml",
+                "inputSchema" to mapOf(
+                    "type" to "object",
+                    "properties" to mapOf(
+                        "project" to mapOf(
+                            "type" to "string",
+                            "description" to "The name of the project to create the diagram in"
+                        ),
+                        "path" to mapOf(
+                            "type" to "string",
+                            "description" to "The relative path from project root (e.g., 'diagrams/my-diagram.drawio.svg'). Extension will be normalized to .drawio.svg, .drawio.png, or .drawio.xml based on fileType"
+                        ),
+                        "fileType" to mapOf(
+                            "type" to "string",
+                            "enum" to listOf("svg", "png", "xml"),
+                            "description" to "The file type: 'svg' (default, embedded XML), 'png', or 'xml'",
+                            "default" to "svg"
+                        ),
+                        "content" to mapOf(
+                            "type" to "string",
+                            "description" to "Optional initial XML content for the diagram. If not provided, an empty diagram will be created"
+                        )
+                    ),
+                    "required" to listOf("project", "path")
+                )
+            ),
+            mapOf(
+                "name" to "list_diagrams",
+                "description" to "List all currently open diagram files in IntelliJ IDEA",
+                "inputSchema" to mapOf(
+                    "type" to "object",
+                    "properties" to emptyMap<String, Any>()
+                )
+            ),
+            mapOf(
+                "name" to "get_diagram_by_id",
+                "description" to "Get the XML content of a specific diagram by its ID",
+                "inputSchema" to mapOf(
+                    "type" to "object",
+                    "properties" to mapOf(
+                        "id" to mapOf(
+                            "type" to "string",
+                            "description" to "The unique identifier of the diagram"
+                        )
+                    ),
+                    "required" to listOf("id")
+                )
+            ),
+            mapOf(
+                "name" to "update_diagram",
+                "description" to "Update the XML content of a diagram and display it in the editor",
+                "inputSchema" to mapOf(
+                    "type" to "object",
+                    "properties" to mapOf(
+                        "id" to mapOf(
+                            "type" to "string",
+                            "description" to "The unique identifier of the diagram"
+                        ),
+                        "xml" to mapOf(
+                            "type" to "string",
+                            "description" to "The new XML content for the diagram"
+                        )
+                    ),
+                    "required" to listOf("id", "xml")
+                )
+            )
+        )
+
+        return mapOf(
+            "jsonrpc" to "2.0",
+            "id" to requestId,
+            "result" to mapOf(
+                "tools" to tools
+            )
+        )
+    }
+
+    /**
+     * Handle MCP tools/call request.
+     */
+    private suspend fun handleMcpToolCall(requestId: Any?, toolName: String?, arguments: Map<String, Any>): Map<String, Any?> {
+        if (toolName == null) {
+            return mapOf(
+                "jsonrpc" to "2.0",
+                "id" to requestId,
+                "error" to mapOf(
+                    "code" to -32602,
+                    "message" to "Missing tool name"
+                )
+            )
+        }
+
+        return when (toolName) {
+            "list_diagrams" -> {
+                val diagrams = service.listDiagrams()
+                val text = buildString {
+                    append("Open diagrams: ${diagrams.size}\n")
+                    diagrams.forEach { d ->
+                        append("- ${d.fileName} (${d.id})\n")
+                    }
+                }
+                mapOf(
+                    "jsonrpc" to "2.0",
+                    "id" to requestId,
+                    "result" to mapOf(
+                        "content" to listOf(
+                            mapOf(
+                                "type" to "text",
+                                "text" to text.trim()
+                            )
+                        )
+                    )
+                )
+            }
+            "get_diagram_by_id" -> {
+                val diagramId = arguments["id"] as? String
+                if (diagramId == null) {
+                    return mapOf(
+                        "jsonrpc" to "2.0",
+                        "id" to requestId,
+                        "error" to mapOf(
+                            "code" to -32602,
+                            "message" to "Missing diagram ID"
+                        )
+                    )
+                }
+
+                val editorRef = service.getEditor(diagramId)
+                if (editorRef == null) {
+                    return mapOf(
+                        "jsonrpc" to "2.0",
+                        "id" to requestId,
+                        "error" to mapOf(
+                            "code" to -32000,
+                            "message" to "Diagram not found: $diagramId"
+                        )
+                    )
+                }
+
+                var xml = editorRef.editor.getXmlContent()
+                if (xml == null) {
+                    try {
+                        editorRef.file.refresh(false, false)
+                        xml = String(editorRef.file.contentsToByteArray(), Charsets.UTF_8)
+                    } catch (e: Exception) {
+                        LOG.warn("Failed to read file content for diagram $diagramId", e)
+                    }
+                }
+
+                val relativePath = getRelativePath(editorRef.project, editorRef.file)
+                val result = mapOf(
+                    "id" to diagramId,
+                    "filePath" to editorRef.file.path,
+                    "relativePath" to relativePath,
+                    "fileName" to editorRef.file.name,
+                    "fileType" to getFileType(editorRef.file),
+                    "project" to editorRef.project.name,
+                    "xml" to xml,
+                    "isModified" to false,
+                    "metadata" to mapOf(
+                        "pages" to 1,
+                        "lastModified" to editorRef.file.timeStamp
+                    )
+                )
+
+                mapOf(
+                    "jsonrpc" to "2.0",
+                    "id" to requestId,
+                    "result" to mapOf(
+                        "content" to listOf(
+                            mapOf(
+                                "type" to "text",
+                                "text" to com.google.gson.Gson().toJson(result)
+                            )
+                        )
+                    )
+                )
+            }
+            "create_diagram" -> {
+                val projectName = arguments["project"] as? String
+                val relativePath = arguments["path"] as? String
+                val fileType = (arguments["fileType"] as? String) ?: "svg"
+                val initialContent = arguments["content"] as? String
+
+                if (projectName == null || relativePath == null) {
+                    return mapOf(
+                        "jsonrpc" to "2.0",
+                        "id" to requestId,
+                        "error" to mapOf(
+                            "code" to -32602,
+                            "message" to "Missing required parameters: project and path"
+                        )
+                    )
+                }
+
+                if (fileType !in listOf("svg", "png", "xml")) {
+                    return mapOf(
+                        "jsonrpc" to "2.0",
+                        "id" to requestId,
+                        "error" to mapOf(
+                            "code" to -32602,
+                            "message" to "Invalid file type: must be 'svg', 'png', or 'xml'"
+                        )
+                    )
+                }
+
+                val normalizedPath = if (!relativePath.endsWith(".drawio.$fileType")) {
+                    val baseName = relativePath.removeSuffix(".drawio.svg")
+                        .removeSuffix(".drawio.png")
+                        .removeSuffix(".drawio.xml")
+                        .removeSuffix(".svg")
+                        .removeSuffix(".png")
+                        .removeSuffix(".xml")
+                    "$baseName.drawio.$fileType"
+                } else {
+                    relativePath
+                }
+
+                val project = com.intellij.openapi.project.ProjectManager.getInstance().openProjects
+                    .firstOrNull { it.name == projectName }
+
+                if (project == null) {
+                    return mapOf(
+                        "jsonrpc" to "2.0",
+                        "id" to requestId,
+                        "error" to mapOf(
+                            "code" to -32000,
+                            "message" to "Project not found: $projectName"
+                        )
+                    )
+                }
+
+                val editorRef = service.createDiagram(project, normalizedPath, fileType, initialContent)
+
+                if (editorRef == null) {
+                    return mapOf(
+                        "jsonrpc" to "2.0",
+                        "id" to requestId,
+                        "error" to mapOf(
+                            "code" to -32000,
+                            "message" to "Failed to create diagram at path: $normalizedPath"
+                        )
+                    )
+                }
+
+                val id = Integer.toHexString(editorRef.file.path.hashCode())
+                val text = buildString {
+                    append("Successfully created diagram: ${editorRef.file.name}\n")
+                    append("ID: $id\n")
+                    append("File path: ${editorRef.file.path}\n")
+                    append("File type: $fileType")
+                }
+
+                mapOf(
+                    "jsonrpc" to "2.0",
+                    "id" to requestId,
+                    "result" to mapOf(
+                        "content" to listOf(
+                            mapOf(
+                                "type" to "text",
+                                "text" to text
+                            )
+                        )
+                    )
+                )
+            }
+            "update_diagram" -> {
+                val diagramId = arguments["id"] as? String
+                val xml = arguments["xml"] as? String
+
+                if (diagramId == null || xml == null) {
+                    return mapOf(
+                        "jsonrpc" to "2.0",
+                        "id" to requestId,
+                        "error" to mapOf(
+                            "code" to -32602,
+                            "message" to "Missing required parameters: id and xml"
+                        )
+                    )
+                }
+
+                val editorRef = service.getEditor(diagramId)
+                if (editorRef == null) {
+                    return mapOf(
+                        "jsonrpc" to "2.0",
+                        "id" to requestId,
+                        "error" to mapOf(
+                            "code" to -32000,
+                            "message" to "Diagram not found: $diagramId"
+                        )
+                    )
+                }
+
+                try {
+                    editorRef.editor.updateAndSaveXmlContent(xml)
+                    mapOf(
+                        "jsonrpc" to "2.0",
+                        "id" to requestId,
+                        "result" to mapOf(
+                            "content" to listOf(
+                                mapOf(
+                                    "type" to "text",
+                                    "text" to "Successfully updated diagram $diagramId"
+                                )
+                            )
+                        )
+                    )
+                } catch (e: Exception) {
+                    LOG.error("Failed to update diagram", e)
+                    mapOf(
+                        "jsonrpc" to "2.0",
+                        "id" to requestId,
+                        "error" to mapOf(
+                            "code" to -32000,
+                            "message" to "Failed to update diagram: ${e.message}"
+                        )
+                    )
+                }
+            }
+            else -> mapOf(
+                "jsonrpc" to "2.0",
+                "id" to requestId,
+                "error" to mapOf(
+                    "code" to -32601,
+                    "message" to "Unknown tool: $toolName"
+                )
+            )
+        }
+    }
+
+    fun stop() {
+        LOG.info("Stopping MCP HTTP server")
+        server?.stop(1000, 2000)
+        server = null
+        LOG.info("MCP HTTP server stopped")
+    }
+}

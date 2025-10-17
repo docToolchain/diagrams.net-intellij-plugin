@@ -32,6 +32,9 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 """
 
+    // Unique ID for this editor instance
+    private val editorId = generateEditorId(file)
+
     override fun getFile() = file
 
     private var view :DiagramsWebView
@@ -45,6 +48,13 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
 
         view = DiagramsWebView(lifetime, uiThemeFromConfig().key, uiModeFromConfig().key)
         initView()
+
+        // Register with MCP service
+        try {
+            de.docs_as_co.intellij.plugin.drawio.mcp.DiagramMcpService.instance.registerEditor(editorId, this, project, file)
+        } catch (e: Exception) {
+            // MCP service might not be available or enabled, ignore
+        }
     }
 
     private fun uiThemeFromConfig(): DiagramsUiTheme {
@@ -161,6 +171,12 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
     }
 
     override fun dispose() {
+        // Unregister from MCP service
+        try {
+            de.docs_as_co.intellij.plugin.drawio.mcp.DiagramMcpService.instance.unregisterEditor(editorId)
+        } catch (e: Exception) {
+            // MCP service might not be available, ignore
+        }
         lifetimeDef.terminate(true)
     }
 
@@ -174,6 +190,84 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
 
     fun openDevTools() {
         view.openDevTools();
+    }
+
+    // ========== MCP Integration Methods ==========
+
+    /**
+     * Get the current XML content of the diagram.
+     * This returns the cached XML from the last AutoSave event.
+     * For the XML to be available, the diagram must have triggered an autosave
+     * (which happens when you make changes in the editor).
+     * @return The XML content, or null if not yet loaded
+     */
+    fun getXmlContent(): String? {
+        return view.xmlContent.value
+    }
+
+    /**
+     * Update the diagram with new XML content.
+     * @param xml The new XML content
+     */
+    fun updateXmlContent(xml: String) {
+        view.loadXmlLike(xml)
+    }
+
+    /**
+     * Update the diagram with new XML content and save it to the file.
+     * This method loads the XML and then triggers a save operation.
+     * @param xml The new XML content
+     */
+    fun updateAndSaveXmlContent(xml: String) {
+        view.loadXmlLike(xml)
+
+        // Trigger save after content is loaded
+        // For SVG files, export as SVG; for PNG files, export as PNG; otherwise save raw XML
+        val isSVGFile = file.name.endsWith(".svg")
+        val isPNGFile = file.name.endsWith(".png")
+
+        if (isSVGFile) {
+            view.exportSvg().then { data: String ->
+                val content = xmlHeader + data
+                saveFile(content.toByteArray(charset("utf-8")))
+            }
+        } else if (isPNGFile) {
+            view.exportPng().then { data: ByteArray ->
+                saveFile(data)
+            }
+        } else {
+            // For XML files, we need to wait a bit for the content to be processed by the editor
+            // before we can save it. Use a short delay.
+            ApplicationManager.getApplication().invokeLater({
+                saveFile(xml.toByteArray(charset("utf-8")))
+            }, com.intellij.openapi.application.ModalityState.NON_MODAL)
+        }
+    }
+
+    /**
+     * Get the editor ID.
+     */
+    fun getEditorId(): String {
+        return editorId
+    }
+
+    /**
+     * Export the diagram as SVG.
+     */
+    fun exportAsSvg() = view.exportSvg()
+
+    /**
+     * Export the diagram as PNG.
+     */
+    fun exportAsPng() = view.exportPng()
+
+    companion object {
+        /**
+         * Generate a unique ID for an editor based on the file path.
+         */
+        fun generateEditorId(file: VirtualFile): String {
+            return file.path.hashCode().toString(16)
+        }
     }
 
 }

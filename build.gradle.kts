@@ -45,6 +45,17 @@ dependencies {
         pluginVerifier()
         testFramework(TestFrameworkType.Platform)
     }
+
+    // Ktor HTTP server for MCP integration
+    implementation("io.ktor:ktor-server-core:2.3.7")
+    implementation("io.ktor:ktor-server-netty:2.3.7")
+    implementation("io.ktor:ktor-server-content-negotiation:2.3.7")
+    implementation("io.ktor:ktor-serialization-gson:2.3.7")
+    implementation("io.ktor:ktor-server-cors:2.3.7")
+
+    // Jackson for browser communication (diagram editor)
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.16.1")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.16.1")
 }
 
 intellijPlatform {
