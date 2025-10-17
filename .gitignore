@@ -27,3 +27,4 @@ gradle-app.setting
 # More information: https://www.jetbrains.com/​help/idea/required-plugin.html
 !/.idea/externalDependencies.xml
 out
+.sdkmanrc
