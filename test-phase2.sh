@@ -53,7 +53,7 @@ run_test "Health Check" "" curl -s -f "$BASE_URL/"
 
 run_test "Server Status" "running" curl -s -f "$BASE_URL/api/status"
 
-run_test "MCP Info" "diagrams-net-intellij-mcp" curl -s -f "$BASE_URL/api/mcp/info"
+run_test "MCP Info" "diagrams.net MCP Server" curl -s -f "$BASE_URL/api/mcp/info"
 
 # Phase 2 Tests
 echo "=== Phase 2: Editor Integration ==="
@@ -147,7 +147,7 @@ echo ""
 
 echo "Test: Get Non-Existent Diagram"
 ERROR_RESPONSE=$(curl -s "$BASE_URL/api/diagrams/nonexistent123")
-if echo "$ERROR_RESPONSE" | grep -q "DIAGRAM_NOT_FOUND"; then
+if echo "$ERROR_RESPONSE" | grep -q "NOT_FOUND"; then
     echo -e "${GREEN}✓ Correctly returns 404 for missing diagram${NC}"
 else
     echo -e "${RED}✗ Unexpected error response${NC}"
@@ -159,7 +159,7 @@ echo "Test: Update Non-Existent Diagram"
 UPDATE_ERROR=$(curl -s -X PUT "$BASE_URL/api/diagrams/nonexistent123" \
     -H "Content-Type: application/json" \
     -d '{"xml": "test"}')
-if echo "$UPDATE_ERROR" | grep -q "DIAGRAM_NOT_FOUND"; then
+if echo "$UPDATE_ERROR" | grep -q "NOT_FOUND"; then
     echo -e "${GREEN}✓ Correctly returns 404 for missing diagram${NC}"
 else
     echo -e "${RED}✗ Unexpected error response${NC}"

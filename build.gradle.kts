@@ -46,12 +46,11 @@ dependencies {
         testFramework(TestFrameworkType.Platform)
     }
 
-    // Ktor HTTP server for MCP integration
-    implementation("io.ktor:ktor-server-core:2.3.7")
-    implementation("io.ktor:ktor-server-netty:2.3.7")
-    implementation("io.ktor:ktor-server-content-negotiation:2.3.7")
-    implementation("io.ktor:ktor-serialization-gson:2.3.7")
-    implementation("io.ktor:ktor-server-cors:2.3.7")
+    // NanoHTTPD for MCP HTTP server (lightweight, works well in IntelliJ plugins)
+    implementation("org.nanohttpd:nanohttpd:2.3.1")
+
+    // Gson for JSON serialization (used by MCP server)
+    implementation("com.google.code.gson:gson:2.10.1")
 
     // Jackson for browser communication (diagram editor)
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.16.1")

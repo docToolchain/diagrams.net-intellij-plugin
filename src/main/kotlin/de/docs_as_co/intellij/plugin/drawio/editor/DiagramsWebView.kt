@@ -9,6 +9,7 @@ import java.util.*
 
 class DiagramsWebView(lifetime: Lifetime, uiTheme: String, uiMode: String) : BaseDiagramsWebView(lifetime, uiTheme, uiMode) {
     private var _initializedPromise = AsyncPromise<Unit>()
+    private var _loadCompletePromise: AsyncPromise<Unit>? = null
 
     // hide the internal promise type from the outside
     fun initialized(): Promise<Unit> {
@@ -34,20 +35,26 @@ class DiagramsWebView(lifetime: Lifetime, uiTheme: String, uiMode: String) : Bas
                 // todo trigger save
             }
             IncomingMessage.Event.Load -> {
-                // Ignore
+                // Signal that load is complete
+                _loadCompletePromise?.setResult(Unit)
+                _loadCompletePromise = null
             }
         }
     }
 
-    fun loadXmlLike(xmlLike: String) {
+    fun loadXmlLike(xmlLike: String): Promise<Unit> {
         _xmlContent.set(null) // xmlLike is not xml
+        _loadCompletePromise = AsyncPromise()
         send(OutgoingMessage.Event.Load(xmlLike, 1))
+        return _loadCompletePromise!!
     }
 
-    fun loadPng(payload: ByteArray) {
+    fun loadPng(payload: ByteArray): Promise<Unit> {
         _xmlContent.set(null) // xmlLike is not xml
+        _loadCompletePromise = AsyncPromise()
         val xmlLike = "data:image/png;base64," + Base64.getEncoder().encodeToString(payload)
         send(OutgoingMessage.Event.Load(xmlLike, 1))
+        return _loadCompletePromise!!
     }
 
     override fun reload(uiTheme: String, uiMode: String, onThemeChanged: Runnable) {
