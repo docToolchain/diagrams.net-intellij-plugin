@@ -22,12 +22,14 @@ class DiagramMcpService : Disposable {
     private var actualPort: Int = 0
 
     init {
-        LOG.info("DiagramMcpService initialized")
+        LOG.info("DiagramMcpService initializing")
         // Start server if enabled in settings
         val settings = DiagramsApplicationSettings.instance.getDiagramsSettings()
+        LOG.info("MCP server enabled: ${settings.mcpServerEnabled}, port: ${settings.mcpServerPort}")
         if (settings.mcpServerEnabled) {
             startServer(settings.mcpServerPort)
         }
+        LOG.info("DiagramMcpService initialized")
     }
 
     /**
@@ -114,31 +116,40 @@ class DiagramMcpService : Disposable {
         }
 
         try {
-            // Try preferred port first, then try next ports if busy
-            var port = preferredPort
-            var started = false
-            var lastError: Exception? = null
-
-            for (attempt in 0..9) {
+            LOG.debug("startServer called, will start in background thread")
+            // Start server in a background thread to avoid blocking plugin initialization
+            Thread {
                 try {
-                    LOG.info("Attempting to start MCP server on port $port")
-                    httpServer = DiagramMcpHttpServer(port, this)
-                    httpServer?.start()
-                    actualPort = port
-                    started = true
-                    LOG.info("MCP server started successfully on port $port")
-                    break
-                } catch (e: Exception) {
-                    LOG.warn("Port $port is busy, trying next port")
-                    lastError = e
-                    port++
-                }
-            }
+                    LOG.debug("Background thread starting MCP server")
+                    // Try preferred port first, then try next ports if busy
+                    var port = preferredPort
+                    var started = false
+                    var lastError: Exception? = null
 
-            if (!started) {
-                LOG.error("Failed to start MCP server after 10 attempts", lastError)
-                return false
-            }
+                    for (attempt in 0..9) {
+                        try {
+                            LOG.info("Attempting to start MCP server on port $port")
+                            val server = DiagramMcpHttpServer(port, this@DiagramMcpService)
+                            server.startServer()
+                            httpServer = server
+                            actualPort = port
+                            started = true
+                            LOG.info("MCP server started successfully on port $port")
+                            break
+                        } catch (e: Exception) {
+                            LOG.warn("Port $port is busy, trying next port: ${e.message}")
+                            lastError = e
+                            port++
+                        }
+                    }
+
+                    if (!started) {
+                        LOG.error("Failed to start MCP server after 10 attempts", lastError)
+                    }
+                } catch (e: Exception) {
+                    LOG.error("Failed to start MCP server in background thread", e)
+                }
+            }.start()
 
             return true
         } catch (e: Exception) {
@@ -153,7 +164,7 @@ class DiagramMcpService : Disposable {
     fun stopServer() {
         httpServer?.let {
             LOG.info("Stopping MCP server on port $actualPort")
-            it.stop()
+            it.stopServer()
             httpServer = null
             actualPort = 0
         }

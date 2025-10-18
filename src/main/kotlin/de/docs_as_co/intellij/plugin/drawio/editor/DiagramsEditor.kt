@@ -124,14 +124,9 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
     private fun saveFile(data: ByteArray) {
         ApplicationManager.getApplication().invokeLater {
             ApplicationManager.getApplication().runWriteAction {
-                file.getOutputStream(this).apply {
-                    writer().apply {
-                        //svg and png are returned base64 encoded
-                        write(data)
-                        flush()
-                    }
-                    flush()
-                    close()
+                file.getOutputStream(this).use { outputStream ->
+                    outputStream.write(data)
+                    outputStream.flush()
                 }
             }
         }
@@ -219,28 +214,25 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
      * @param xml The new XML content
      */
     fun updateAndSaveXmlContent(xml: String) {
-        view.loadXmlLike(xml)
-
-        // Trigger save after content is loaded
-        // For SVG files, export as SVG; for PNG files, export as PNG; otherwise save raw XML
         val isSVGFile = file.name.endsWith(".svg")
         val isPNGFile = file.name.endsWith(".png")
 
-        if (isSVGFile) {
-            view.exportSvg().then { data: String ->
-                val content = xmlHeader + data
-                saveFile(content.toByteArray(charset("utf-8")))
-            }
-        } else if (isPNGFile) {
-            view.exportPng().then { data: ByteArray ->
-                saveFile(data)
-            }
-        } else {
-            // For XML files, we need to wait a bit for the content to be processed by the editor
-            // before we can save it. Use a short delay.
-            ApplicationManager.getApplication().invokeLater({
+        // Load the XML and wait for the webview to finish loading
+        view.loadXmlLike(xml).then {
+            // Now that the content is loaded, trigger the appropriate save operation
+            if (isSVGFile) {
+                view.exportSvg().then { data: String ->
+                    val content = xmlHeader + data
+                    saveFile(content.toByteArray(charset("utf-8")))
+                }
+            } else if (isPNGFile) {
+                view.exportPng().then { data: ByteArray ->
+                    saveFile(data)
+                }
+            } else {
+                // For XML files, save the raw XML directly
                 saveFile(xml.toByteArray(charset("utf-8")))
-            }, com.intellij.openapi.application.ModalityState.NON_MODAL)
+            }
         }
     }
 

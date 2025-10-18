@@ -236,3 +236,100 @@ Phase 3 will add path-based access:
 ## Known Issues
 
 None identified yet. Awaiting build and test results.
+
+---
+
+## UPDATE: HTTP Server Replacement (NanoHTTPD Migration)
+
+### Critical Issue Discovered
+
+After Phase 2 implementation, a critical issue was discovered: **All `/api/*` endpoints returned HTTP 500 errors with empty response bodies**.
+
+**Root Cause:** Ktor's `call.respond()` and `call.respondText()` methods hung indefinitely due to fundamental incompatibility between:
+. Ktor's coroutine-based request handling
+. Netty's event loop
+. IntelliJ's plugin classloader/threading model
+
+See `MCP_HTTP_SERVER_ISSUES.md` for detailed technical analysis of all attempted fixes.
+
+### Solution: NanoHTTPD Migration
+
+Replaced the entire Ktor/Netty stack with **NanoHTTPD** (proven lightweight HTTP server for IntelliJ plugins).
+
+#### Dependencies Changed
+
+**Removed 6 Ktor dependencies:**
+[source,kotlin]
+----
+implementation("io.ktor:ktor-server-core:2.3.7")
+implementation("io.ktor:ktor-server-netty:2.3.7")
+implementation("io.ktor:ktor-server-content-negotiation:2.3.7")
+implementation("io.ktor:ktor-serialization-gson:2.3.7")
+implementation("io.ktor:ktor-server-cors:2.3.7")
+implementation("io.ktor:ktor-server-status-pages:2.3.7")
+----
+
+**Added 2 lightweight dependencies:**
+[source,kotlin]
+----
+implementation("org.nanohttpd:nanohttpd:2.3.1")  // ~60KB
+implementation("com.google.code.gson:gson:2.10.1")
+----
+
+#### Code Changes
+
+. **DiagramMcpHttpServer.kt**: Complete rewrite (957 lines → 340 lines)
+  * Extends `NanoHTTPD` class
+  * Simple `serve()` override for request handling
+  * String-based routing (no coroutines)
+  * Gson for JSON serialization
+  * CORS support maintained
+  * Thread-safe IntelliJ API access via `runReadAction`
+
+. **DiagramMcpService.kt**: Updated server lifecycle calls
+  * `server.start()` → `server.startServer()`
+  * `server.stop()` → `server.stopServer()`
+
+. **Backup**: Old implementation saved as `DiagramMcpHttpServer_KTOR_BROKEN.kt.bak`
+
+### Test Results - ALL ENDPOINTS WORKING ✅
+
+Tested all endpoints with immediate responses (no hanging, no 500 errors):
+
+* ✅ **GET /** → "diagrams.net MCP Server - Running"
+* ✅ **GET /api/test** → `{"message":"Test endpoint working","timestamp":1760733977354}`
+* ✅ **GET /api/status** → `{"status":"running","port":8765,"version":"0.2.7","openDiagrams":1}`
+* ✅ **GET /api/diagrams** → Lists all open diagrams with full metadata
+* ✅ **GET /api/diagrams/{id}** → Returns diagram details with XML content
+* ✅ **GET /api/diagrams/nonexistent** → Proper 404: `{"error":"Diagram not found","code":"NOT_FOUND","message":"No diagram found with ID: nonexistent"}`
+* ✅ **GET /api/mcp/info** → Server capabilities and version info
+
+### Key Success Metrics
+
+. **Zero hanging requests**: All responses return instantly
+. **Proper HTTP status codes**: 200 OK, 404 NOT_FOUND, etc.
+. **Valid JSON responses**: All responses properly formatted
+. **Error handling**: Structured error messages with codes
+. **CORS headers**: All responses include CORS support
+. **Thread safety**: IntelliJ API calls wrapped in `runReadAction`
+
+### Why NanoHTTPD Works
+
+. **Proven**: Used successfully by IntelliJ-Automation-Plugin
+. **Simple**: Synchronous request/response model (no coroutines)
+. **Lightweight**: Single JAR, ~60KB
+. **Compatible**: No classloader or threading issues
+. **Independent**: Runs on dedicated port (8765)
+
+### Files Modified in Migration
+
+. `build.gradle.kts` - Dependency changes
+. `src/main/kotlin/de/docs_as_co/intellij/plugin/drawio/mcp/DiagramMcpHttpServer.kt` - Complete rewrite
+. `src/main/kotlin/de/docs_as_co/intellij/plugin/drawio/mcp/DiagramMcpService.kt` - Server lifecycle methods
+
+### Migration Complete
+
+**Status:** ✅ **SUCCESSFUL**
+
+All MCP HTTP endpoints are now fully functional with NanoHTTPD.
+The plugin is ready for Phase 3 development (path-based access and auto-open).
