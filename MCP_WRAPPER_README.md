@@ -12,8 +12,15 @@ This wrapper enables Claude Desktop (and other MCP clients) to interact with dia
 .
 **Available MCP Tools:**
   * `list_diagrams` - List all open diagrams
-  * `get_diagram_by_id` - Get diagram content and metadata
+  * `get_diagram_by_id` - Get diagram content with decoded, readable XML
   * `update_diagram` - Update diagram with new XML content
+
+.
+**XML Decoding:**
+  * Automatically decodes base64+zlib compressed diagram data
+  * Provides human-readable mxGraphModel XML structure
+  * No need for MCP clients to implement decompression
+  * Shows cells, geometry, styles, and connections clearly
 
 .
 **Real-Time Updates:**
@@ -27,7 +34,10 @@ This wrapper enables Claude Desktop (and other MCP clients) to interact with dia
 .
 IntelliJ IDEA with diagrams.net plugin installed
 .
-Plugin MCP server enabled (Settings → Languages & Frameworks → Diagrams.net)
+MCP server enabled in plugin settings:
+  ** Settings → Tools → Diagrams.net Integration
+  ** Check "Enable MCP Server"
+  ** Configure port (default: 8765)
 .
 At least one diagram open in the IDE
 
@@ -76,6 +86,39 @@ Add this to your Claude Desktop MCP settings file:
 
 **Note:** Replace `/absolute/path/to/` with the actual path to this repository.
 The port argument is optional and defaults to 8765 if not specified.
+
+### Claude Code Configuration
+
+Create `.mcp.json` in your project root:
+
+[source,json]
+----
+{
+  "mcpServers": {
+    "diagrams-net-intellij": {
+      "command": "/absolute/path/to/diagrams.net-intellij-plugin/mcp-server-wrapper.py",
+      "args": []
+    }
+  }
+}
+----
+
+Then add to `~/.claude/settings.json`:
+
+[source,json]
+----
+{
+  "enableAllProjectMcpServers": true
+}
+----
+
+**Important:**
+.
+Add `.mcp.json` to your `.gitignore` to keep it user-local
+.
+Restart Claude Code session after creating `.mcp.json`
+.
+Custom ports: Add port as argument in `args`: `["9000"]`
 
 ## CLI Mode (Manual Testing)
 
@@ -130,10 +173,29 @@ Path: /Users/you/project/docs/architecture.drawio.svg
 Type: svg
 Project: my-project
 
-XML Content:
+Diagram Structure (decoded):
+<mxGraphModel dx="643" dy="706" grid="1" gridSize="10" guides="1">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="2" value="API Gateway" style="rounded=1;..." vertex="1" parent="1">
+      <mxGeometry x="100" y="100" width="120" height="60" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>
+
+Full XML Content (for updates):
 <?xml version="1.0" encoding="UTF-8"?>
-<mxfile>...</mxfile>
+<mxfile host="drawio-plugin">
+  <diagram name="Page-1" id="0">jZNNb4MwDIZ/DcdK...</diagram>
+</mxfile>
 ----
+
+**Key Features:**
+.
+**Decoded XML** shows human-readable diagram structure with cells, geometry, and styles
+.
+**Full XML** contains the complete mxfile with base64+zlib compressed data for updates
 
 ### Update Diagram
 
@@ -222,11 +284,13 @@ The changes should now be visible in IntelliJ IDEA.
 .
 Open IntelliJ IDEA
 .
-Go to Settings → Languages & Frameworks → Diagrams.net
+Go to Settings → Tools → Diagrams.net Integration
 .
 Check "Enable MCP Server"
 .
-Verify the port number (default: 8765)
+Configure the port number (default: 8765)
+.
+Ensure at least one diagram file is open
 
 ### No Diagrams Found
 

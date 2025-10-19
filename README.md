@@ -59,71 +59,107 @@ You can even start this in debug mode.
 
 ## MCP Integration (Model Context Protocol)
 
-This plugin exposes a Model Context Protocol (MCP) server that allows AI assistants like Claude to interact with diagrams in your IDE. The MCP server provides tools to create, list, view, and update diagrams programmatically.
+This plugin exposes a Model Context Protocol (MCP) server that allows AI assistants like Claude to interact with diagrams in your IDE.
+The MCP server provides tools to list, view, and update diagrams programmatically.
 
 ### Features
 
-The MCP server provides the following tools:
-- `create_diagram` - Create a new diagram file (supports .drawio.svg, .drawio.png, .drawio.xml)
+**Available MCP Tools:**
 - `list_diagrams` - List all open diagrams in the IDE
-- `get_diagram_by_id` - Retrieve XML content of a specific diagram
+- `get_diagram_by_id` - Get diagram content with **decoded, readable XML**
 - `update_diagram` - Update diagram content and save changes
 
-### Configuration
+**XML Decoding:**
+- Automatically decodes base64+zlib compressed diagram data
+- Provides human-readable mxGraphModel XML structure
+- No need for MCP clients to implement decompression
+- Shows cells, geometry, styles, and connections clearly
 
-The plugin automatically starts an HTTP server on port 8765 (configurable in settings). Two integration methods are available:
+**Real-Time Updates:**
+- Changes appear immediately in the IntelliJ editor
+- Supports SVG, PNG, and XML diagram formats
 
-#### Method 1: Direct SSE Integration (Claude Code)
+### Quick Setup
 
-Claude Code supports HTTP/SSE MCP servers natively. Add this to your MCP settings:
+#### 1. Enable MCP Server in IntelliJ
 
-```json
-{
-  "mcpServers": {
-    "diagrams-net-intellij": {
-      "url": "http://localhost:8765/mcp/sse"
-    }
-  }
-}
-```
+1. Open IntelliJ IDEA Settings (Preferences on macOS)
+2. Navigate to: **Settings → Tools → Diagrams.net Integration**
+3. Check: **Enable MCP Server**
+4. Configure: **MCP Server Port** (default: 8765)
+5. Click: **Apply** / **OK**
 
-#### Method 2: Python Wrapper (Claude Desktop)
+The server will start automatically when enabled and a diagram file is open.
 
-Claude Desktop requires stdio-based MCP servers. Use the included Python wrapper:
+#### 2. Configure Your MCP Client
 
-1. Add to `claude_desktop_config.json`:
+##### Claude Desktop
+
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS):
+
 ```json
 {
   "mcpServers": {
     "diagrams-net-intellij": {
       "command": "python3",
-      "args": ["/path/to/diagrams.net-intellij-plugin/mcp-server-wrapper.py", "8765"]
+      "args": [
+        "/absolute/path/to/diagrams.net-intellij-plugin/mcp-server-wrapper.py"
+      ]
     }
   }
 }
 ```
 
-2. Ensure the IntelliJ IDE with the plugin is running
-3. Restart Claude Desktop to load the MCP server
+##### Claude Code
 
-### Multiple IDE Instances
+Create `.mcp.json` in your project root:
 
-To use multiple IDE instances simultaneously, configure each instance to use a different port in the plugin settings, then update your MCP configuration accordingly.
+```json
+{
+  "mcpServers": {
+    "diagrams-net-intellij": {
+      "command": "/absolute/path/to/diagrams.net-intellij-plugin/mcp-server-wrapper.py",
+      "args": []
+    }
+  }
+}
+```
+
+Add to `~/.claude/settings.json`:
+
+```json
+{
+  "enableAllProjectMcpServers": true
+}
+```
+
+**Important:** Add `.mcp.json` to your `.gitignore` to keep it user-local.
 
 ### REST API
 
-The plugin also exposes a REST API for direct HTTP access:
+The plugin exposes a REST API for direct HTTP access:
 
-- `GET /api/status` - Server status
-- `POST /api/diagrams` - Create new diagram
-- `GET /api/diagrams` - List all diagrams
-- `GET /api/diagrams/{id}` - Get diagram by ID
+**Core Endpoints:**
+- `GET /api/status` - Server status and info
+- `GET /api/diagrams` - List all open diagrams
+- `GET /api/diagrams/{id}` - Get diagram with decoded XML
 - `PUT /api/diagrams/{id}` - Update diagram content
-- `GET /api/mcp/info` - MCP tool definitions
 
-Example:
+**Example:**
 ```bash
+# Check server status
 curl http://localhost:8765/api/status
+
+# Get diagram with decoded XML
+curl http://localhost:8765/api/diagrams/{id} | jq
 ```
+
+### Documentation
+
+Detailed documentation:
+- [MCP Quick Start Guide](MCP_QUICK_START.md) - Setup and usage
+- [MCP API Reference](MCP_API_REFERENCE.md) - Complete API documentation
+- [MCP Wrapper README](MCP_WRAPPER_README.md) - CLI usage and testing
+- [Phase 3 Complete](MCP_PHASE3_COMPLETE.md) - XML decoding implementation details
 
 

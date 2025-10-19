@@ -32,5 +32,8 @@ out
 # Ignore CLAUDE working directory
 .claude/
 
+# Ignore user-local MCP configuration
+.mcp.json
+
 # Ignore IntelliJ Platform cache
 .intellijPlatform/

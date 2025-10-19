@@ -5,6 +5,9 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import fi.iki.elonen.NanoHTTPD
 import java.io.IOException
+import java.net.URLDecoder
+import java.util.Base64
+import java.util.zip.Inflater
 
 /**
  * HTTP server using NanoHTTPD that exposes the MCP REST API.
@@ -138,18 +141,29 @@ class DiagramMcpHttpServer(private val port: Int, private val service: DiagramMc
         }
 
         if (editorRef != null) {
-            // Try to get cached XML first, fallback to reading from file
-            val xml = editorRef.editor.getXmlContent() ?: run {
-                try {
-                    ApplicationManager.getApplication().runReadAction<String> {
-                        editorRef.file.inputStream.reader().readText()
-                    }
-                } catch (e: Exception) {
-                    null
+            // For GET requests, always read fresh from disk to avoid serving stale cached content
+            // This ensures Claude Desktop and other MCP clients get the latest saved content
+            val rawXml = try {
+                ApplicationManager.getApplication().runReadAction<String> {
+                    editorRef.file.inputStream.reader().readText()
                 }
+            } catch (e: Exception) {
+                LOG.warn("Failed to read diagram from disk, falling back to cached content", e)
+                editorRef.editor.getXmlContent()
             }
 
-            val response = mapOf(
+            // For SVG files, extract the embedded mxfile XML from the content attribute
+            val xml = if (editorRef.file.name.endsWith(".svg")) {
+                extractMxfileFromSvg(rawXml ?: "")
+            } else {
+                rawXml
+            }
+
+            // Decode the diagram content for MCP clients
+            // This provides a readable mxGraphModel XML instead of base64+zlib compressed data
+            val decodedXml = xml?.let { decodeDiagramContent(it) }
+
+            val response = mutableMapOf(
                 "id" to id,
                 "filePath" to editorRef.file.path,
                 "fileName" to editorRef.file.name,
@@ -157,6 +171,12 @@ class DiagramMcpHttpServer(private val port: Int, private val service: DiagramMc
                 "project" to editorRef.project.name,
                 "xml" to xml
             )
+
+            // Add decoded XML if available
+            if (decodedXml != null) {
+                response["decodedXml"] = decodedXml
+            }
+
             return jsonResponse(Response.Status.OK, response)
         } else {
             return jsonResponse(
@@ -343,6 +363,61 @@ class DiagramMcpHttpServer(private val port: Int, private val service: DiagramMc
             fileName.endsWith(".png") -> "png"
             fileName.endsWith(".xml") -> "xml"
             else -> "unknown"
+        }
+    }
+
+    private fun extractMxfileFromSvg(svgContent: String): String? {
+        // Extract the mxfile XML from the SVG's content attribute
+        // The content attribute contains HTML-encoded XML like: content="&lt;mxfile...&gt;&lt;/mxfile&gt;"
+        try {
+            val contentMatch = Regex("""content="([^"]+)"""").find(svgContent)
+            if (contentMatch != null) {
+                val encodedXml = contentMatch.groupValues[1]
+                // Decode HTML entities
+                return encodedXml
+                    .replace("&lt;", "<")
+                    .replace("&gt;", ">")
+                    .replace("&quot;", "\"")
+                    .replace("&amp;", "&")
+            }
+        } catch (e: Exception) {
+            LOG.error("Error extracting mxfile from SVG", e)
+        }
+        return null
+    }
+
+    private fun decodeDiagramContent(mxfileXml: String): String? {
+        // Decode the base64+zlib compressed content from <diagram> tags
+        // Returns the readable mxGraphModel XML for MCP clients
+        try {
+            val diagramMatch = Regex("""<diagram[^>]*>([^<]+)</diagram>""").find(mxfileXml)
+            if (diagramMatch == null) {
+                return null
+            }
+
+            val base64Content = diagramMatch.groupValues[1].trim()
+            if (base64Content.isEmpty()) {
+                return null
+            }
+
+            // Base64 decode
+            val compressed = Base64.getDecoder().decode(base64Content)
+
+            // Decompress with zlib (using raw inflate, no zlib header)
+            val inflater = Inflater(true) // true = nowrap mode (raw deflate)
+            inflater.setInput(compressed)
+            val decompressed = ByteArray(compressed.size * 10) // Allocate buffer
+            val decompressedLength = inflater.inflate(decompressed)
+            inflater.end()
+
+            // Convert to string and URL decode
+            val urlEncoded = String(decompressed, 0, decompressedLength, Charsets.UTF_8)
+            val decoded = URLDecoder.decode(urlEncoded, "UTF-8")
+
+            return decoded
+        } catch (e: Exception) {
+            LOG.warn("Failed to decode diagram content", e)
+            return null
         }
     }
 
