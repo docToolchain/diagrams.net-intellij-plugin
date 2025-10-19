@@ -101,17 +101,21 @@ GET /api/diagrams/{id}
 {
   "id": "abc123",
   "filePath": "/absolute/path/diagram.drawio.svg",
-  "relativePath": "docs/diagram.drawio.svg",
   "fileName": "diagram.drawio.svg",
   "fileType": "svg",
+  "project": "my-project",
   "xml": "<?xml version=\"1.0\"?><mxfile>...</mxfile>",
-  "isModified": false,
-  "metadata": {
-    "pages": 1,
-    "lastModified": "2025-10-17T10:30:00Z"
-  }
+  "decodedXml": "<mxGraphModel dx=\"643\" dy=\"706\" grid=\"1\"...><root><mxCell id=\"0\"/>...</root></mxGraphModel>"
 }
 ```
+
+**Fields:**
+- `xml`: Full mxfile XML with compressed diagram data (for updates)
+- `decodedXml`: Human-readable mxGraphModel XML with decompressed structure (for reading/understanding)
+  - Base64 decoded
+  - Zlib decompressed
+  - URL decoded
+  - Only the diagram content, not the mxfile wrapper
 
 ---
 

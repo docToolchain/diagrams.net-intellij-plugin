@@ -188,3 +188,8 @@ When implementing MCP features, be aware of:
 - Supports all diagram formats (SVG, PNG, XML) with XML extraction
 - Path resolution is relative to project root
 - Auto-opening uses IntelliJ's `FileEditorManager`
+- **XML Decoding**: API returns both compressed (`xml`) and decoded (`decodedXml`) XML
+  - `decodeDiagramContent()` in `DiagramMcpHttpServer.kt:389-422` handles base64+zlib decompression
+  - `extractMxfileFromSvg()` in `DiagramMcpHttpServer.kt:369-387` extracts XML from SVG files
+  - Decoded XML shows readable mxGraphModel structure for MCP clients
+  - No need for clients to implement decompression

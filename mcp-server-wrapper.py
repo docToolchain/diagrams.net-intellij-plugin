@@ -186,14 +186,20 @@ def handle_get_diagram_by_id(request_id, base_url, arguments):
 
     # Format the diagram info as text
     xml = result.get("xml", "")
-    xml_preview = xml[:500] + "..." if len(xml) > 500 else xml
+    decodedXml = result.get("decodedXml", "")
 
     text = f"Diagram: {result.get('fileName', 'Unknown')}\n"
     text += f"ID: {result.get('id', 'N/A')}\n"
     text += f"Path: {result.get('filePath', 'N/A')}\n"
     text += f"Type: {result.get('fileType', 'N/A')}\n"
-    text += f"Project: {result.get('project', 'N/A')}\n"
-    text += f"\nXML Content:\n{xml_preview}"
+    text += f"Project: {result.get('project', 'N/A')}\n\n"
+
+    # Show decoded diagram structure if available (human-readable)
+    if decodedXml:
+        text += f"Diagram Structure (decoded):\n{decodedXml}\n\n"
+
+    # Include full XML for update operations
+    text += f"Full XML (for updates):\n{xml}"
 
     return {
         "jsonrpc": "2.0",
@@ -374,7 +380,14 @@ Examples:
         print(f"Path: {result.get('filePath')}")
         print(f"Type: {result.get('fileType')}")
         print(f"Project: {result.get('project')}")
-        print("\nXML Content:")
+
+        # Show decoded diagram structure if available
+        decodedXml = result.get('decodedXml')
+        if decodedXml:
+            print("\nDiagram Structure (decoded):")
+            print(decodedXml)
+
+        print("\nFull XML Content:")
         print(result.get('xml', '(no content)'))
 
     elif args.update_diagram:

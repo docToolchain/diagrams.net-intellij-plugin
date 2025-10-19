@@ -33,37 +33,80 @@ This allows Claude Code to work naturally:
 
 ### 1. Enable MCP Server in IntelliJ
 
-1. Open IntelliJ IDEA Settings
-2. Navigate to: **Settings → Languages & Frameworks → Diagrams.net**
+1. Open IntelliJ IDEA Settings (Preferences on macOS)
+2. Navigate to: **Settings → Tools → Diagrams.net Integration**
 3. Check: **Enable MCP Server**
-4. Configure: **Port** (default: 8765)
+4. Configure: **MCP Server Port** (default: 8765)
 5. Click: **Apply** / **OK**
 
-The server will start automatically when enabled.
+The server will start automatically when enabled and a diagram file is open.
 
-### 2. Configure Claude Desktop
+**Note:** You can change the port if 8765 is already in use by another application.
+
+### 2. Configure for Your MCP Client
+
+#### Claude Desktop
 
 Edit your Claude Desktop config file:
 - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - **Linux**: `~/.config/Claude/claude_desktop_config.json`
 - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 
-Add the MCP server configuration:
+Add the MCP server configuration using the wrapper script:
 
 ```json
 {
   "mcpServers": {
     "diagrams-net-intellij": {
-      "url": "http://localhost:8765/api/mcp/info",
-      "type": "rest"
+      "command": "python3",
+      "args": [
+        "/absolute/path/to/diagrams.net-intellij-plugin/mcp-server-wrapper.py"
+      ]
     }
   }
 }
 ```
 
+**Note:**
+- The wrapper defaults to port 8765
+- For a custom port, configure it in IntelliJ settings and update the wrapper args: `["...py", "9000"]`
+- Restart Claude Desktop after configuration changes
+
+#### Claude Code
+
+Create `.mcp.json` in your project root:
+
+```json
+{
+  "mcpServers": {
+    "diagrams-net-intellij": {
+      "command": "/absolute/path/to/diagrams.net-intellij-plugin/mcp-server-wrapper.py",
+      "args": []
+    }
+  }
+}
+```
+
+Then add to `~/.claude/settings.json`:
+
+```json
+{
+  "enableAllProjectMcpServers": true
+}
+```
+
+**Note:** Add `.mcp.json` to `.gitignore` to keep it user-local.
+
 ### 3. Verify Connection
 
-Restart Claude Desktop and in Claude Code, you should be able to:
+Restart your MCP client.
+You should now have access to:
+
+- `list_diagrams` - List all open diagrams
+- `get_diagram_by_id` - Get diagram with decoded, readable XML
+- `update_diagram` - Update diagram content
+
+**Test:**
 
 ```
 User: "List all diagram files in this project"
@@ -166,18 +209,23 @@ Would you like me to add them?"
 
 ### Server Not Starting
 
-1. Check IntelliJ Event Log for errors
-2. Verify port is not already in use
-3. Check firewall settings
-4. Try a different port number
+1. Verify MCP server is enabled in IntelliJ:
+   - Settings → Tools → Diagrams.net Integration
+   - Check "Enable MCP Server"
+2. Ensure at least one diagram file is open
+3. Check IntelliJ Event Log for errors
+4. Verify port is not already in use (`lsof -i :8765`)
+5. Check firewall settings
+6. Try a different port number in plugin settings
 
 ### Claude Code Can't Connect
 
-1. Verify MCP server is enabled in IntelliJ settings
-2. Check Claude Desktop config file syntax
-3. Restart Claude Desktop after config changes
-4. Verify URL in config matches actual port
-5. Check `~/.diagrams-net-intellij-mcp/instances.json` for actual port
+1. Verify MCP server is enabled in IntelliJ settings (see above)
+2. Ensure the port in `.mcp.json` matches the plugin configuration
+3. Check Claude Code config file syntax
+4. Restart Claude Code session after config changes
+5. Verify wrapper script path is correct and executable
+6. Test the server manually: `curl http://localhost:8765/api/status`
 
 ### Diagram Not Updating
 

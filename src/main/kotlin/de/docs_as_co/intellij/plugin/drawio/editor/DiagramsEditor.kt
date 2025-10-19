@@ -1,6 +1,7 @@
 package de.docs_as_co.intellij.plugin.drawio.editor
 
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.colors.EditorColorsListener
 import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.editor.colors.EditorColorsScheme
@@ -217,20 +218,26 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
         val isSVGFile = file.name.endsWith(".svg")
         val isPNGFile = file.name.endsWith(".png")
 
+        LOG.info("updateAndSaveXmlContent: Starting update for file ${file.name}, isSVG=$isSVGFile, isPNG=$isPNGFile")
+
         // Load the XML and wait for the webview to finish loading
         view.loadXmlLike(xml).then {
+            LOG.info("updateAndSaveXmlContent: Load complete, now exporting/saving")
             // Now that the content is loaded, trigger the appropriate save operation
             if (isSVGFile) {
                 view.exportSvg().then { data: String ->
+                    LOG.info("updateAndSaveXmlContent: SVG export complete, saving ${data.length} bytes")
                     val content = xmlHeader + data
                     saveFile(content.toByteArray(charset("utf-8")))
                 }
             } else if (isPNGFile) {
                 view.exportPng().then { data: ByteArray ->
+                    LOG.info("updateAndSaveXmlContent: PNG export complete, saving ${data.size} bytes")
                     saveFile(data)
                 }
             } else {
                 // For XML files, save the raw XML directly
+                LOG.info("updateAndSaveXmlContent: Saving raw XML, ${xml.length} bytes")
                 saveFile(xml.toByteArray(charset("utf-8")))
             }
         }
@@ -254,6 +261,8 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
     fun exportAsPng() = view.exportPng()
 
     companion object {
+        private val LOG = Logger.getInstance(DiagramsEditor::class.java)
+
         /**
          * Generate a unique ID for an editor based on the file path.
          */
