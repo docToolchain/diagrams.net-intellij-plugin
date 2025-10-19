@@ -97,10 +97,22 @@ intellijPlatform {
         freeArgs = listOf("-mute", "TemplateWordInPluginId")
         ides {
             // recommended()
-            ides( properties("pluginVerifierIdeVersions").get().split(',') )
+            // Configure IDE versions for verification - required on CI
+            val ideVersions = properties("pluginVerifierIdeVersions").get()
+            if (ideVersions.isNotBlank()) {
+                ides( ideVersions.split(',').map { it.trim() }.filter { it.isNotEmpty() } )
+            }
+            // Note: If empty, verifyPlugin task is skipped via onlyIf condition below
         }
     }
 
+}
+
+// Skip plugin verification if no IDE versions configured (ARM64/Apple Silicon local builds)
+tasks.named<VerifyPluginTask>("verifyPlugin") {
+    onlyIf {
+        properties("pluginVerifierIdeVersions").get().isNotBlank()
+    }
 }
 
 tasks.jar {
