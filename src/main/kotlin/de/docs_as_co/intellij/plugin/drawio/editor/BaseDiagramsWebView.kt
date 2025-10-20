@@ -3,6 +3,7 @@ package de.docs_as_co.intellij.plugin.drawio.editor
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.ui.jcef.JBCefJSQuery
 import com.jetbrains.rd.util.lifetime.Lifetime
 import com.jetbrains.rd.util.lifetime.assertAlive
@@ -21,6 +22,8 @@ import java.net.URI
 
 abstract class BaseDiagramsWebView(val lifetime: Lifetime, var uiTheme: String, var uiMode: String) {
     companion object {
+        private val LOG = Logger.getInstance(BaseDiagramsWebView::class.java)
+
         val mapper = jacksonObjectMapper().apply {
             configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         }
@@ -42,9 +45,9 @@ abstract class BaseDiagramsWebView(val lifetime: Lifetime, var uiTheme: String, 
                     // Error message was: "CORS policy: Cross origin requests are only supported for protocol schemes..."
                     "https", "drawio-plugin",
                     SchemeHandlerFactory { uri: URI ->
-                        println("SCHEME HANDLER: Requested URI: ${uri.path}")
+                        LOG.debug("Scheme handler: Requested URI: ${uri.path}")
                         if (uri.path == "/index.html") {
-                            println("SCHEME HANDLER: Serving index.html with initialData")
+                            LOG.debug("Scheme handler: Serving index.html with initialData")
                             // Build initial data JSON manually to avoid Jackson reflection issues with local classes
                             val initialDataJson = """{"baseUrl":"https://drawio-plugin","localStorage":null,"theme":"$myUiTheme","mode":"$myUiMode","lang":"en","showChrome":"1"}"""
 
@@ -52,23 +55,23 @@ abstract class BaseDiagramsWebView(val lifetime: Lifetime, var uiTheme: String, 
                                 BaseDiagramsWebView::class.java.getResourceAsStream("/assets/index.html")?.reader()
                                     ?.readText()
                             if (text == null) {
-                                println("SCHEME HANDLER ERROR: Failed to load /assets/index.html")
+                                LOG.error("Scheme handler: Failed to load /assets/index.html")
                                 null
                             } else {
                                 val updatedText = text.replace(
                                     "\$\$initialData\$\$",
                                     initialDataJson
                                 )
-                                println("SCHEME HANDLER: index.html loaded, size: ${updatedText.length} bytes")
+                                LOG.debug("Scheme handler: index.html loaded, size: ${updatedText.length} bytes")
                                 updatedText.byteInputStream()
                             }
                         } else {
-                            println("SCHEME HANDLER: Serving asset: /assets${uri.path}")
+                            LOG.debug("Scheme handler: Serving asset: /assets${uri.path}")
                             val stream = BaseDiagramsWebView::class.java.getResourceAsStream("/assets" + uri.path)
                             if (stream == null) {
-                                println("SCHEME HANDLER ERROR: Asset not found: /assets${uri.path}")
+                                LOG.error("Scheme handler: Asset not found: /assets${uri.path}")
                             } else {
-                                println("SCHEME HANDLER: Asset found: /assets${uri.path}")
+                                LOG.debug("Scheme handler: Asset found: /assets${uri.path}")
                             }
                             stream
                         }
