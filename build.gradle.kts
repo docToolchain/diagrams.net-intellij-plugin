@@ -133,9 +133,16 @@ tasks.jar {
     }
 }
 
+// Use JVM Toolchain to ensure consistent Java/Kotlin compilation target
+// This ensures both Java and Kotlin compile to the same JVM target
+kotlin {
+    jvmToolchain(17)
+}
+
+// Keep explicit Java configuration for clarity and compatibility
 java {
-    targetCompatibility = JavaVersion.VERSION_17
     sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 tasks.test {
