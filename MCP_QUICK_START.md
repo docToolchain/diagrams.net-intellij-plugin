@@ -74,7 +74,7 @@ Add the MCP server configuration using the wrapper script:
 
 #### Claude Code
 
-Create `.mcp.json` in your project root:
+Create `.claude/mcp.json` in your project root:
 
 ```json
 {
@@ -87,15 +87,20 @@ Create `.mcp.json` in your project root:
 }
 ```
 
-Then add to `~/.claude/settings.json`:
+Then enable project MCP servers in `~/.config/claude-code/user_settings.json`:
 
 ```json
 {
-  "enableAllProjectMcpServers": true
+  "mcpServers": {
+    "enableAllProjectMcpServers": true
+  }
 }
 ```
 
-**Note:** Add `.mcp.json` to `.gitignore` to keep it user-local.
+**Note:**
+- The wrapper script bridges the MCP stdio protocol to the HTTP REST API
+- Add `.claude/mcp.json` to `.gitignore` to keep it user-local
+- For custom ports, pass the port as an argument: `["...py", "9000"]`
 
 ### 3. Verify Connection
 
@@ -120,20 +125,45 @@ If you have multiple IntelliJ instances open:
 
 1. Each instance uses a different port (8765, 8766, 8767, etc.)
 2. Each instance writes its info to `~/.diagrams-net-intellij-mcp/instances.json`
-3. Configure multiple MCP servers in Claude Desktop:
+3. Configure multiple MCP servers for each instance
+
+**Claude Code Configuration:**
+
+Create `.claude/mcp.json` in each project:
+
+```json
+{
+  "mcpServers": {
+    "diagrams-net-intellij": {
+      "command": "/absolute/path/to/diagrams.net-intellij-plugin/mcp-server-wrapper.py",
+      "args": ["8765"]
+    }
+  }
+}
+```
+
+(Use different ports - 8765, 8766, etc. - for each project)
+
+**Claude Desktop Configuration:**
+
+Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 ```json
 {
   "mcpServers": {
     "diagrams-main-project": {
-      "url": "http://localhost:8765/api/mcp/info",
-      "type": "rest",
-      "description": "Main project"
+      "command": "python3",
+      "args": [
+        "/absolute/path/to/diagrams.net-intellij-plugin/mcp-server-wrapper.py",
+        "8765"
+      ]
     },
     "diagrams-plugin-dev": {
-      "url": "http://localhost:8766/api/mcp/info",
-      "type": "rest",
-      "description": "Plugin development"
+      "command": "python3",
+      "args": [
+        "/absolute/path/to/diagrams.net-intellij-plugin/mcp-server-wrapper.py",
+        "8766"
+      ]
     }
   }
 }
@@ -221,11 +251,15 @@ Would you like me to add them?"
 ### Claude Code Can't Connect
 
 1. Verify MCP server is enabled in IntelliJ settings (see above)
-2. Ensure the port in `.mcp.json` matches the plugin configuration
-3. Check Claude Code config file syntax
+2. Ensure wrapper script path in `.claude/mcp.json` is correct and absolute
+3. Check config file syntax (valid JSON)
 4. Restart Claude Code session after config changes
-5. Verify wrapper script path is correct and executable
-6. Test the server manually: `curl http://localhost:8765/api/status`
+5. Verify wrapper script is executable: `chmod +x mcp-server-wrapper.py`
+6. Test wrapper manually: `./mcp-server-wrapper.py --status`
+7. Verify server is running: `curl http://localhost:8765/api/status`
+8. Ensure the port in wrapper args matches the plugin configuration (if using custom port)
+9. Check `.claude/mcp.json` file location (must be in `.claude/` subdirectory of project root)
+10. Verify `enableAllProjectMcpServers` is set to true in user settings
 
 ### Diagram Not Updating
 
