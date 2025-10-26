@@ -112,7 +112,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
 
 ##### Claude Code
 
-Create `.mcp.json` in your project root:
+Create `.claude/mcp.json` in your project root:
 
 ```json
 {
@@ -125,15 +125,17 @@ Create `.mcp.json` in your project root:
 }
 ```
 
-Add to `~/.claude/settings.json`:
+Add to `~/.config/claude-code/user_settings.json`:
 
 ```json
 {
-  "enableAllProjectMcpServers": true
+  "mcpServers": {
+    "enableAllProjectMcpServers": true
+  }
 }
 ```
 
-**Important:** Add `.mcp.json` to your `.gitignore` to keep it user-local.
+**Important:** Add `.claude/mcp.json` to your `.gitignore` to keep it user-local.
 
 ### REST API
 
