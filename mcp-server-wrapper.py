@@ -8,16 +8,21 @@ This script can run in two modes:
 
 Usage:
   # MCP Protocol Mode (for Claude Desktop)
-  ./mcp-server-wrapper.py           # Uses default port 8765
-  ./mcp-server-wrapper.py 9000      # Uses custom port 9000
+  ./mcp-server-wrapper.py                              # Uses default port 8765
+  ./mcp-server-wrapper.py 9000                         # Uses custom port 9000
+  DIAGRAMS_NET_MCP_PORT=9000 ./mcp-server-wrapper.py  # Uses env var
 
   # CLI Mode (for manual testing)
   ./mcp-server-wrapper.py --help
   ./mcp-server-wrapper.py --show-diagrams
   ./mcp-server-wrapper.py --show-diagrams --port 9000
+  DIAGRAMS_NET_MCP_PORT=9000 ./mcp-server-wrapper.py --show-diagrams
   ./mcp-server-wrapper.py --get-diagram <id>
   ./mcp-server-wrapper.py --update-diagram <id> <xml-file>
   ./mcp-server-wrapper.py --status
+
+Environment Variables:
+  DIAGRAMS_NET_MCP_PORT  Server port (overridden by --port or positional arg)
 """
 
 import sys
@@ -25,8 +30,13 @@ import json
 import urllib.request
 import urllib.error
 import argparse
+import os
 
 DEFAULT_PORT = "8765"
+
+def get_port_from_env():
+    """Get port from environment variable or default"""
+    return os.environ.get("DIAGRAMS_NET_MCP_PORT", DEFAULT_PORT)
 
 def call_api(base_url, endpoint, method="GET", data=None):
     """Call the HTTP API"""
@@ -336,8 +346,8 @@ Examples:
         """
     )
 
-    parser.add_argument("--port", type=int, default=8765,
-                        help="Server port (default: 8765)")
+    parser.add_argument("--port", type=int, default=int(get_port_from_env()),
+                        help=f"Server port (default: {get_port_from_env()})")
     parser.add_argument("--show-diagrams", action="store_true",
                         help="List all open diagrams")
     parser.add_argument("--get-diagram", metavar="ID",
@@ -419,7 +429,8 @@ def main():
         cli_mode()
     else:
         # MCP protocol mode
-        port = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_PORT
+        # Priority: positional arg > env var > default
+        port = sys.argv[1] if len(sys.argv) > 1 else get_port_from_env()
         mcp_protocol_mode(port)
 
 if __name__ == "__main__":

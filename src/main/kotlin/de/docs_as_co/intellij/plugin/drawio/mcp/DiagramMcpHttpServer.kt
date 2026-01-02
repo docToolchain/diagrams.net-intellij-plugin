@@ -6,7 +6,9 @@ import com.intellij.openapi.diagnostic.Logger
 import fi.iki.elonen.NanoHTTPD
 import java.io.IOException
 import java.net.URLDecoder
+import java.net.URLEncoder
 import java.util.Base64
+import java.util.zip.Deflater
 import java.util.zip.Inflater
 
 /**
@@ -213,7 +215,41 @@ class DiagramMcpHttpServer(private val port: Int, private val service: DiagramMc
         }
 
         if (editorRef != null) {
-            editorRef.editor.updateAndSaveXmlContent(xml)
+            // Detect if incoming XML is decoded (mxGraphModel) or encoded (mxfile)
+            // MCP clients send decoded XML for easier editing
+            val decodedXml = extractDecodedXmlIfNeeded(xml)
+            val xmlToSave = if (decodedXml != null) {
+                LOG.debug("Received decoded XML from MCP client (extracted from wrapper), encoding to mxfile format")
+                // Save the decoded XML to temp file for debugging (only when debug logging is enabled)
+                if (LOG.isDebugEnabled) {
+                    try {
+                        val tmpDir = System.getProperty("java.io.tmpdir")
+                        val debugFile = java.io.File(tmpDir, "mcp-decoded-xml-${System.currentTimeMillis()}.xml")
+                        debugFile.writeText(decodedXml)
+                        LOG.debug("Saved decoded XML to ${debugFile.absolutePath} for debugging")
+                    } catch (e: Exception) {
+                        LOG.warn("Failed to save debug XML file", e)
+                    }
+                }
+                try {
+                    encodeDiagramContent(decodedXml)
+                } catch (e: Exception) {
+                    LOG.error("Failed to encode decoded XML", e)
+                    return jsonResponse(
+                        Response.Status.BAD_REQUEST,
+                        mapOf(
+                            "error" to "Invalid XML format",
+                            "code" to "ENCODING_ERROR",
+                            "message" to "Failed to encode decoded XML: ${e.message}"
+                        )
+                    )
+                }
+            } else {
+                LOG.debug("Received properly encoded mxfile XML, using as-is")
+                xml
+            }
+
+            editorRef.editor.updateAndSaveXmlContent(xmlToSave)
             return jsonResponse(
                 Response.Status.OK,
                 mapOf(
@@ -406,18 +442,126 @@ class DiagramMcpHttpServer(private val port: Int, private val service: DiagramMc
             // Decompress with zlib (using raw inflate, no zlib header)
             val inflater = Inflater(true) // true = nowrap mode (raw deflate)
             inflater.setInput(compressed)
-            val decompressed = ByteArray(compressed.size * 10) // Allocate buffer
-            val decompressedLength = inflater.inflate(decompressed)
+
+            // Use a dynamically growing buffer to ensure we get all data
+            val outputStream = java.io.ByteArrayOutputStream()
+            val buffer = ByteArray(1024)
+            while (!inflater.finished()) {
+                val count = inflater.inflate(buffer)
+                outputStream.write(buffer, 0, count)
+            }
             inflater.end()
+            val decompressed = outputStream.toByteArray()
 
             // Convert to string and URL decode
-            val urlEncoded = String(decompressed, 0, decompressedLength, Charsets.UTF_8)
+            val urlEncoded = String(decompressed, Charsets.UTF_8)
             val decoded = URLDecoder.decode(urlEncoded, "UTF-8")
 
             return decoded
         } catch (e: Exception) {
             LOG.warn("Failed to decode diagram content", e)
             return null
+        }
+    }
+
+    /**
+     * Extract decoded XML from incoming content if needed.
+     * Handles cases where MCP clients send:
+     * 1. Raw mxGraphModel XML (decoded) - return as-is
+     * 2. mxfile wrapper with decoded content - extract and return decoded content
+     * 3. mxfile wrapper with properly encoded base64+zlib - return null (use as-is)
+     *
+     * @param xml The incoming XML content
+     * @return Decoded mxGraphModel XML if found, null if properly encoded
+     */
+    private fun extractDecodedXmlIfNeeded(xml: String): String? {
+        val trimmed = xml.trim()
+
+        // Case 1: Raw mxGraphModel - already decoded
+        if (trimmed.startsWith("<mxGraphModel")) {
+            LOG.debug("Detected raw mxGraphModel XML (decoded)")
+            return trimmed
+        }
+
+        // Case 2: mxfile wrapper - check if content is decoded or encoded
+        if (trimmed.startsWith("<mxfile")) {
+            try {
+                // Find the diagram tag opening
+                val diagramStartMatch = Regex("""<diagram[^>]*>""").find(trimmed)
+                if (diagramStartMatch != null) {
+                    val startIdx = diagramStartMatch.range.last + 1
+
+                    // Find the LAST </diagram> closing tag (not the first!)
+                    val diagramEndIdx = trimmed.lastIndexOf("</diagram>")
+
+                    if (diagramEndIdx > startIdx) {
+                        val content = trimmed.substring(startIdx, diagramEndIdx).trim()
+                        LOG.debug("Extracted content from diagram tags: length=${content.length}, first 100 chars: ${content.take(100)}")
+
+                        // Check if content looks like decoded XML vs base64
+                        // Base64 should not contain < or > characters
+                        if (content.contains("<") || content.contains(">")) {
+                            LOG.debug("Detected mxfile wrapper with decoded XML content (contains < or >)")
+                            return content
+                        }
+
+                        // If content is very long, it's likely decoded XML that just doesn't have < >
+                        // Properly encoded/compressed content is typically 1-3KB, decoded is 10-15KB+
+                        if (content.length > 5000) {
+                            LOG.debug("Detected mxfile wrapper with likely decoded content (length=${content.length})")
+                            return content
+                        }
+
+                        // Otherwise, it's properly base64 encoded
+                        LOG.debug("Content appears to be properly base64 encoded (length=${content.length})")
+                        return null
+                    }
+                }
+            } catch (e: Exception) {
+                LOG.warn("Error extracting content from mxfile wrapper", e)
+            }
+        }
+
+        // Unknown format or properly encoded
+        return null
+    }
+
+    /**
+     * Encode decoded mxGraphModel XML back to mxfile format with base64+zlib compression.
+     * This is the reverse of decodeDiagramContent().
+     *
+     * @param decodedXml The decoded mxGraphModel XML
+     * @return Encoded mxfile XML with compressed diagram data
+     */
+    private fun encodeDiagramContent(decodedXml: String): String {
+        try {
+            // URL encode using URI component encoding (not form encoding)
+            // This encodes special characters but preserves more characters than URLEncoder
+            val urlEncoded = URLEncoder.encode(decodedXml, "UTF-8")
+                .replace("+", "%20")  // URLEncoder encodes space as +, but we need %20
+                .replace("%21", "!")
+                .replace("%27", "'")
+                .replace("%28", "(")
+                .replace("%29", ")")
+                .replace("%7E", "~")
+
+            // Compress with zlib (using raw deflate, no zlib header)
+            val deflater = Deflater(Deflater.DEFAULT_COMPRESSION, true) // true = nowrap mode
+            deflater.setInput(urlEncoded.toByteArray(Charsets.UTF_8))
+            deflater.finish()
+
+            val compressedBuffer = ByteArray(urlEncoded.length * 2) // Allocate sufficient buffer
+            val compressedLength = deflater.deflate(compressedBuffer)
+            deflater.end()
+
+            // Base64 encode
+            val base64Encoded = Base64.getEncoder().encodeToString(compressedBuffer.copyOf(compressedLength))
+
+            // Wrap in mxfile structure
+            return """<mxfile host="drawio-plugin" modified="${System.currentTimeMillis()}" agent="MCP-Client" version="22.1.22" type="embed"><diagram name="Page-1" id="0">$base64Encoded</diagram></mxfile>"""
+        } catch (e: Exception) {
+            LOG.error("Failed to encode diagram content", e)
+            throw e
         }
     }
 

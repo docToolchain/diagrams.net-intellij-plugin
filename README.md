@@ -104,7 +104,10 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
       "command": "python3",
       "args": [
         "/absolute/path/to/diagrams.net-intellij-plugin/mcp-server-wrapper.py"
-      ]
+      ],
+      "env": {
+        "DIAGRAMS_NET_MCP_PORT": "8765"
+      }
     }
   }
 }
@@ -119,7 +122,10 @@ Create `.claude/mcp.json` in your project root:
   "mcpServers": {
     "diagrams-net-intellij": {
       "command": "/absolute/path/to/diagrams.net-intellij-plugin/mcp-server-wrapper.py",
-      "args": []
+      "args": [],
+      "env": {
+        "DIAGRAMS_NET_MCP_PORT": "8765"
+      }
     }
   }
 }
@@ -136,6 +142,19 @@ Add to `~/.config/claude-code/user_settings.json`:
 ```
 
 **Important:** Add `.claude/mcp.json` to your `.gitignore` to keep it user-local.
+
+#### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DIAGRAMS_NET_MCP_PORT` | Port for the MCP HTTP server | `8765` |
+
+The port can be configured via:
+1. Environment variable `DIAGRAMS_NET_MCP_PORT`
+2. Command-line argument: `./mcp-server-wrapper.py 9000`
+3. CLI flag: `./mcp-server-wrapper.py --port 9000`
+
+Priority: CLI argument > environment variable > default (8765)
 
 ### REST API
 
