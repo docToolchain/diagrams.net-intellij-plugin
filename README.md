@@ -93,7 +93,29 @@ The server will start automatically when enabled and a diagram file is open.
 
 #### 2. Configure Your MCP Client
 
-##### Claude Desktop
+##### Claude Code (Recommended: Direct HTTP)
+
+Claude Code supports HTTP transport directly. Add to `.claude/mcp.json` in your project:
+
+```json
+{
+  "mcpServers": {
+    "diagrams-net-intellij": {
+      "type": "http",
+      "url": "http://localhost:8765/mcp"
+    }
+  }
+}
+```
+
+Or via CLI:
+```bash
+claude mcp add --transport http diagrams-net-intellij http://localhost:8765/mcp
+```
+
+##### Claude Desktop (Requires Wrapper)
+
+Claude Desktop only supports stdio transport. Use the wrapper script.
 
 Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS):
 
@@ -113,35 +135,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
 }
 ```
 
-##### Claude Code
-
-Create `.claude/mcp.json` in your project root:
-
-```json
-{
-  "mcpServers": {
-    "diagrams-net-intellij": {
-      "command": "/absolute/path/to/diagrams.net-intellij-plugin/mcp-server-wrapper.py",
-      "args": [],
-      "env": {
-        "DIAGRAMS_NET_MCP_PORT": "8765"
-      }
-    }
-  }
-}
-```
-
-Add to `~/.config/claude-code/user_settings.json`:
-
-```json
-{
-  "mcpServers": {
-    "enableAllProjectMcpServers": true
-  }
-}
-```
-
-**Important:** Add `.claude/mcp.json` to your `.gitignore` to keep it user-local.
+The wrapper acts as a stdio ↔ HTTP proxy, forwarding JSON-RPC messages to the `/mcp` endpoint.
 
 #### Environment Variables
 
@@ -149,38 +143,48 @@ Add to `~/.config/claude-code/user_settings.json`:
 |----------|-------------|---------|
 | `DIAGRAMS_NET_MCP_PORT` | Port for the MCP HTTP server | `8765` |
 
-The port can be configured via:
-1. Environment variable `DIAGRAMS_NET_MCP_PORT`
-2. Command-line argument: `./mcp-server-wrapper.py 9000`
-3. CLI flag: `./mcp-server-wrapper.py --port 9000`
+### MCP Streamable HTTP Transport (Direct Access)
 
-Priority: CLI argument > environment variable > default (8765)
+The plugin supports the **MCP Streamable HTTP Transport** specification, allowing MCP clients to connect directly via HTTP without the Python wrapper.
 
-### REST API
+**Endpoint:** `POST /mcp`
 
-The plugin exposes a REST API for direct HTTP access:
-
-**Core Endpoints:**
-- `GET /api/status` - Server status and info
-- `GET /api/diagrams` - List all open diagrams
-- `GET /api/diagrams/{id}` - Get diagram with decoded XML
-- `PUT /api/diagrams/{id}` - Update diagram content
+This endpoint accepts JSON-RPC 2.0 requests and implements the full MCP protocol:
+- `initialize` - Start MCP session, returns server capabilities
+- `tools/list` - List available tools with JSON Schema
+- `tools/call` - Execute a tool (list_diagrams, get_diagram_by_id, update_diagram)
+- `ping` - Health check
 
 **Example:**
 ```bash
-# Check server status
-curl http://localhost:8765/api/status
+# Initialize MCP session
+curl -X POST http://localhost:8765/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "initialize",
+    "params": {
+      "protocolVersion": "2024-11-05",
+      "capabilities": {},
+      "clientInfo": {"name": "test", "version": "1.0"}
+    }
+  }'
 
-# Get diagram with decoded XML
-curl http://localhost:8765/api/diagrams/{id} | jq
+# List available tools
+curl -X POST http://localhost:8765/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc": "2.0", "id": 2, "method": "tools/list"}'
+
+# Call list_diagrams tool
+curl -X POST http://localhost:8765/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 3,
+    "method": "tools/call",
+    "params": {"name": "list_diagrams", "arguments": {}}
+  }'
 ```
 
-### Documentation
-
-Detailed documentation:
-- [MCP Quick Start Guide](MCP_QUICK_START.md) - Setup and usage
-- [MCP API Reference](MCP_API_REFERENCE.md) - Complete API documentation
-- [MCP Wrapper README](MCP_WRAPPER_README.md) - CLI usage and testing
-- [Phase 3 Complete](MCP_PHASE3_COMPLETE.md) - XML decoding implementation details
-
-
+For testing, use the included `mcp-test-requests.http` file with IntelliJ's HTTP Client.
