@@ -1,0 +1,147 @@
+### MCP Streamable HTTP Transport - Test Requests
+### Use these requests in IntelliJ IDEA's HTTP Client to test the MCP endpoint
+
+### Default port (change if using a different port)
+@port = 8765
+
+### ===========================================================================
+### MCP JSON-RPC 2.0 Protocol Requests
+### ===========================================================================
+
+### Initialize - Start MCP session
+POST http://localhost:{{port}}/mcp
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "initialize",
+  "params": {
+    "protocolVersion": "2024-11-05",
+    "capabilities": {},
+    "clientInfo": {
+      "name": "http-client-test",
+      "version": "1.0"
+    }
+  }
+}
+
+### Initialized notification - Acknowledge initialization
+POST http://localhost:{{port}}/mcp
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "method": "initialized"
+}
+
+### Ping - Check server responsiveness
+POST http://localhost:{{port}}/mcp
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "ping"
+}
+
+### Tools/List - Get available tools
+POST http://localhost:{{port}}/mcp
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "method": "tools/list"
+}
+
+### ===========================================================================
+### Tool Calls
+### ===========================================================================
+
+### list_diagrams - List all open diagrams
+POST http://localhost:{{port}}/mcp
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 10,
+  "method": "tools/call",
+  "params": {
+    "name": "list_diagrams",
+    "arguments": {}
+  }
+}
+
+### get_diagram_by_id - Get diagram content (replace ID with actual diagram ID)
+POST http://localhost:{{port}}/mcp
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 11,
+  "method": "tools/call",
+  "params": {
+    "name": "get_diagram_by_id",
+    "arguments": {
+      "id": "YOUR_DIAGRAM_ID_HERE"
+    }
+  }
+}
+
+### update_diagram - Update diagram content (replace ID and XML)
+POST http://localhost:{{port}}/mcp
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 12,
+  "method": "tools/call",
+  "params": {
+    "name": "update_diagram",
+    "arguments": {
+      "id": "YOUR_DIAGRAM_ID_HERE",
+      "xml": "<mxGraphModel><root><mxCell id=\"0\"/><mxCell id=\"1\" parent=\"0\"/></root></mxGraphModel>"
+    }
+  }
+}
+
+### ===========================================================================
+### Error Cases
+### ===========================================================================
+
+### Unknown method
+POST http://localhost:{{port}}/mcp
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 99,
+  "method": "unknown/method"
+}
+
+### Missing method
+POST http://localhost:{{port}}/mcp
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 98
+}
+
+### Invalid JSON-RPC version
+POST http://localhost:{{port}}/mcp
+Content-Type: application/json
+
+{
+  "jsonrpc": "1.0",
+  "id": 97,
+  "method": "initialize"
+}
+
+### ===========================================================================
+### Health Check
+### ===========================================================================
+
+### Root endpoint (health check)
+GET http://localhost:{{port}}/

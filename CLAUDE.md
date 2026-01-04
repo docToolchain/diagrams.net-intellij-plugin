@@ -165,31 +165,25 @@ The plugin publishes to different channels based on the `PRE_RELEASE` environmen
 
 Requires `PUBLISH_TOKEN` environment variable for authentication.
 
-## MCP Integration (In Design Phase)
+## MCP Integration
 
-An MCP (Model Context Protocol) server integration is being designed to enable LLM interaction with diagrams. Key capabilities:
+The plugin exposes an MCP (Model Context Protocol) server for LLM interaction with diagrams.
 
-- **File-Based Access**: Access diagrams by relative path (e.g., `docs/architecture/system.drawio.svg`)
+### Key Features
+
+- **JSON-RPC 2.0**: Single endpoint `POST /mcp` for all MCP operations
 - **Real-Time Updates**: LLM modifications appear immediately in the IntelliJ editor
-- **Multi-Instance Support**: Multiple IntelliJ instances can run on different ports
-- **Auto-Open**: Diagrams automatically open when accessed via API
+- **XML Decoding**: Automatically decodes base64+zlib compressed diagram data
+- **Supports**: SVG, PNG, and XML diagram formats
 
-### Documentation
+### MCP Tools
 
-- **`MCP_INTEGRATION_DESIGN.md`**: Comprehensive technical design with architecture, API specs, and implementation plan
-- **`MCP_QUICK_START.md`**: User-facing guide for setting up and using MCP integration
-- **`MCP_IMPLEMENTATION_SUMMARY.md`**: Developer-focused implementation overview with checklists
+- `list_diagrams` - List all open diagrams
+- `get_diagram_by_id` - Get diagram content with decoded XML
+- `update_diagram` - Update diagram content and save
 
-### Key Concepts
+### Configuration
 
-When implementing MCP features, be aware of:
-- REST API runs on configurable port (default: 8765)
-- Instance discovery file: `~/.diagrams-net-intellij-mcp/instances.json`
-- Supports all diagram formats (SVG, PNG, XML) with XML extraction
-- Path resolution is relative to project root
-- Auto-opening uses IntelliJ's `FileEditorManager`
-- **XML Decoding**: API returns both compressed (`xml`) and decoded (`decodedXml`) XML
-  - `decodeDiagramContent()` in `DiagramMcpHttpServer.kt:389-422` handles base64+zlib decompression
-  - `extractMxfileFromSvg()` in `DiagramMcpHttpServer.kt:369-387` extracts XML from SVG files
-  - Decoded XML shows readable mxGraphModel structure for MCP clients
-  - No need for clients to implement decompression
+- Server runs on configurable port (default: 8765)
+- Enable in: **Settings → Tools → Diagrams.net Integration**
+- See `README.md` for client configuration (Claude Code, Claude Desktop)
