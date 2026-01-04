@@ -45,6 +45,16 @@ dependencies {
         pluginVerifier()
         testFramework(TestFrameworkType.Platform)
     }
+
+    // NanoHTTPD for MCP HTTP server (lightweight, works well in IntelliJ plugins)
+    implementation("org.nanohttpd:nanohttpd:2.3.1")
+
+    // Gson for JSON serialization (used by MCP server)
+    implementation("com.google.code.gson:gson:2.10.1")
+
+    // Jackson for browser communication (diagram editor)
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.16.1")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.16.1")
 }
 
 intellijPlatform {
@@ -87,10 +97,22 @@ intellijPlatform {
         freeArgs = listOf("-mute", "TemplateWordInPluginId")
         ides {
             // recommended()
-            ides( properties("pluginVerifierIdeVersions").get().split(',') )
+            // Configure IDE versions for verification - required on CI
+            val ideVersions = properties("pluginVerifierIdeVersions").get()
+            if (ideVersions.isNotBlank()) {
+                ides( ideVersions.split(',').map { it.trim() }.filter { it.isNotEmpty() } )
+            }
+            // Note: If empty, verifyPlugin task is skipped via onlyIf condition below
         }
     }
 
+}
+
+// Skip plugin verification if no IDE versions configured (ARM64/Apple Silicon local builds)
+tasks.named<VerifyPluginTask>("verifyPlugin") {
+    onlyIf {
+        properties("pluginVerifierIdeVersions").get().isNotBlank()
+    }
 }
 
 tasks.jar {
@@ -111,9 +133,16 @@ tasks.jar {
     }
 }
 
+// Use JVM Toolchain to ensure consistent Java/Kotlin compilation target
+// This ensures both Java and Kotlin compile to the same JVM target
+kotlin {
+    jvmToolchain(17)
+}
+
+// Keep explicit Java configuration for clarity and compatibility
 java {
-    targetCompatibility = JavaVersion.VERSION_21
-    sourceCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 tasks.test {

@@ -34,8 +34,27 @@ class DiagramsConfigurable : SearchableConfigurable {
     }
 
     override fun apply() {
-        val settings = DiagramsApplicationSettings.instance
-        settings.setDiagramsPreviewSettings(form.getDiagramsSettings())
+        val oldSettings = DiagramsApplicationSettings.instance.getDiagramsSettings()
+        val newSettings = form.getDiagramsSettings()
+
+        DiagramsApplicationSettings.instance.setDiagramsPreviewSettings(newSettings)
+
+        // Handle MCP server start/stop based on settings changes
+        val mcpService = de.docs_as_co.intellij.plugin.drawio.mcp.DiagramMcpService.instance
+
+        if (newSettings.mcpServerEnabled != oldSettings.mcpServerEnabled ||
+            newSettings.mcpServerPort != oldSettings.mcpServerPort) {
+
+            // Stop server if it was running
+            if (mcpService.isServerRunning()) {
+                mcpService.stopServer()
+            }
+
+            // Start server if enabled
+            if (newSettings.mcpServerEnabled) {
+                mcpService.startServer(newSettings.mcpServerPort)
+            }
+        }
     }
 
     override fun reset() {
