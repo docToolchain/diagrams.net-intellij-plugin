@@ -102,15 +102,15 @@ Claude Code supports HTTP transport directly. Add to `.claude/mcp.json` in your 
   "mcpServers": {
     "diagrams-net-intellij": {
       "type": "http",
-      "url": "http://localhost:8765/mcp"
+      "url": "http://localhost:${DIAGRAMS_NET_MCP_PORT_CURRENT:-8765}/mcp"
     }
   }
 }
 ```
 
-Or via CLI:
+Or via CLI (use single quotes to preserve `${}`):
 ```bash
-claude mcp add --transport http diagrams-net-intellij http://localhost:8765/mcp
+claude mcp add --transport http diagrams-net-intellij 'http://localhost:${DIAGRAMS_NET_MCP_PORT_CURRENT:-8765}/mcp'
 ```
 
 ##### Claude Desktop (Requires Wrapper)
@@ -137,11 +137,44 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
 
 The wrapper acts as a stdio ↔ HTTP proxy, forwarding JSON-RPC messages to the `/mcp` endpoint.
 
+#### Per-IDE Port Assignment
+
+Each JetBrains IDE type automatically gets a unique port to allow running multiple IDEs simultaneously:
+
+| IDE | Product Code | Default Port |
+|-----|--------------|--------------|
+| IntelliJ IDEA | IC/IU | 8765 (base) |
+| WebStorm | WS | 8766 |
+| PyCharm | PY/PC | 8767 |
+| GoLand | GO | 8768 |
+| Rider | RD | 8769 |
+| RubyMine | RM | 8770 |
+| CLion | CL | 8771 |
+| PhpStorm | PS | 8772 |
+
 #### Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `DIAGRAMS_NET_MCP_PORT` | Port for the MCP HTTP server | `8765` |
+| `DIAGRAMS_NET_MCP_PORT` | Base port in IDE settings | `8765` |
+| `DIAGRAMS_NET_MCP_PORT_<CODE>` | Override port for specific IDE (e.g., `_WS`, `_PY`) | - |
+| `DIAGRAMS_NET_MCP_PORT_CURRENT` | Exported by plugin for Claude Code discovery | - |
+
+**Claude Code Integration:**
+
+The plugin exports `DIAGRAMS_NET_MCP_PORT_CURRENT` to the IDE environment.
+Terminals opened in IntelliJ inherit this, so Claude Code can use:
+
+```json
+{
+  "mcpServers": {
+    "diagrams-net-intellij": {
+      "type": "http",
+      "url": "http://localhost:${DIAGRAMS_NET_MCP_PORT_CURRENT:-8765}/mcp"
+    }
+  }
+}
+```
 
 ### MCP Streamable HTTP Transport (Direct Access)
 

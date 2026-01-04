@@ -25,9 +25,11 @@ class DiagramMcpService : Disposable {
         LOG.info("DiagramMcpService initializing")
         // Start server if enabled in settings
         val settings = DiagramsApplicationSettings.instance.getDiagramsSettings()
-        LOG.info("MCP server enabled: ${settings.mcpServerEnabled}, port: ${settings.mcpServerPort}")
+        // Calculate effective port based on IDE product type
+        val effectivePort = McpPortManager.calculatePort(settings.mcpServerPort)
+        LOG.info("MCP server enabled: ${settings.mcpServerEnabled}, settings port: ${settings.mcpServerPort}, effective port: $effectivePort (${McpPortManager.getProductCode()})")
         if (settings.mcpServerEnabled) {
-            startServer(settings.mcpServerPort)
+            startServer(effectivePort)
         }
         LOG.info("DiagramMcpService initialized")
     }
@@ -135,6 +137,9 @@ class DiagramMcpService : Disposable {
                             actualPort = port
                             started = true
                             LOG.info("MCP server started successfully on port $port")
+                            // Export port for Claude Code discovery
+                            McpPortManager.exportCurrentPort(port)
+                            LOG.info(McpPortManager.getPortDescription(port))
                             break
                         } catch (e: Exception) {
                             LOG.warn("Port $port is busy, trying next port: ${e.message}")
