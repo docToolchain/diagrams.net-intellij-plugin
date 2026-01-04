@@ -182,8 +182,23 @@ The plugin exposes an MCP (Model Context Protocol) server for LLM interaction wi
 - `get_diagram_by_id` - Get diagram content with decoded XML
 - `update_diagram` - Update diagram content and save
 
+### Per-IDE Port Assignment
+
+Each JetBrains IDE type gets a unique port offset (managed by `McpPortManager.kt`):
+
+| IDE | Code | Port |
+|-----|------|------|
+| IntelliJ IDEA | IC/IU | 8765 |
+| WebStorm | WS | 8766 |
+| PyCharm | PY/PC | 8767 |
+| GoLand | GO | 8768 |
+
+Environment variables:
+- `DIAGRAMS_NET_MCP_PORT_<CODE>` - Override port for specific IDE
+- `DIAGRAMS_NET_MCP_PORT_CURRENT` - Exported by plugin for Claude Code discovery
+
 ### Configuration
 
-- Server runs on configurable port (default: 8765)
 - Enable in: **Settings → Tools → Diagrams.net Integration**
+- Base port configurable in settings (default: 8765)
 - See `README.md` for client configuration (Claude Code, Claude Desktop)
