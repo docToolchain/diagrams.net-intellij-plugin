@@ -29,7 +29,7 @@ object JsonRpcError {
  * NanoHTTPD was chosen over Ktor/Netty due to classloader/threading compatibility issues
  * in the IntelliJ plugin environment. See MCP_HTTP_SERVER_ISSUES.md for details.
  */
-class DiagramMcpHttpServer(private val port: Int, private val service: DiagramMcpService) : NanoHTTPD(port) {
+class DiagramMcpHttpServer(private val port: Int, private val service: DiagramMcpService) : NanoHTTPD("127.0.0.1", port) {
     private val LOG = Logger.getInstance(DiagramMcpHttpServer::class.java)
     private val gson = Gson()
 
@@ -507,9 +507,11 @@ class DiagramMcpHttpServer(private val port: Int, private val service: DiagramMc
     }
 
     private fun addCORSHeaders(response: Response): Response {
-        response.addHeader("Access-Control-Allow-Origin", "*")
-        response.addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-        response.addHeader("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        // Restrict CORS to localhost origins only for security
+        // MCP clients typically connect directly, but browser-based tools need CORS
+        response.addHeader("Access-Control-Allow-Origin", "http://localhost")
+        response.addHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        response.addHeader("Access-Control-Allow-Headers", "Content-Type")
         return response
     }
 

@@ -76,7 +76,7 @@ class DiagramMcpService : Disposable {
                 fileType = getFileType(ref.file),
                 project = ref.project.name,
                 isOpen = true,
-                isModified = false // TODO: check if modified
+                isModified = false // TODO: Implement isModified tracking; currently always false
             )
         }
     }

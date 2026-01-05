@@ -95,42 +95,18 @@ object McpPortManager {
     }
 
     /**
-     * Export the current port to the environment for Claude Code discovery.
-     * Sets DIAGRAMS_NET_MCP_PORT_CURRENT.
+     * Export the current port for Claude Code discovery.
+     * Sets DIAGRAMS_NET_MCP_PORT_CURRENT as a JVM system property.
      *
-     * Note: This sets a JVM system property which IntelliJ's terminal
-     * will inherit when spawning new processes.
+     * Note: IntelliJ's terminal and other child processes inherit JVM
+     * system properties, so this is sufficient for typical usage.
      */
     fun exportCurrentPort(port: Int) {
         try {
-            // Set as system property - child processes (like terminal) will inherit this
             System.setProperty(ENV_CURRENT_PORT, port.toString())
             LOG.info("Exported $ENV_CURRENT_PORT=$port as system property")
-
-            // Also try to set as environment variable for the current process
-            // This uses reflection to modify the process environment (platform-specific)
-            setEnvironmentVariable(ENV_CURRENT_PORT, port.toString())
         } catch (e: Exception) {
-            LOG.warn("Failed to export current port to environment", e)
-        }
-    }
-
-    /**
-     * Set an environment variable in the current process.
-     * Uses reflection to modify ProcessEnvironment (works on Unix/Mac).
-     */
-    private fun setEnvironmentVariable(name: String, value: String) {
-        try {
-            val env = System.getenv()
-            val field = env.javaClass.getDeclaredField("m")
-            field.isAccessible = true
-            @Suppress("UNCHECKED_CAST")
-            val map = field.get(env) as MutableMap<String, String>
-            map[name] = value
-            LOG.info("Set environment variable $name=$value")
-        } catch (e: Exception) {
-            LOG.debug("Could not set environment variable directly: ${e.message}")
-            // Fall back to system property only - this is fine for most use cases
+            LOG.warn("Failed to export current port as system property", e)
         }
     }
 

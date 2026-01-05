@@ -55,6 +55,7 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
             de.docs_as_co.intellij.plugin.drawio.mcp.DiagramMcpService.instance.registerEditor(editorId, this, project, file)
         } catch (e: Exception) {
             // MCP service might not be available or enabled, ignore
+            LOG.debug("MCP service registration failed (service may not be enabled)", e)
         }
     }
 
@@ -172,6 +173,7 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
             de.docs_as_co.intellij.plugin.drawio.mcp.DiagramMcpService.instance.unregisterEditor(editorId)
         } catch (e: Exception) {
             // MCP service might not be available, ignore
+            LOG.debug("MCP service unregistration failed (service may not be enabled)", e)
         }
         lifetimeDef.terminate(true)
     }

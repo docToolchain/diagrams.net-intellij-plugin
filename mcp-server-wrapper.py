@@ -72,6 +72,7 @@ def mcp_proxy_mode(port):
             parsed = json.loads(line)
             request_id = parsed.get("id")
         except json.JSONDecodeError:
+            # If the input is not valid JSON, we cannot extract an id; leave request_id as None
             pass
 
         try:
