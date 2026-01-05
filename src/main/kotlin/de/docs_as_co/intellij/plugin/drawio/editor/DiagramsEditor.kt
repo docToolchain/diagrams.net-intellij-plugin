@@ -269,7 +269,7 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
          * Generate a unique ID for an editor based on the file path.
          */
         fun generateEditorId(file: VirtualFile): String {
-            return file.path.hashCode().toString(16)
+            return Integer.toHexString(file.path.hashCode())
         }
     }
 

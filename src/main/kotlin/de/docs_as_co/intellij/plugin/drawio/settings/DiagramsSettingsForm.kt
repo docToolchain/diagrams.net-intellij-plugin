@@ -7,6 +7,7 @@ import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBTextField
 import de.docs_as_co.intellij.plugin.drawio.DiagramsNetBundle
 import de.docs_as_co.intellij.plugin.drawio.mcp.DiagramMcpService
+import de.docs_as_co.intellij.plugin.drawio.mcp.McpPortManager
 import javax.swing.JComponent
 import javax.swing.JPanel
 
@@ -53,7 +54,7 @@ class DiagramsSettingsForm : DiagramsSettings.Holder {
         val port = try {
             myMcpServerPort.text.toInt()
         } catch (e: NumberFormatException) {
-            8765
+            McpPortManager.DEFAULT_BASE_PORT
         }
 
         return DiagramsSettings(
