@@ -94,19 +94,55 @@ object McpPortManager {
         return calculatedPort
     }
 
+    // Lazy-initialized mutable environment map obtained via reflection
+    // This follows the same approach as the intellij-direnv plugin
+    private val modifiableEnvironment: MutableMap<String, String> by lazy {
+        getModifiableEnvironmentMap()
+    }
+
+    /**
+     * Get the underlying mutable map from System.getenv() using reflection.
+     * System.getenv() returns an UnmodifiableMap, but we can access the
+     * underlying mutable map via reflection.
+     */
+    @Suppress("UNCHECKED_CAST")
+    private fun getModifiableEnvironmentMap(): MutableMap<String, String> {
+        val env = System.getenv()
+        val envClass = env.javaClass
+
+        // Find the internal 'm' field that holds the actual mutable map
+        val field = envClass.declaredFields.firstOrNull { it.type == Map::class.java }
+            ?: throw RuntimeException("Could not find Map field in ${envClass.name}")
+
+        field.isAccessible = true
+        return field.get(env) as MutableMap<String, String>
+    }
+
     /**
      * Export the current port for Claude Code discovery.
-     * Sets DIAGRAMS_NET_MCP_PORT_CURRENT as a JVM system property.
+     * Sets DIAGRAMS_NET_MCP_PORT_CURRENT as an environment variable
+     * so that child processes (like terminals) can inherit it.
      *
-     * Note: IntelliJ's terminal and other child processes inherit JVM
-     * system properties, so this is sufficient for typical usage.
+     * Uses reflection to modify the JVM's environment map, following
+     * the same approach as the intellij-direnv plugin.
      */
     fun exportCurrentPort(port: Int) {
         try {
+            // Set as actual environment variable (inherited by child processes)
+            modifiableEnvironment[ENV_CURRENT_PORT] = port.toString()
+            LOG.info("Exported $ENV_CURRENT_PORT=$port as environment variable")
+
+            // Also set as system property for in-process access
             System.setProperty(ENV_CURRENT_PORT, port.toString())
-            LOG.info("Exported $ENV_CURRENT_PORT=$port as system property")
         } catch (e: Exception) {
-            LOG.warn("Failed to export current port as system property", e)
+            LOG.warn("Failed to export current port as environment variable", e)
+            // Fallback to system property only
+            try {
+                System.setProperty(ENV_CURRENT_PORT, port.toString())
+                LOG.info("Fallback: Exported $ENV_CURRENT_PORT=$port as system property only")
+            } catch (e2: Exception) {
+                LOG.error("Failed to export current port", e2)
+            }
         }
     }
 

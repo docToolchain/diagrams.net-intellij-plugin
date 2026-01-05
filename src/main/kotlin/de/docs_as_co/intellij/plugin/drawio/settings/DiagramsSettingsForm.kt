@@ -26,13 +26,35 @@ class DiagramsSettingsForm : DiagramsSettings.Holder {
     val component: JComponent?
         get() = myMainPanel
 
-    private fun updateServerStatus() {
+    /**
+     * Update the server status label. Called when settings are loaded
+     * and after the server is restarted via Apply.
+     * Automatically detects port fallback by comparing configured port with actual running port.
+     */
+    fun updateServerStatus() {
         val service = DiagramMcpService.instance
         if (service.isServerRunning()) {
-            myMcpServerStatusLabel.text = "Server Status: Running on port ${service.getActualPort()}"
+            val actualPort = service.getActualPort()
+            // Get the configured port from settings and calculate effective port
+            val settings = DiagramsApplicationSettings.instance.getDiagramsSettings()
+            val configuredPort = McpPortManager.calculatePort(settings.mcpServerPort)
+
+            if (actualPort != configuredPort) {
+                myMcpServerStatusLabel.text = "Server Status: Running on port $actualPort (port $configuredPort was busy)"
+            } else {
+                myMcpServerStatusLabel.text = "Server Status: Running on port $actualPort"
+            }
         } else {
             myMcpServerStatusLabel.text = "Server Status: Stopped"
         }
+    }
+
+    /**
+     * Show "Starting..." status immediately when server is being started.
+     * This provides immediate feedback before the async server start completes.
+     */
+    fun setServerStatusStarting(port: Int) {
+        myMcpServerStatusLabel.text = "Server Status: Starting on port $port..."
     }
 
     override fun setDiagramsPreviewSettings(settings: DiagramsSettings) {

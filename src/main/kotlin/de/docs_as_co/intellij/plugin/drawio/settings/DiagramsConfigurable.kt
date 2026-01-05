@@ -42,18 +42,74 @@ class DiagramsConfigurable : SearchableConfigurable {
         // Handle MCP server start/stop based on settings changes
         val mcpService = de.docs_as_co.intellij.plugin.drawio.mcp.DiagramMcpService.instance
 
-        if (newSettings.mcpServerEnabled != oldSettings.mcpServerEnabled ||
-            newSettings.mcpServerPort != oldSettings.mcpServerPort) {
+        // Calculate effective port (includes IDE-specific offset)
+        val effectivePort = de.docs_as_co.intellij.plugin.drawio.mcp.McpPortManager.calculatePort(newSettings.mcpServerPort)
 
+        // Restart server if:
+        // - enabled/disabled state changed, OR
+        // - configured port changed, OR
+        // - actual running port differs from effective port (e.g., due to port fallback)
+        val needsRestart = newSettings.mcpServerEnabled != oldSettings.mcpServerEnabled ||
+            newSettings.mcpServerPort != oldSettings.mcpServerPort ||
+            (mcpService.isServerRunning() && mcpService.getActualPort() != effectivePort)
+
+        if (needsRestart) {
             // Stop server if it was running
             if (mcpService.isServerRunning()) {
                 mcpService.stopServer()
             }
 
-            // Start server if enabled
+            // Start server if enabled, with callback to refresh status
             if (newSettings.mcpServerEnabled) {
-                mcpService.startServer(newSettings.mcpServerPort)
+                // Capture reference to form before async operation
+                val currentForm = myForm
+                // Show "Starting..." status immediately
+                currentForm?.setServerStatusStarting(effectivePort)
+
+                // Track if callback already handled notification
+                var notificationShown = false
+
+                mcpService.startServer(effectivePort) { actualPort ->
+                    // Callback invoked on EDT when server is started
+                    currentForm?.updateServerStatus()
+
+                    // Also show notification balloon for fallback (visible even after dialog closes)
+                    if (actualPort != effectivePort && !notificationShown) {
+                        notificationShown = true
+                        com.intellij.notification.NotificationGroupManager.getInstance()
+                            .getNotificationGroup("DiagramsNet")
+                            .createNotification(
+                                "MCP Server Port",
+                                "Port $effectivePort was busy. Server started on port $actualPort instead.",
+                                com.intellij.notification.NotificationType.WARNING
+                            )
+                            .notify(null)
+                    }
+                }
+
+                // Fallback: Update status after a short delay in case callback doesn't fire
+                com.intellij.util.Alarm(com.intellij.util.Alarm.ThreadToUse.SWING_THREAD).addRequest({
+                    currentForm?.updateServerStatus()
+                    // Also show notification balloon for fallback
+                    val actualPort = mcpService.getActualPort()
+                    if (actualPort != 0 && actualPort != effectivePort && !notificationShown) {
+                        notificationShown = true
+                        com.intellij.notification.NotificationGroupManager.getInstance()
+                            .getNotificationGroup("DiagramsNet")
+                            .createNotification(
+                                "MCP Server Port",
+                                "Port $effectivePort was busy. Server started on port $actualPort instead.",
+                                com.intellij.notification.NotificationType.WARNING
+                            )
+                            .notify(null)
+                    }
+                }, 500)
+            } else {
+                // Server disabled - update status immediately
+                form.updateServerStatus()
             }
+        } else {
+            form.updateServerStatus()
         }
     }
 

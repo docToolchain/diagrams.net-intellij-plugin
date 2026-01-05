@@ -47,6 +47,7 @@
                                  instance="de.docs_as_co.intellij.plugin.drawio.settings.DiagramsConfigurable" />
         <applicationService serviceImplementation="de.docs_as_co.intellij.plugin.drawio.settings.DiagramsApplicationSettings" />
         <applicationService serviceImplementation="de.docs_as_co.intellij.plugin.drawio.mcp.DiagramMcpService" />
+        <notificationGroup id="DiagramsNet" displayType="BALLOON" />
     </extensions>
 
     <actions>

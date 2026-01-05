@@ -109,9 +109,11 @@ class DiagramMcpService : Disposable {
     /**
      * Start the MCP HTTP server.
      * @param preferredPort The preferred port to use
-     * @return true if server started successfully
+     * @param onStarted Optional callback invoked on EDT when server starts successfully.
+     *                  Receives the actual port the server started on (may differ from preferred if fallback occurred).
+     * @return true if server start was initiated
      */
-    fun startServer(preferredPort: Int): Boolean {
+    fun startServer(preferredPort: Int, onStarted: ((actualPort: Int) -> Unit)? = null): Boolean {
         if (httpServer != null) {
             LOG.warn("Server already running on port $actualPort")
             return false
@@ -140,6 +142,12 @@ class DiagramMcpService : Disposable {
                             // Export port for Claude Code discovery
                             McpPortManager.exportCurrentPort(port)
                             LOG.info(McpPortManager.getPortDescription(port))
+
+                            // Invoke callback on EDT if provided, passing actual port
+                            val finalPort = port
+                            onStarted?.let {
+                                ApplicationManager.getApplication().invokeLater { it(finalPort) }
+                            }
                             break
                         } catch (e: Exception) {
                             LOG.warn("Port $port is busy, trying next port: ${e.message}")
