@@ -9,9 +9,10 @@ import com.intellij.openapi.diagnostic.Logger
  * Each JetBrains IDE type gets a unique port offset to allow running
  * multiple IDEs simultaneously with MCP servers.
  *
- * Port calculation:
- * 1. Check for per-IDE override: DIAGRAMS_NET_MCP_PORT_<CODE> (e.g., DIAGRAMS_NET_MCP_PORT_WS)
- * 2. Otherwise: base port + product offset
+ * Port calculation priority:
+ * 1. Per-IDE env var: DIAGRAMS_NET_MCP_PORT_<CODE> (e.g., DIAGRAMS_NET_MCP_PORT_WS)
+ * 2. Base env var: DIAGRAMS_NET_MCP_PORT (applies to all IDEs, with offset)
+ * 3. Settings port + product offset
  *
  * After server starts, exports DIAGRAMS_NET_MCP_PORT_CURRENT for Claude Code
  * to discover the active IDE's port.
@@ -70,16 +71,18 @@ object McpPortManager {
      * Calculate the effective port for the MCP server.
      *
      * Priority:
-     * 1. Per-IDE env var: DIAGRAMS_NET_MCP_PORT_<CODE>
-     * 2. Base port from settings + product offset
+     * 1. Per-IDE env var: DIAGRAMS_NET_MCP_PORT_<CODE> (e.g., DIAGRAMS_NET_MCP_PORT_WS)
+     * 2. Base env var: DIAGRAMS_NET_MCP_PORT (applies to all IDEs, with offset)
+     * 3. Settings port + product offset
      *
      * @param settingsPort The port configured in IDE settings
      * @return The effective port to use
      */
     fun calculatePort(settingsPort: Int): Int {
         val productCode = getProductCode()
+        val offset = getProductOffset()
 
-        // Check for per-IDE override
+        // Check for per-IDE override (exact port, no offset)
         val perIdeEnvVar = "${ENV_BASE_PORT}_$productCode"
         val perIdePort = System.getenv(perIdeEnvVar)?.toIntOrNull()
         if (perIdePort != null) {
@@ -87,8 +90,15 @@ object McpPortManager {
             return perIdePort
         }
 
+        // Check for base env var (applies offset)
+        val baseEnvPort = System.getenv(ENV_BASE_PORT)?.toIntOrNull()
+        if (baseEnvPort != null) {
+            val calculatedPort = baseEnvPort + offset
+            LOG.info("Using base env port from $ENV_BASE_PORT: $baseEnvPort + $offset = $calculatedPort")
+            return calculatedPort
+        }
+
         // Calculate based on settings + offset
-        val offset = getProductOffset()
         val calculatedPort = settingsPort + offset
         LOG.info("Calculated port for $productCode: $settingsPort + $offset = $calculatedPort")
         return calculatedPort

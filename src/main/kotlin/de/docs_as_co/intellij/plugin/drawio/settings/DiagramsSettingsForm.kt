@@ -29,7 +29,7 @@ class DiagramsSettingsForm : DiagramsSettings.Holder {
     /**
      * Update the server status label. Called when settings are loaded
      * and after the server is restarted via Apply.
-     * Automatically detects port fallback by comparing configured port with actual running port.
+     * Automatically detects port fallback and environment variable overrides.
      */
     fun updateServerStatus() {
         val service = DiagramMcpService.instance
@@ -39,11 +39,31 @@ class DiagramsSettingsForm : DiagramsSettings.Holder {
             val settings = DiagramsApplicationSettings.instance.getDiagramsSettings()
             val configuredPort = McpPortManager.calculatePort(settings.mcpServerPort)
 
-            if (actualPort != configuredPort) {
-                myMcpServerStatusLabel.text = "Server Status: Running on port $actualPort (port $configuredPort was busy)"
-            } else {
-                myMcpServerStatusLabel.text = "Server Status: Running on port $actualPort"
+            // Check if env var is overriding the port
+            val productCode = McpPortManager.getProductCode()
+            val perIdeEnvVar = "${McpPortManager.ENV_BASE_PORT}_$productCode"
+            val perIdePort = System.getenv(perIdeEnvVar)?.toIntOrNull()
+            val baseEnvPort = System.getenv(McpPortManager.ENV_BASE_PORT)?.toIntOrNull()
+
+            // Determine the requested port (from env var or settings)
+            val envVarName = when {
+                perIdePort != null -> perIdeEnvVar
+                baseEnvPort != null -> McpPortManager.ENV_BASE_PORT
+                else -> null
             }
+            val requestedPort = perIdePort ?: baseEnvPort ?: configuredPort
+
+            val statusText = when {
+                envVarName != null && actualPort != requestedPort ->
+                    "Running on port $actualPort (from $envVarName=$requestedPort, was busy)"
+                envVarName != null ->
+                    "Running on port $actualPort (from $envVarName)"
+                actualPort != configuredPort ->
+                    "Running on port $actualPort (port $configuredPort was busy)"
+                else ->
+                    "Running on port $actualPort"
+            }
+            myMcpServerStatusLabel.text = "Server Status: $statusText"
         } else {
             myMcpServerStatusLabel.text = "Server Status: Stopped"
         }
@@ -67,7 +87,30 @@ class DiagramsSettingsForm : DiagramsSettings.Holder {
         myUiModeModel.setSelectedItem(settings.uiMode)
 
         myMcpServerEnabled.isSelected = settings.mcpServerEnabled
-        myMcpServerPort.text = settings.mcpServerPort.toString()
+
+        // Check if port is overridden by environment variable
+        val productCode = McpPortManager.getProductCode()
+        val perIdeEnvVar = "${McpPortManager.ENV_BASE_PORT}_$productCode"
+        val perIdePort = System.getenv(perIdeEnvVar)?.toIntOrNull()
+        val baseEnvPort = System.getenv(McpPortManager.ENV_BASE_PORT)?.toIntOrNull()
+
+        when {
+            perIdePort != null -> {
+                myMcpServerPort.text = perIdePort.toString()
+                myMcpServerPort.isEnabled = false
+                myMcpServerPort.toolTipText = "Port is set by environment variable $perIdeEnvVar"
+            }
+            baseEnvPort != null -> {
+                myMcpServerPort.text = baseEnvPort.toString()
+                myMcpServerPort.isEnabled = false
+                myMcpServerPort.toolTipText = "Port is set by environment variable ${McpPortManager.ENV_BASE_PORT}"
+            }
+            else -> {
+                myMcpServerPort.text = settings.mcpServerPort.toString()
+                myMcpServerPort.isEnabled = true
+                myMcpServerPort.toolTipText = null
+            }
+        }
 
         updateServerStatus()
     }
