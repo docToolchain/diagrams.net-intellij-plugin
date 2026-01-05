@@ -55,6 +55,9 @@ dependencies {
     // Jackson for browser communication (diagram editor)
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.16.1")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.16.1")
+
+    // JUnit 4 for unit testing (required by IntelliJ Platform test framework)
+    testImplementation("junit:junit:4.13.2")
 }
 
 intellijPlatform {
@@ -146,5 +149,6 @@ java {
 }
 
 tasks.test {
-    //useJUnitPlatform()
+    // Use IntelliJ Platform test runner (JUnit 4 based)
+    // Note: useJUnitPlatform() conflicts with IntelliJ Platform's test framework
 }
