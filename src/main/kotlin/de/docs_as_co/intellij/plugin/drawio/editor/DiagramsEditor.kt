@@ -206,10 +206,9 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
     /**
      * Update the diagram with new XML content.
      * @param xml The new XML content
+     * @return Promise that completes when the content is loaded
      */
-    fun updateXmlContent(xml: String) {
-        view.loadXmlLike(xml)
-    }
+    fun updateXmlContent(xml: String) = view.loadXmlLike(xml)
 
     /**
      * Update the diagram with new XML content and save it to the file.
