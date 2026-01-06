@@ -350,6 +350,8 @@ tasks.register<Exec>("runTestIde") {
         }
         launcherScript.writeText("""
             #!/bin/bash
+            # Clear any inherited MCP port env var for clean test environment
+            unset DIAGRAMS_NET_MCP_PORT_CURRENT
             export ${envPrefix}_PROPERTIES="${ideaProperties.absolutePath}"
             export ${envPrefix}_VM_OPTIONS="${ideaVmOptions.absolutePath}"
             $launchCommand

@@ -23,6 +23,9 @@ class DiagramMcpService : Disposable {
 
     init {
         LOG.info("DiagramMcpService initializing")
+        // Clear any inherited port env var - only set it when server actually starts
+        McpPortManager.clearCurrentPort()
+
         // Start server if enabled in settings
         val settings = DiagramsApplicationSettings.instance.getDiagramsSettings()
         // Calculate effective port based on IDE product type
@@ -180,6 +183,8 @@ class DiagramMcpService : Disposable {
             it.stopServer()
             httpServer = null
             actualPort = 0
+            // Clear the exported port so new terminals don't see stale value
+            McpPortManager.clearCurrentPort()
         }
     }
 

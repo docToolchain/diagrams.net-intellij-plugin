@@ -71,9 +71,11 @@ object McpPortManager {
      * Calculate the effective port for the MCP server.
      *
      * Priority:
-     * 1. Per-IDE env var: DIAGRAMS_NET_MCP_PORT_<CODE> (e.g., DIAGRAMS_NET_MCP_PORT_WS)
-     * 2. Base env var: DIAGRAMS_NET_MCP_PORT (applies to all IDEs, with offset)
-     * 3. Settings port + product offset
+     * 1. Per-IDE env var: DIAGRAMS_NET_MCP_PORT_<CODE> (e.g., DIAGRAMS_NET_MCP_PORT_WS) - exact port
+     * 2. Base env var: DIAGRAMS_NET_MCP_PORT - applies offset for IDE-specific default
+     * 3. Settings port:
+     *    - If DEFAULT_BASE_PORT (8765): apply offset for IDE-specific default
+     *    - If user changed it: use exactly what they set (no offset)
      *
      * @param settingsPort The port configured in IDE settings
      * @return The effective port to use
@@ -98,10 +100,16 @@ object McpPortManager {
             return calculatedPort
         }
 
-        // Calculate based on settings + offset
-        val calculatedPort = settingsPort + offset
-        LOG.info("Calculated port for $productCode: $settingsPort + $offset = $calculatedPort")
-        return calculatedPort
+        // Only apply offset if using the default base port
+        // If user explicitly set a different port, use it directly
+        return if (settingsPort == DEFAULT_BASE_PORT) {
+            val calculatedPort = settingsPort + offset
+            LOG.info("Using default port for $productCode: $settingsPort + $offset = $calculatedPort")
+            calculatedPort
+        } else {
+            LOG.info("Using user-configured port: $settingsPort (no offset)")
+            settingsPort
+        }
     }
 
     // Lazy-initialized mutable environment map obtained via reflection
@@ -153,6 +161,20 @@ object McpPortManager {
             } catch (e2: Exception) {
                 LOG.error("Failed to export current port", e2)
             }
+        }
+    }
+
+    /**
+     * Clear the current port environment variable when server stops.
+     * This ensures terminals opened after server stop don't see a stale port.
+     */
+    fun clearCurrentPort() {
+        try {
+            modifiableEnvironment.remove(ENV_CURRENT_PORT)
+            System.clearProperty(ENV_CURRENT_PORT)
+            LOG.info("Cleared $ENV_CURRENT_PORT environment variable")
+        } catch (e: Exception) {
+            LOG.warn("Failed to clear current port environment variable", e)
         }
     }
 

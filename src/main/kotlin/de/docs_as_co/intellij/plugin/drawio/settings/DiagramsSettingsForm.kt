@@ -94,6 +94,9 @@ class DiagramsSettingsForm : DiagramsSettings.Holder {
         val perIdePort = System.getenv(perIdeEnvVar)?.toIntOrNull()
         val baseEnvPort = System.getenv(McpPortManager.ENV_BASE_PORT)?.toIntOrNull()
 
+        // Calculate the effective port (what will actually be used)
+        val effectivePort = McpPortManager.calculatePort(settings.mcpServerPort)
+
         when {
             perIdePort != null -> {
                 myMcpServerPort.text = perIdePort.toString()
@@ -101,14 +104,16 @@ class DiagramsSettingsForm : DiagramsSettings.Holder {
                 myMcpServerPort.toolTipText = "Port is set by environment variable $perIdeEnvVar"
             }
             baseEnvPort != null -> {
-                myMcpServerPort.text = baseEnvPort.toString()
+                myMcpServerPort.text = effectivePort.toString()
                 myMcpServerPort.isEnabled = false
                 myMcpServerPort.toolTipText = "Port is set by environment variable ${McpPortManager.ENV_BASE_PORT}"
             }
             else -> {
-                myMcpServerPort.text = settings.mcpServerPort.toString()
+                myMcpServerPort.text = effectivePort.toString()
                 myMcpServerPort.isEnabled = true
-                myMcpServerPort.toolTipText = null
+                myMcpServerPort.toolTipText = if (settings.mcpServerPort == McpPortManager.DEFAULT_BASE_PORT) {
+                    "Default port for this IDE (change to override)"
+                } else null
             }
         }
 
