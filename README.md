@@ -74,6 +74,8 @@ This creates a separate config directory (`build/test-ide-pycharm/`) that won't 
 This plugin exposes a Model Context Protocol (MCP) server that allows AI assistants like Claude to interact with diagrams in your IDE.
 The MCP server provides tools to list, view, and update diagrams programmatically.
 
+![MCP Architecture](src/docs/arc42/images/intellij-plugin-mcp-server.drawio.svg)
+
 ### Features
 
 **Available MCP Tools:**
