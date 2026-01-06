@@ -42,6 +42,8 @@ For pre-releases, either
 
 [![](https://img.shields.io/twitter/follow/ahus1de.svg?style=social)](https://twitter.com/intent/follow?screen_name=ahus1de)
 
+[![Mastodon Follow](https://img.shields.io/badge/Mastodon-Follow%20%40ascheman-6364FF?logo=mastodon&style=social)](https://mastodon.social/@ascheman)
+
 ## Docs
 
 An architecture overview can be found at https://drawio-intellij-plugin.netlify.app/ .
@@ -56,6 +58,16 @@ For development purpose, clone the project locally and start it with the command
 
 This will build the plugin and start an Instance of IntelliJ with the plugin already installed.
 You can even start this in debug mode.
+
+### How do I test the plugin with a different IDE (PyCharm, WebStorm, GoLand, etc.)?
+
+Use the `runTestIde` task to run the plugin in an external IDE installation with fully isolated configuration:
+
+```bash
+./gradlew runTestIde -PtestIdePath="$HOME/Applications/PyCharm.app"
+```
+
+This creates a separate config directory (`build/test-ide-pycharm/`) that won't interfere with your default IDE settings. See `CLAUDE.md` for more options.
 
 ## MCP Integration (Model Context Protocol)
 
@@ -221,3 +233,17 @@ curl -X POST http://localhost:8765/mcp \
 ```
 
 For testing, use the included `mcp-test-requests.http` file with IntelliJ's HTTP Client.
+
+## Troubleshooting
+
+### Blank Canvas in IntelliJ 2025.1 and Later
+
+If you see a blank canvas (white/dark screen) instead of the diagrams.net editor in IntelliJ 2025.1 or later versions, this is caused by a known JetBrains bug with JCEF (Java Chromium Embedded Framework) out-of-process mode ([IJPL-184288](https://youtrack.jetbrains.com/issue/IJPL-184288), [IJPL-227022](https://youtrack.jetbrains.com/issue/IJPL-227022)).
+
+**Workaround:**
+
+1. Go to **Help → Edit Custom VM Options...**
+2. Add `-Dide.browser.jcef.out-of-process.enabled=false` on a new line
+3. Save and restart the IDE
+
+**Note:** This workaround disables the out-of-process mode for JCEF, which may affect memory isolation for browser components. The JetBrains team is working on a fix. See [GitHub issue #340](https://github.com/docToolchain/diagrams.net-intellij-plugin/issues/340) for updates.

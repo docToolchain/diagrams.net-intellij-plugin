@@ -152,3 +152,226 @@ tasks.test {
     // Use IntelliJ Platform test runner (JUnit 4 based)
     // Note: useJUnitPlatform() conflicts with IntelliJ Platform's test framework
 }
+
+// TEMPORARY: Workaround for JCEF out-of-process bug (IJPL-184288) causing blank canvas
+// Remove this once JetBrains fixes the issue
+tasks.named<org.jetbrains.intellij.platform.gradle.tasks.RunIdeTask>("runIde") {
+    jvmArgumentProviders += CommandLineArgumentProvider {
+        listOf("-Dide.browser.jcef.out-of-process.enabled=false")
+    }
+}
+
+// Task to run an external IDE installation with isolated test configuration
+// Usage: ./gradlew runTestIde [-PtestIdePath=/path/to/IDE.app] [-PtestConfigName=my-config] [-PcleanConfig=true]
+// Each IDE type gets its own config directory by default (e.g., test-ide-idea, test-ide-pycharm)
+tasks.register<Exec>("runTestIde") {
+    group = "intellij platform"
+    description = "Run an external IDE with isolated test configuration and the built plugin"
+    dependsOn("buildPlugin")
+
+    // This task is not compatible with configuration cache because it needs
+    // to evaluate properties at execution time (e.g., testIdePath from command line)
+    notCompatibleWithConfigurationCache("Task properties must be evaluated at execution time")
+
+    // Store providers for lazy evaluation
+    val testIdePathProp = properties("testIdePath")
+    val testConfigNameProp = properties("testConfigName")
+    val cleanConfigProp = properties("cleanConfig")
+    val detachedProp = properties("detached")
+
+    doFirst {
+        val userHome = System.getProperty("user.home")
+        val isMacOS = System.getProperty("os.name").lowercase().contains("mac")
+
+        // Configurable properties with defaults - check both user and system Applications
+        val defaultIdePath = if (isMacOS) {
+            // Prefer user's Applications folder, fall back to system Applications
+            val userApp = File("$userHome/Applications/IntelliJ IDEA.app")
+            val systemApp = File("/Applications/IntelliJ IDEA.app")
+            when {
+                userApp.exists() -> userApp.absolutePath
+                systemApp.exists() -> systemApp.absolutePath
+                else -> "$userHome/Applications/IntelliJ IDEA.app"  // Default for error message
+            }
+        } else "/opt/idea"
+        val testIdePath = testIdePathProp.getOrElse(defaultIdePath)
+        val cleanConfig = cleanConfigProp.getOrElse("false").toBoolean()
+        val detached = detachedProp.getOrElse("true").toBoolean()
+
+        // Validate IDE exists
+        val ideFile = File(testIdePath)
+        if (!ideFile.exists()) {
+            throw GradleException("""
+                IDE not found at: $testIdePath
+                Set -PtestIdePath=/path/to/IDE.app
+                Example: -PtestIdePath=$userHome/Applications/PyCharm.app
+            """.trimIndent())
+        }
+
+        // Find IDE binary and determine env var prefix
+        // Each JetBrains IDE uses its own prefix: IDEA, PYCHARM, WEBIDE, GOLAND, etc.
+        data class IdeInfo(val binary: String, val envPrefix: String, val ideName: String)
+        val ideInfo: IdeInfo = if (isMacOS) {
+            val macosDir = File(testIdePath, "Contents/MacOS")
+            val ideMap = mapOf(
+                "idea" to Pair("IDEA", "idea"),
+                "pycharm" to Pair("PYCHARM", "pycharm"),
+                "webstorm" to Pair("WEBIDE", "webstorm"),
+                "goland" to Pair("GOLAND", "goland"),
+                "clion" to Pair("CLION", "clion"),
+                "rider" to Pair("RIDER", "rider"),
+                "phpstorm" to Pair("PHPSTORM", "phpstorm"),
+                "rubymine" to Pair("RUBYMINE", "rubymine"),
+                "datagrip" to Pair("DATAGRIP", "datagrip")
+            )
+            val found = ideMap.entries.firstOrNull { File(macosDir, it.key).exists() }
+            if (found != null) {
+                IdeInfo(File(macosDir, found.key).absolutePath, found.value.first, found.value.second)
+            } else {
+                IdeInfo(File(macosDir, "idea").absolutePath, "IDEA", "idea")
+            }
+        } else {
+            IdeInfo(File(testIdePath, "bin/idea.sh").absolutePath, "IDEA", "idea")
+        }
+        val ideBinary = ideInfo.binary
+        val envPrefix = ideInfo.envPrefix
+        val ideName = ideInfo.ideName
+
+        // Config directory defaults to IDE-specific name (e.g., test-ide-pycharm, test-ide-webstorm)
+        val testConfigName = testConfigNameProp.getOrElse("test-ide-$ideName")
+
+        // Paths - each IDE type gets its own isolated directory
+        val configDir = layout.buildDirectory.dir(testConfigName).get().asFile
+        val pluginsDir = File(configDir, "plugins")
+        val ideaProperties = File(configDir, "idea.properties")
+        val ideaVmOptions = File(configDir, "idea.vmoptions")
+
+        // Clean config if requested
+        if (cleanConfig && configDir.exists()) {
+            println("Cleaning test config directory: $configDir")
+            configDir.deleteRecursively()
+        }
+
+        // Create config directories
+        listOf("config", "system", "log", "plugins").forEach {
+            File(configDir, it).mkdirs()
+        }
+
+        // Clear plugin cache in system directory to force fresh plugin loading
+        val pluginCache = File(configDir, "system/plugins")
+        if (pluginCache.exists()) {
+            println("Clearing plugin cache...")
+            pluginCache.deleteRecursively()
+        }
+
+        // Create idea.properties with FULLY isolated paths
+        // All paths are under build/<config-name>/ - NO interference with default IDE
+        ideaProperties.writeText("""
+            idea.config.path=${configDir.absolutePath}/config
+            idea.system.path=${configDir.absolutePath}/system
+            idea.log.path=${configDir.absolutePath}/log
+            idea.plugins.path=${configDir.absolutePath}/plugins
+            idea.scratch.path=${configDir.absolutePath}/scratches
+            idea.initially.ask.config=true
+        """.trimIndent() + "\n")
+
+        // Create options directory and configure to NOT reopen last project
+        val optionsDir = File(configDir, "config/options")
+        optionsDir.mkdirs()
+        File(optionsDir, "ide.general.xml").writeText("""
+            <application>
+              <component name="GeneralSettings">
+                <option name="reopenLastProject" value="false" />
+                <option name="showTipsOnStartup" value="false" />
+                <option name="confirmExit" value="false" />
+              </component>
+            </application>
+        """.trimIndent() + "\n")
+
+        // Create idea.vmoptions with JCEF workaround AND path overrides
+        // Using -D flags ensures these take precedence over default paths
+        ideaVmOptions.writeText("""
+            -Xmx4096m
+            -Dide.browser.jcef.out-of-process.enabled=false
+            -Didea.config.path=${configDir.absolutePath}/config
+            -Didea.system.path=${configDir.absolutePath}/system
+            -Didea.log.path=${configDir.absolutePath}/log
+            -Didea.plugins.path=${configDir.absolutePath}/plugins
+        """.trimIndent() + "\n")
+
+        // Clean plugins directory completely to avoid conflicts with marketplace version
+        pluginsDir.listFiles()?.forEach { it.deleteRecursively() }
+
+        // Install built plugin
+        val pluginZip = fileTree(layout.buildDirectory.dir("distributions")) {
+            include("*.zip")
+        }.files.firstOrNull()
+
+        if (pluginZip != null) {
+            println("Installing plugin from: ${pluginZip.name}")
+            copy {
+                from(zipTree(pluginZip))
+                into(pluginsDir)
+            }
+            // Verify installation
+            val installedPlugin = File(pluginsDir, "diagrams.net-intellij-plugin")
+            if (installedPlugin.exists()) {
+                println("Plugin installed to: ${installedPlugin.absolutePath}")
+            }
+        } else {
+            throw GradleException("No plugin ZIP found in build/distributions/ - run buildPlugin first")
+        }
+
+        // Create disabled_plugins.txt to prevent loading marketplace plugin from user's config
+        // This disables the plugin by ID in any OTHER location (bundled, user config, etc.)
+        // Our local plugin in idea.plugins.path will still load as it's explicitly in our plugins dir
+        val disabledPlugins = File(configDir, "config/disabled_plugins.txt")
+        disabledPlugins.parentFile.mkdirs()
+        // Note: We list plugins to disable from OTHER locations here
+        // The marketplace plugin has same ID but is in a different location
+        disabledPlugins.writeText("")  // Empty for now - isolation via paths should work
+
+        // Create a launcher script that properly exports environment variables
+        // This ensures they're inherited by the macOS app bundle
+        // Use IDE-specific env var prefix (IDEA, PYCHARM, WEBIDE, etc.)
+        // The script launches the IDE detached so Gradle can complete (allows parallel runs)
+        val launcherScript = File(configDir, "launch.sh")
+        val launchCommand = if (detached) {
+            """
+            # Launch detached so Gradle completes and releases lock (enables parallel IDE runs)
+            nohup "$ideBinary" > /dev/null 2>&1 &
+            echo "IDE launched in background (PID: ${'$'}!)"
+            """.trimIndent()
+        } else {
+            """
+            # Launch synchronously (for debugging)
+            exec "$ideBinary"
+            """.trimIndent()
+        }
+        launcherScript.writeText("""
+            #!/bin/bash
+            export ${envPrefix}_PROPERTIES="${ideaProperties.absolutePath}"
+            export ${envPrefix}_VM_OPTIONS="${ideaVmOptions.absolutePath}"
+            $launchCommand
+        """.trimIndent() + "\n")
+        launcherScript.setExecutable(true)
+        println("Using env prefix: ${envPrefix}_PROPERTIES, ${envPrefix}_VM_OPTIONS")
+
+        println("")
+        println("=== Test IDE Configuration (Fully Isolated) ===")
+        println("IDE:      $testIdePath")
+        println("Base dir: $configDir")
+        println("  config:   ${configDir.absolutePath}/config")
+        println("  system:   ${configDir.absolutePath}/system")
+        println("  plugins:  ${configDir.absolutePath}/plugins")
+        println("  log:      ${configDir.absolutePath}/log")
+        println("JCEF workaround: -Dide.browser.jcef.out-of-process.enabled=false")
+        println("Launcher:  ${launcherScript.absolutePath}")
+        println("")
+        println("This test IDE is FULLY ISOLATED from your default IDE installation.")
+        println("================================================")
+
+        // Set command line at execution time (after configDir is determined)
+        commandLine("bash", File(configDir, "launch.sh").absolutePath)
+    }
+}

@@ -76,6 +76,33 @@ The build will fail with an error if the submodule is not initialized.
 ./gradlew publishPlugin
 ```
 
+### Testing with External IDEs
+
+The `runTestIde` task runs an external IDE installation with fully isolated test configuration. This allows testing the plugin in different JetBrains IDEs (PyCharm, WebStorm, GoLand, etc.) without interfering with your default IDE installation.
+
+```bash
+# Run with default IntelliJ IDEA (checks ~/Applications and /Applications)
+./gradlew runTestIde
+
+# Run with a specific IDE
+./gradlew runTestIde -PtestIdePath="$HOME/Applications/PyCharm.app"
+./gradlew runTestIde -PtestIdePath="$HOME/Applications/WebStorm.app"
+./gradlew runTestIde -PtestIdePath="$HOME/Applications/GoLand.app"
+
+# Clean config before running (removes cached state)
+./gradlew runTestIde -PtestIdePath="$HOME/Applications/PyCharm.app" -PcleanConfig=true
+
+# Synchronous mode (for debugging, keeps Gradle running)
+./gradlew runTestIde -PtestIdePath="$HOME/Applications/PyCharm.app" -Pdetached=false
+```
+
+**Key features:**
+- **Full isolation**: Config, system, plugins, and log directories are separate from your default IDE
+- **Per-IDE directories**: Each IDE type gets its own config directory (`build/test-ide-idea`, `build/test-ide-pycharm`, etc.)
+- **Parallel runs**: You can run multiple IDEs simultaneously (default: detached mode)
+- **Auto-detection**: Detects IDE type and uses correct environment variable prefix (IDEA, PYCHARM, WEBIDE, etc.)
+- **JCEF workaround**: Automatically applies `-Dide.browser.jcef.out-of-process.enabled=false` to fix blank canvas issue
+
 ## Architecture
 
 ### Core Components
