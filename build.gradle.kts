@@ -173,72 +173,100 @@ tasks.register<Exec>("runTestIde") {
     // to evaluate properties at execution time (e.g., testIdePath from command line)
     notCompatibleWithConfigurationCache("Task properties must be evaluated at execution time")
 
-    // Store providers for lazy evaluation
-    val testIdePathProp = properties("testIdePath")
-    val testConfigNameProp = properties("testConfigName")
-    val cleanConfigProp = properties("cleanConfig")
-    val detachedProp = properties("detached")
-
     doFirst {
         val userHome = System.getProperty("user.home")
         val isMacOS = System.getProperty("os.name").lowercase().contains("mac")
+        val isWindows = System.getProperty("os.name").lowercase().contains("windows")
 
-        // Configurable properties with defaults - check both user and system Applications
-        val defaultIdePath = if (isMacOS) {
-            // Prefer user's Applications folder, fall back to system Applications
-            val userApp = File("$userHome/Applications/IntelliJ IDEA.app")
-            val systemApp = File("/Applications/IntelliJ IDEA.app")
-            when {
-                userApp.exists() -> userApp.absolutePath
-                systemApp.exists() -> systemApp.absolutePath
-                else -> "$userHome/Applications/IntelliJ IDEA.app"  // Default for error message
+        // Determine IDE path: explicit property takes precedence over auto-detection
+        val customPath = properties("testIdePath").orNull
+        val testIdePath: String = if (customPath != null) {
+            // User specified a path - use it directly, fail if not found
+            if (!File(customPath).exists()) {
+                throw GradleException("IDE not found at specified path: $customPath")
             }
-        } else "/opt/idea"
-        val testIdePath = testIdePathProp.getOrElse(defaultIdePath)
-        val cleanConfig = cleanConfigProp.getOrElse("false").toBoolean()
-        val detached = detachedProp.getOrElse("true").toBoolean()
-
-        // Validate IDE exists
-        val ideFile = File(testIdePath)
-        if (!ideFile.exists()) {
-            throw GradleException("""
-                IDE not found at: $testIdePath
-                Set -PtestIdePath=/path/to/IDE.app
-                Example: -PtestIdePath=$userHome/Applications/PyCharm.app
-            """.trimIndent())
+            customPath
+        } else {
+            // No path specified - search default locations based on OS
+            val searchPaths: List<String> = when {
+                isMacOS -> listOf(
+                    "$userHome/Applications/IntelliJ IDEA.app",
+                    "/Applications/IntelliJ IDEA.app"
+                )
+                isWindows -> listOf(
+                    "$userHome\\AppData\\Local\\Programs\\IntelliJ IDEA",
+                    "C:\\Program Files\\JetBrains\\IntelliJ IDEA"
+                )
+                else -> listOf("/opt/idea")  // Linux
+            }
+            val foundPath = searchPaths.firstOrNull { File(it).exists() }
+            if (foundPath == null) {
+                val searchedLocations = searchPaths.joinToString("\n") { "  - $it" }
+                val examplePath = when {
+                    isMacOS -> "$userHome/Applications/PyCharm.app"
+                    isWindows -> "$userHome\\AppData\\Local\\Programs\\PyCharm"
+                    else -> "/opt/pycharm"
+                }
+                throw GradleException("""
+                    IDE not found. Searched locations:
+                    $searchedLocations
+                    Set -PtestIdePath=/path/to/IDE
+                    Example: -PtestIdePath=$examplePath
+                """.trimIndent())
+            }
+            foundPath
         }
 
         // Find IDE binary and determine env var prefix
         // Each JetBrains IDE uses its own prefix: IDEA, PYCHARM, WEBIDE, GOLAND, etc.
         data class IdeInfo(val binary: String, val envPrefix: String, val ideName: String)
-        val ideInfo: IdeInfo = if (isMacOS) {
-            val macosDir = File(testIdePath, "Contents/MacOS")
-            val ideMap = mapOf(
-                "idea" to Pair("IDEA", "idea"),
-                "pycharm" to Pair("PYCHARM", "pycharm"),
-                "webstorm" to Pair("WEBIDE", "webstorm"),
-                "goland" to Pair("GOLAND", "goland"),
-                "clion" to Pair("CLION", "clion"),
-                "rider" to Pair("RIDER", "rider"),
-                "phpstorm" to Pair("PHPSTORM", "phpstorm"),
-                "rubymine" to Pair("RUBYMINE", "rubymine"),
-                "datagrip" to Pair("DATAGRIP", "datagrip")
-            )
-            val found = ideMap.entries.firstOrNull { File(macosDir, it.key).exists() }
-            if (found != null) {
-                IdeInfo(File(macosDir, found.key).absolutePath, found.value.first, found.value.second)
-            } else {
-                IdeInfo(File(macosDir, "idea").absolutePath, "IDEA", "idea")
+
+        // Map of IDE binary names to (envPrefix, ideName)
+        val ideMap = mapOf(
+            "idea" to Pair("IDEA", "idea"),
+            "pycharm" to Pair("PYCHARM", "pycharm"),
+            "webstorm" to Pair("WEBIDE", "webstorm"),
+            "goland" to Pair("GOLAND", "goland"),
+            "clion" to Pair("CLION", "clion"),
+            "rider" to Pair("RIDER", "rider"),
+            "phpstorm" to Pair("PHPSTORM", "phpstorm"),
+            "rubymine" to Pair("RUBYMINE", "rubymine"),
+            "datagrip" to Pair("DATAGRIP", "datagrip")
+        )
+
+        val ideInfo: IdeInfo = when {
+            isMacOS -> {
+                val macosDir = File(testIdePath, "Contents/MacOS")
+                val found = ideMap.entries.firstOrNull { File(macosDir, it.key).exists() }
+                if (found != null) {
+                    IdeInfo(File(macosDir, found.key).absolutePath, found.value.first, found.value.second)
+                } else {
+                    IdeInfo(File(macosDir, "idea").absolutePath, "IDEA", "idea")
+                }
             }
-        } else {
-            IdeInfo(File(testIdePath, "bin/idea.sh").absolutePath, "IDEA", "idea")
+            isWindows -> {
+                val binDir = File(testIdePath, "bin")
+                val found = ideMap.entries.firstOrNull { File(binDir, "${it.key}64.exe").exists() }
+                if (found != null) {
+                    IdeInfo(File(binDir, "${found.key}64.exe").absolutePath, found.value.first, found.value.second)
+                } else {
+                    IdeInfo(File(binDir, "idea64.exe").absolutePath, "IDEA", "idea")
+                }
+            }
+            else -> {
+                // Linux
+                val binDir = File(testIdePath, "bin")
+                val found = ideMap.entries.firstOrNull { File(binDir, "${it.key}.sh").exists() }
+                if (found != null) {
+                    IdeInfo(File(binDir, "${found.key}.sh").absolutePath, found.value.first, found.value.second)
+                } else {
+                    IdeInfo(File(binDir, "idea.sh").absolutePath, "IDEA", "idea")
+                }
+            }
         }
-        val ideBinary = ideInfo.binary
-        val envPrefix = ideInfo.envPrefix
-        val ideName = ideInfo.ideName
 
         // Config directory defaults to IDE-specific name (e.g., test-ide-pycharm, test-ide-webstorm)
-        val testConfigName = testConfigNameProp.getOrElse("test-ide-$ideName")
+        val testConfigName = properties("testConfigName").getOrElse("test-ide-${ideInfo.ideName}")
 
         // Paths - each IDE type gets its own isolated directory
         val configDir = layout.buildDirectory.dir(testConfigName).get().asFile
@@ -247,6 +275,7 @@ tasks.register<Exec>("runTestIde") {
         val ideaVmOptions = File(configDir, "idea.vmoptions")
 
         // Clean config if requested
+        val cleanConfig = properties("cleanConfig").getOrElse("false").toBoolean()
         if (cleanConfig && configDir.exists()) {
             println("Cleaning test config directory: $configDir")
             configDir.deleteRecursively()
@@ -336,28 +365,29 @@ tasks.register<Exec>("runTestIde") {
         // Use IDE-specific env var prefix (IDEA, PYCHARM, WEBIDE, etc.)
         // The script launches the IDE detached so Gradle can complete (allows parallel runs)
         val launcherScript = File(configDir, "launch.sh")
+        val detached = properties("detached").getOrElse("true").toBoolean()
         val launchCommand = if (detached) {
             """
             # Launch detached so Gradle completes and releases lock (enables parallel IDE runs)
-            nohup "$ideBinary" > /dev/null 2>&1 &
+            nohup "${ideInfo.binary}" > /dev/null 2>&1 &
             echo "IDE launched in background (PID: ${'$'}!)"
             """.trimIndent()
         } else {
             """
             # Launch synchronously (for debugging)
-            exec "$ideBinary"
+            exec "${ideInfo.binary}"
             """.trimIndent()
         }
         launcherScript.writeText("""
             #!/bin/bash
             # Clear any inherited MCP port env var for clean test environment
             unset DIAGRAMS_NET_MCP_PORT_CURRENT
-            export ${envPrefix}_PROPERTIES="${ideaProperties.absolutePath}"
-            export ${envPrefix}_VM_OPTIONS="${ideaVmOptions.absolutePath}"
+            export ${ideInfo.envPrefix}_PROPERTIES="${ideaProperties.absolutePath}"
+            export ${ideInfo.envPrefix}_VM_OPTIONS="${ideaVmOptions.absolutePath}"
             $launchCommand
         """.trimIndent() + "\n")
         launcherScript.setExecutable(true)
-        println("Using env prefix: ${envPrefix}_PROPERTIES, ${envPrefix}_VM_OPTIONS")
+        println("Using env prefix: ${ideInfo.envPrefix}_PROPERTIES, ${ideInfo.envPrefix}_VM_OPTIONS")
 
         println("")
         println("=== Test IDE Configuration (Fully Isolated) ===")

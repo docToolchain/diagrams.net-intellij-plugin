@@ -1,12 +1,14 @@
 package de.docs_as_co.intellij.plugin.drawio.settings
 
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.options.SearchableConfigurable
+import com.intellij.openapi.util.Disposer
 import com.intellij.util.Alarm
 import de.docs_as_co.intellij.plugin.drawio.DiagramsNetBundle.message
 import org.jetbrains.annotations.Nls
 import javax.swing.JComponent
 
-class DiagramsConfigurable : SearchableConfigurable {
+class DiagramsConfigurable : SearchableConfigurable, Disposable {
     private var myForm: DiagramsSettingsForm? = null
     private var statusUpdateAlarm: Alarm? = null
     override fun getId(): String {
@@ -93,7 +95,8 @@ class DiagramsConfigurable : SearchableConfigurable {
                 // Cancel any previous pending requests and reuse/create the alarm
                 statusUpdateAlarm?.cancelAllRequests()
                 if (statusUpdateAlarm == null) {
-                    statusUpdateAlarm = Alarm(Alarm.ThreadToUse.SWING_THREAD)
+                    // Create Alarm with parent disposable to ensure proper cleanup
+                    statusUpdateAlarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
                 }
                 statusUpdateAlarm!!.addRequest({
                     currentForm?.updateServerStatus()
@@ -126,9 +129,15 @@ class DiagramsConfigurable : SearchableConfigurable {
     }
 
     override fun disposeUIResources() {
+        // Alarm is disposed automatically via parent disposable (this)
         statusUpdateAlarm?.cancelAllRequests()
         statusUpdateAlarm = null
         myForm = null
+    }
+
+    override fun dispose() {
+        // Called when this Disposable is disposed
+        // Alarm registered with 'this' as parent will be disposed automatically
     }
 
     val form: DiagramsSettingsForm
