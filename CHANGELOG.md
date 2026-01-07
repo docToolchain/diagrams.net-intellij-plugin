@@ -4,6 +4,19 @@
 
 ### Added
 
+- MCP (Model Context Protocol) server integration for AI assistant interaction
+  - `list_diagrams` tool to list all open diagrams
+  - `get_diagram_by_id` tool to retrieve diagram content with decoded XML
+  - `update_diagram` tool to modify diagrams programmatically
+- MCP Streamable HTTP Transport via `/mcp` JSON-RPC 2.0 endpoint
+- Per-IDE port assignment: each JetBrains IDE type gets a unique port offset
+  - IntelliJ IDEA: base port (default 8765)
+  - WebStorm: base + 1, PyCharm: base + 2, GoLand: base + 3, etc.
+- Environment variable support:
+  - `DIAGRAMS_NET_MCP_PORT_<CODE>` for per-IDE port override
+  - `DIAGRAMS_NET_MCP_PORT_CURRENT` exported for Claude Code discovery
+- Python wrapper script (`mcp-server-wrapper.py`) for stdio transport clients
+
 ### Changed
 
 ### Deprecated
