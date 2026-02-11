@@ -3,6 +3,7 @@ package de.docs_as_co.intellij.plugin.drawio.editor
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.ui.jcef.JBCefJSQuery
 import com.jetbrains.rd.util.lifetime.Lifetime
 import com.jetbrains.rd.util.lifetime.assertAlive
@@ -21,6 +22,8 @@ import java.net.URI
 
 abstract class BaseDiagramsWebView(val lifetime: Lifetime, var uiTheme: String, var uiMode: String) {
     companion object {
+        private val LOG = Logger.getInstance(BaseDiagramsWebView::class.java)
+
         val mapper = jacksonObjectMapper().apply {
             configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         }
@@ -42,36 +45,35 @@ abstract class BaseDiagramsWebView(val lifetime: Lifetime, var uiTheme: String, 
                     // Error message was: "CORS policy: Cross origin requests are only supported for protocol schemes..."
                     "https", "drawio-plugin",
                     SchemeHandlerFactory { uri: URI ->
+                        LOG.debug("Scheme handler: Requested URI: ${uri.path}")
                         if (uri.path == "/index.html") {
-                            data class InitialData(
-                                val baseUrl: String,
-                                val localStorage: String?,
-                                val theme: String,
-                                val mode: String,
-                                val lang: String,
-                                val showChrome: String
-                            )
+                            LOG.debug("Scheme handler: Serving index.html with initialData")
+                            // Build initial data JSON manually to avoid Jackson reflection issues with local classes
+                            val initialDataJson = """{"baseUrl":"https://drawio-plugin","localStorage":null,"theme":"$myUiTheme","mode":"$myUiMode","lang":"en","showChrome":"1"}"""
 
                             val text =
-                                BaseDiagramsWebView::class.java.getResourceAsStream("/assets/index.html").reader()
-                                    .readText()
-                            val updatedText = text.replace(
-                                "\$\$initialData\$\$",
-                                mapper.writeValueAsString(
-                                    InitialData(
-                                        "https://drawio-plugin",
-                                        null,
-                                        myUiTheme,
-                                        myUiMode,
-                                        "en",
-                                        "1"
-                                    )
+                                BaseDiagramsWebView::class.java.getResourceAsStream("/assets/index.html")?.reader()
+                                    ?.readText()
+                            if (text == null) {
+                                LOG.error("Scheme handler: Failed to load /assets/index.html")
+                                null
+                            } else {
+                                val updatedText = text.replace(
+                                    "\$\$initialData\$\$",
+                                    initialDataJson
                                 )
-                            )
-
-                            updatedText.byteInputStream()
+                                LOG.debug("Scheme handler: index.html loaded, size: ${updatedText.length} bytes")
+                                updatedText.byteInputStream()
+                            }
                         } else {
-                            BaseDiagramsWebView::class.java.getResourceAsStream("/assets" + uri.path)
+                            LOG.debug("Scheme handler: Serving asset: /assets${uri.path}")
+                            val stream = BaseDiagramsWebView::class.java.getResourceAsStream("/assets" + uri.path)
+                            if (stream == null) {
+                                LOG.error("Scheme handler: Asset not found: /assets${uri.path}")
+                            } else {
+                                LOG.debug("Scheme handler: Asset found: /assets${uri.path}")
+                            }
+                            stream
                         }
                     }
                 ).also { successful -> assert(successful) }
