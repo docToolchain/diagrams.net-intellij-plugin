@@ -5,6 +5,7 @@ import com.intellij.ide.plugins.MultiPanel
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.invokeLater
 import com.intellij.openapi.editor.EditorBundle
+import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.SystemInfoRt
 import com.intellij.openapi.util.registry.Registry
 import com.intellij.ui.components.JBLoadingPanel
@@ -28,7 +29,9 @@ class LoadableJCEFHtmlPanel(
         null,
         null)
 
-    private val loadingPanel = JBLoadingPanel(BorderLayout(), this).apply { setLoadingText(CommonBundle.getLoadingTreeNodeText()) }
+    // Create a local Disposable parent for loadingPanel to avoid registering with ROOT_DISPOSABLE
+    private val loadingPanelDisposable = Disposer.newDisposable()
+    private val loadingPanel = JBLoadingPanel(BorderLayout(), loadingPanelDisposable).apply { setLoadingText(CommonBundle.getLoadingTreeNodeText()) }
     private val alarm = Alarm()
 
     val browser: JBCefBrowserBase get() = htmlPanelComponent
@@ -84,6 +87,9 @@ class LoadableJCEFHtmlPanel(
 
     override fun dispose() {
         alarm.dispose()
+        loadingPanel.stopLoading()
+        Disposer.dispose(loadingPanelDisposable)  // Dispose the loading panel and its children
+        htmlPanelComponent.dispose()
     }
 
     val component: JComponent get() = this.multiPanel

@@ -1,6 +1,7 @@
 package de.docs_as_co.intellij.plugin.drawio.editor
 
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.colors.EditorColorsListener
 import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.editor.colors.EditorColorsScheme
@@ -32,6 +33,9 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 """
 
+    // Unique ID for this editor instance
+    private val editorId = generateEditorId(file)
+
     override fun getFile() = file
 
     private var view :DiagramsWebView
@@ -45,6 +49,14 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
 
         view = DiagramsWebView(lifetime, uiThemeFromConfig().key, uiModeFromConfig().key)
         initView()
+
+        // Register with MCP service
+        try {
+            de.docs_as_co.intellij.plugin.drawio.mcp.DiagramMcpService.instance.registerEditor(editorId, this, project, file)
+        } catch (e: Exception) {
+            // MCP service might not be available or enabled, ignore
+            LOG.debug("MCP service registration failed (service may not be enabled)", e)
+        }
     }
 
     private fun uiThemeFromConfig(): DiagramsUiTheme {
@@ -114,14 +126,9 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
     private fun saveFile(data: ByteArray) {
         ApplicationManager.getApplication().invokeLater {
             ApplicationManager.getApplication().runWriteAction {
-                file.getOutputStream(this).apply {
-                    writer().apply {
-                        //svg and png are returned base64 encoded
-                        write(data)
-                        flush()
-                    }
-                    flush()
-                    close()
+                file.getOutputStream(this).use { outputStream ->
+                    outputStream.write(data)
+                    outputStream.flush()
                 }
             }
         }
@@ -161,6 +168,13 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
     }
 
     override fun dispose() {
+        // Unregister from MCP service
+        try {
+            de.docs_as_co.intellij.plugin.drawio.mcp.DiagramMcpService.instance.unregisterEditor(editorId)
+        } catch (e: Exception) {
+            // MCP service might not be available, ignore
+            LOG.debug("MCP service unregistration failed (service may not be enabled)", e)
+        }
         lifetimeDef.terminate(true)
     }
 
@@ -174,6 +188,88 @@ class DiagramsEditor(private val project: Project, private val file: VirtualFile
 
     fun openDevTools() {
         view.openDevTools();
+    }
+
+    // ========== MCP Integration Methods ==========
+
+    /**
+     * Get the current XML content of the diagram.
+     * This returns the cached XML from the last AutoSave event.
+     * For the XML to be available, the diagram must have triggered an autosave
+     * (which happens when you make changes in the editor).
+     * @return The XML content, or null if not yet loaded
+     */
+    fun getXmlContent(): String? {
+        return view.xmlContent.value
+    }
+
+    /**
+     * Update the diagram with new XML content.
+     * @param xml The new XML content
+     * @return Promise that completes when the content is loaded
+     */
+    fun updateXmlContent(xml: String) = view.loadXmlLike(xml)
+
+    /**
+     * Update the diagram with new XML content and save it to the file.
+     * This method loads the XML and then triggers a save operation.
+     * @param xml The new XML content
+     */
+    fun updateAndSaveXmlContent(xml: String) {
+        val isSVGFile = file.name.endsWith(".svg")
+        val isPNGFile = file.name.endsWith(".png")
+
+        LOG.info("updateAndSaveXmlContent: Starting update for file ${file.name}, isSVG=$isSVGFile, isPNG=$isPNGFile")
+
+        // Load the XML and wait for the webview to finish loading
+        view.loadXmlLike(xml).then {
+            LOG.info("updateAndSaveXmlContent: Load complete, now exporting/saving")
+            // Now that the content is loaded, trigger the appropriate save operation
+            if (isSVGFile) {
+                view.exportSvg().then { data: String ->
+                    LOG.info("updateAndSaveXmlContent: SVG export complete, saving ${data.length} bytes")
+                    val content = xmlHeader + data
+                    saveFile(content.toByteArray(charset("utf-8")))
+                }
+            } else if (isPNGFile) {
+                view.exportPng().then { data: ByteArray ->
+                    LOG.info("updateAndSaveXmlContent: PNG export complete, saving ${data.size} bytes")
+                    saveFile(data)
+                }
+            } else {
+                // For XML files, save the raw XML directly
+                LOG.info("updateAndSaveXmlContent: Saving raw XML, ${xml.length} bytes")
+                saveFile(xml.toByteArray(charset("utf-8")))
+            }
+        }
+    }
+
+    /**
+     * Get the editor ID.
+     */
+    fun getEditorId(): String {
+        return editorId
+    }
+
+    /**
+     * Export the diagram as SVG.
+     */
+    fun exportAsSvg() = view.exportSvg()
+
+    /**
+     * Export the diagram as PNG.
+     */
+    fun exportAsPng() = view.exportPng()
+
+    companion object {
+        private val LOG = Logger.getInstance(DiagramsEditor::class.java)
+
+        /**
+         * Generate a unique ID for an editor based on the file path.
+         */
+        fun generateEditorId(file: VirtualFile): String {
+            return Integer.toHexString(file.path.hashCode())
+        }
     }
 
 }

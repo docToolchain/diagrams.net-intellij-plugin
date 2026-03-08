@@ -42,6 +42,8 @@ For pre-releases, either
 
 [![](https://img.shields.io/twitter/follow/ahus1de.svg?style=social)](https://twitter.com/intent/follow?screen_name=ahus1de)
 
+[![Mastodon Follow](https://img.shields.io/badge/Mastodon-Follow%20%40ascheman-6364FF?logo=mastodon&style=social)](https://mastodon.social/@ascheman)
+
 ## Docs
 
 An architecture overview can be found at https://drawio-intellij-plugin.netlify.app/ .
@@ -57,4 +59,193 @@ For development purpose, clone the project locally and start it with the command
 This will build the plugin and start an Instance of IntelliJ with the plugin already installed.
 You can even start this in debug mode.
 
+### How do I test the plugin with a different IDE (PyCharm, WebStorm, GoLand, etc.)?
 
+Use the `runTestIde` task to run the plugin in an external IDE installation with fully isolated configuration:
+
+```bash
+./gradlew runTestIde -PtestIdePath="$HOME/Applications/PyCharm.app"
+```
+
+This creates a separate config directory (`build/test-ide-pycharm/`) that won't interfere with your default IDE settings. See `CLAUDE.md` for more options.
+
+## MCP Integration (Model Context Protocol)
+
+This plugin exposes a Model Context Protocol (MCP) server that allows AI assistants like Claude to interact with diagrams in your IDE.
+The MCP server provides tools to list, view, and update diagrams programmatically.
+
+![MCP Architecture](src/docs/arc42/images/intellij-plugin-mcp-server.drawio.svg)
+
+### Features
+
+**Available MCP Tools:**
+- `list_diagrams` - List all open diagrams in the IDE
+- `get_diagram_by_id` - Get diagram content with **decoded, readable XML**
+- `update_diagram` - Update diagram content and save changes
+
+**XML Decoding:**
+- Automatically decodes base64+zlib compressed diagram data
+- Provides human-readable mxGraphModel XML structure
+- No need for MCP clients to implement decompression
+- Shows cells, geometry, styles, and connections clearly
+
+**Real-Time Updates:**
+- Changes appear immediately in the IntelliJ editor
+- Supports SVG, PNG, and XML diagram formats
+
+### Quick Setup
+
+#### 1. Enable MCP Server in IntelliJ
+
+1. Open IntelliJ IDEA Settings (Preferences on macOS)
+2. Navigate to: **Settings → Tools → Diagrams.net Integration**
+3. Check: **Enable MCP Server**
+4. Configure: **MCP Server Port** (default: 8765)
+5. Click: **Apply** / **OK**
+
+The server will start automatically when enabled and a diagram file is open.
+
+#### 2. Configure Your MCP Client
+
+##### Claude Code (Recommended: Direct HTTP)
+
+Claude Code supports HTTP transport directly. Add to `.claude/mcp.json` in your project:
+
+```json
+{
+  "mcpServers": {
+    "diagrams-net-intellij": {
+      "type": "http",
+      "url": "http://localhost:${DIAGRAMS_NET_MCP_PORT_CURRENT:-8765}/mcp"
+    }
+  }
+}
+```
+
+Or via CLI (use single quotes to preserve `${}`):
+```bash
+claude mcp add --transport http diagrams-net-intellij 'http://localhost:${DIAGRAMS_NET_MCP_PORT_CURRENT:-8765}/mcp'
+```
+
+##### Claude Desktop (Requires Wrapper)
+
+Claude Desktop only supports stdio transport. Use the wrapper script.
+
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS):
+
+```json
+{
+  "mcpServers": {
+    "diagrams-net-intellij": {
+      "command": "python3",
+      "args": [
+        "/absolute/path/to/diagrams.net-intellij-plugin/mcp-server-wrapper.py"
+      ],
+      "env": {
+        "DIAGRAMS_NET_MCP_PORT": "8765"
+      }
+    }
+  }
+}
+```
+
+The wrapper acts as a stdio ↔ HTTP proxy, forwarding JSON-RPC messages to the `/mcp` endpoint.
+
+#### Per-IDE Port Assignment
+
+Each JetBrains IDE type automatically gets a unique port to allow running multiple IDEs simultaneously:
+
+| IDE | Product Code | Default Port |
+|-----|--------------|--------------|
+| IntelliJ IDEA | IC/IU | 8765 (base) |
+| WebStorm | WS | 8766 |
+| PyCharm | PY/PC | 8767 |
+| GoLand | GO | 8768 |
+| Rider | RD | 8769 |
+| RubyMine | RM | 8770 |
+| CLion | CL | 8771 |
+| PhpStorm | PS | 8772 |
+
+#### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DIAGRAMS_NET_MCP_PORT` | Base port in IDE settings | `8765` |
+| `DIAGRAMS_NET_MCP_PORT_<CODE>` | Override port for specific IDE (e.g., `_WS`, `_PY`) | - |
+| `DIAGRAMS_NET_MCP_PORT_CURRENT` | Exported by plugin for Claude Code discovery | - |
+
+**Claude Code Integration:**
+
+The plugin exports `DIAGRAMS_NET_MCP_PORT_CURRENT` to the IDE environment.
+Terminals opened in IntelliJ inherit this, so Claude Code can use:
+
+```json
+{
+  "mcpServers": {
+    "diagrams-net-intellij": {
+      "type": "http",
+      "url": "http://localhost:${DIAGRAMS_NET_MCP_PORT_CURRENT:-8765}/mcp"
+    }
+  }
+}
+```
+
+### MCP Streamable HTTP Transport (Direct Access)
+
+The plugin supports the **MCP Streamable HTTP Transport** specification, allowing MCP clients to connect directly via HTTP without the Python wrapper.
+
+**Endpoint:** `POST /mcp`
+
+This endpoint accepts JSON-RPC 2.0 requests and implements the full MCP protocol:
+- `initialize` - Start MCP session, returns server capabilities
+- `tools/list` - List available tools with JSON Schema
+- `tools/call` - Execute a tool (list_diagrams, get_diagram_by_id, update_diagram)
+- `ping` - Health check
+
+**Example:**
+```bash
+# Initialize MCP session
+curl -X POST http://localhost:8765/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "initialize",
+    "params": {
+      "protocolVersion": "2024-11-05",
+      "capabilities": {},
+      "clientInfo": {"name": "test", "version": "1.0"}
+    }
+  }'
+
+# List available tools
+curl -X POST http://localhost:8765/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc": "2.0", "id": 2, "method": "tools/list"}'
+
+# Call list_diagrams tool
+curl -X POST http://localhost:8765/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 3,
+    "method": "tools/call",
+    "params": {"name": "list_diagrams", "arguments": {}}
+  }'
+```
+
+For testing, use the included `mcp-test-requests.http` file with IntelliJ's HTTP Client.
+
+## Troubleshooting
+
+### Blank Canvas in IntelliJ 2025.1 and Later
+
+If you see a blank canvas (white/dark screen) instead of the diagrams.net editor in IntelliJ 2025.1 or later versions, this is caused by a known JetBrains bug with JCEF (Java Chromium Embedded Framework) out-of-process mode ([IJPL-184288](https://youtrack.jetbrains.com/issue/IJPL-184288), [IJPL-227022](https://youtrack.jetbrains.com/issue/IJPL-227022)).
+
+**Workaround:**
+
+1. Go to **Help → Edit Custom VM Options...**
+2. Add `-Dide.browser.jcef.out-of-process.enabled=false` on a new line
+3. Save and restart the IDE
+
+**Note:** This workaround disables the out-of-process mode for JCEF, which may affect memory isolation for browser components. The JetBrains team is working on a fix. See [GitHub issue #340](https://github.com/docToolchain/diagrams.net-intellij-plugin/issues/340) for updates.
