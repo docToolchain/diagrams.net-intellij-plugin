@@ -17,17 +17,7 @@
   - `DIAGRAMS_NET_MCP_PORT_CURRENT` exported for Claude Code discovery
 - Python wrapper script (`mcp-server-wrapper.py`) for stdio transport clients
 
-### Changed
-
-### Deprecated
-
-### Removed
-
-### Fixed
-
-### Security
-
-## [0.2.6] - 2024-07-02
+## 0.2.6 - 2024-07-02
 
 ### Fixed
 
