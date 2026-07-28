@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.2.7
+
+### Fixed
+
+- Support IntelliJ IDEA 2026.2.0.1, including its JCEF module and resource handler API.
+
 ### Added
 
 - MCP (Model Context Protocol) server integration for AI assistant interaction

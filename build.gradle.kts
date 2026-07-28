@@ -5,14 +5,15 @@ import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask
 
 fun properties(key: String) = providers.gradleProperty(key)
 fun environment(key: String) = providers.environmentVariable(key)
+val localIdeaPath = providers.gradleProperty("localIdeaPath")
 
 plugins {
     // Java support
     //id("java")
     // Kotlin support
-    id("org.jetbrains.kotlin.jvm") version "2.3.10"
+    id("org.jetbrains.kotlin.jvm") version "2.4.0"
     // gradle-intellij-plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
-    id("org.jetbrains.intellij.platform") version "2.11.0"
+    id("org.jetbrains.intellij.platform") version "2.18.1"
     // gradle-changelog-plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
     id("org.jetbrains.changelog") version "2.5.0"
 }
@@ -36,8 +37,12 @@ repositories {
 }
 dependencies {
     intellijPlatform {
-        // https://github.com/JetBrains/intellij-platform-gradle-plugin/issues/1693
-        intellijIdeaCommunity(properties("platformVersion"), useInstaller = false)
+        if (localIdeaPath.isPresent) {
+            local(file(localIdeaPath.get()))
+        } else {
+            create(properties("platformType"), properties("platformVersion"))
+        }
+        bundledPlugin("com.intellij.modules.jcef")
 
         // Needed when I download EAP versions which are only available on Maven.
         // https://github.com/JetBrains/intellij-platform-gradle-plugin/issues/1638#issuecomment-2151527333
@@ -53,7 +58,9 @@ dependencies {
     implementation("com.google.code.gson:gson:2.10.1")
 
     // Jackson for browser communication (diagram editor)
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.16.1")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.16.1") {
+        exclude(group = "org.jetbrains.kotlin")
+    }
     implementation("com.fasterxml.jackson.core:jackson-databind:2.16.1")
 
     // JUnit 4 for unit testing (required by IntelliJ Platform test framework)
@@ -99,23 +106,10 @@ intellijPlatform {
         failureLevel = listOf(VerifyPluginTask.FailureLevel.INVALID_PLUGIN, VerifyPluginTask.FailureLevel.COMPATIBILITY_PROBLEMS, VerifyPluginTask.FailureLevel.NOT_DYNAMIC)
         freeArgs = listOf("-mute", "TemplateWordInPluginId")
         ides {
-            // recommended()
-            // Configure IDE versions for verification - required on CI
-            val ideVersions = properties("pluginVerifierIdeVersions").get()
-            if (ideVersions.isNotBlank()) {
-                ides( ideVersions.split(',').map { it.trim() }.filter { it.isNotEmpty() } )
-            }
-            // Note: If empty, verifyPlugin task is skipped via onlyIf condition below
+            current()
         }
     }
 
-}
-
-// Skip plugin verification if no IDE versions configured (ARM64/Apple Silicon local builds)
-tasks.named<VerifyPluginTask>("verifyPlugin") {
-    onlyIf {
-        properties("pluginVerifierIdeVersions").get().isNotBlank()
-    }
 }
 
 tasks.jar {
@@ -136,16 +130,13 @@ tasks.jar {
     }
 }
 
-// Use JVM Toolchain to ensure consistent Java/Kotlin compilation target
-// This ensures both Java and Kotlin compile to the same JVM target
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(25)
 }
 
-// Keep explicit Java configuration for clarity and compatibility
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
 }
 
 tasks.test {

@@ -31,14 +31,19 @@ abstract class BaseDiagramsWebView(val lifetime: Lifetime, var uiTheme: String, 
         private var didRegisterSchemeHandler = false
         private var myUiTheme = DiagramsUiTheme.DEFAULT.key
         private var myUiMode = DiagramsUiMode.AUTO.key
+        private val schemeHandlerLock = Any()
+
         fun initializeSchemeHandler(uiTheme: String, uiMode: String) {
             // set new theme to private variable. Will be used when rendering the preview the next time
             myUiTheme = uiTheme
             myUiMode = uiMode
 
-            if (!didRegisterSchemeHandler) {
-                didRegisterSchemeHandler = true
-                CefApp.getInstance().registerSchemeHandlerFactory(
+            synchronized(schemeHandlerLock) {
+                if (didRegisterSchemeHandler) {
+                    return
+                }
+
+                val registered = CefApp.getInstance().registerSchemeHandlerFactory(
                     // needed to use "https" as scheme here as "drawio-plugin" scheme didn't allow for CORS requests that were needed
                     // to start the diagrams.net application in the JCEF/Chromium preview browser.
                     // Worked in previous versions, but not from IntelliJ 2021.1 onwards; maybe due to tightened security in Chromium.
@@ -76,12 +81,14 @@ abstract class BaseDiagramsWebView(val lifetime: Lifetime, var uiTheme: String, 
                             stream
                         }
                     }
-                ).also { successful -> assert(successful) }
+                )
+                check(registered) { "Unable to register the diagrams.net JCEF resource handler" }
+                didRegisterSchemeHandler = true
             }
         }
     }
 
-    private val panel = LoadableJCEFHtmlPanel("https://drawio-plugin/index.html", null, null)
+    private val panel = LoadableJCEFHtmlPanel()
     val component = panel.component
 
     fun openDevTools() {
@@ -91,6 +98,7 @@ abstract class BaseDiagramsWebView(val lifetime: Lifetime, var uiTheme: String, 
     private val responseMap = HashMap<String, AsyncPromise<IncomingMessage.Response>>()
 
     init {
+        initializeSchemeHandler(uiTheme, uiMode)
         object : CefLifeSpanHandlerAdapter() {
             override fun onAfterCreated(browser: CefBrowser?) {
                 super.onAfterCreated(browser)
@@ -135,6 +143,7 @@ abstract class BaseDiagramsWebView(val lifetime: Lifetime, var uiTheme: String, 
                 panel.browser.jbCefClient.removeLoadHandler(handler, panel.browser.cefBrowser)
             }
         }
+        panel.loadUrl("https://drawio-plugin/index.html")
     }
 
     private var requestId = 0

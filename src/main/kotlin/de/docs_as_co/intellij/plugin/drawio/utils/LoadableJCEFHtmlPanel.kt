@@ -94,4 +94,8 @@ class LoadableJCEFHtmlPanel(
 
     val component: JComponent get() = this.multiPanel
 
+    fun loadUrl(url: String) {
+        htmlPanelComponent.loadURL(url)
+    }
+
 }
