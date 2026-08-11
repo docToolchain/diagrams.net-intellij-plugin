@@ -37,11 +37,7 @@ repositories {
 }
 dependencies {
     intellijPlatform {
-        if (localIdeaPath.isPresent) {
-            local(file(localIdeaPath.get()))
-        } else {
-            create(properties("platformType"), properties("platformVersion"))
-        }
+        create(providers.gradleProperty("platformType"), providers.gradleProperty("platformVersion"))
         bundledPlugin("com.intellij.modules.jcef")
 
         // Needed when I download EAP versions which are only available on Maven.
@@ -106,10 +102,23 @@ intellijPlatform {
         failureLevel = listOf(VerifyPluginTask.FailureLevel.INVALID_PLUGIN, VerifyPluginTask.FailureLevel.COMPATIBILITY_PROBLEMS, VerifyPluginTask.FailureLevel.NOT_DYNAMIC)
         freeArgs = listOf("-mute", "TemplateWordInPluginId")
         ides {
-            current()
+            // recommended()
+            // Configure IDE versions for verification - required on CI
+            val ideVersions = properties("pluginVerifierIdeVersions").get()
+            if (ideVersions.isNotBlank()) {
+                create(provider { ideVersions.split(',') })
+            }
+            // Note: If empty, verifyPlugin task is skipped via onlyIf condition below
         }
     }
 
+}
+
+tasks {
+    patchPluginXml {
+        sinceBuild = "262.8665"
+        untilBuild = provider { null }
+    }
 }
 
 tasks.jar {
