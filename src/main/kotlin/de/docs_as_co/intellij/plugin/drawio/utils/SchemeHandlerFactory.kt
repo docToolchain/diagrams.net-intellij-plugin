@@ -3,9 +3,13 @@ package de.docs_as_co.intellij.plugin.drawio.utils
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
 import org.cef.callback.CefCallback
+import org.cef.callback.CefResourceReadCallback
+import org.cef.callback.CefResourceSkipCallback
 import org.cef.callback.CefSchemeHandlerFactory
 import org.cef.handler.CefResourceHandler
+import org.cef.misc.BoolRef
 import org.cef.misc.IntRef
+import org.cef.misc.LongRef
 import org.cef.misc.StringRef
 import org.cef.network.CefRequest
 import org.cef.network.CefResponse
@@ -20,13 +24,18 @@ class SchemeHandlerFactory(val getStream: (uri: URI) -> InputStream?) : CefSchem
         val myStream = getStream(uri)
 
         return object : CefResourceHandler {
-            override fun processRequest(req: CefRequest, callback: CefCallback): Boolean {
+            override fun open(request: CefRequest, handleRequest: BoolRef, callback: CefCallback): Boolean {
+                handleRequest.set(true)
+                return true
+            }
+
+            @Deprecated("Use open()", replaceWith = ReplaceWith("open"))
+            override fun processRequest(request: CefRequest, callback: CefCallback): Boolean {
                 callback.Continue()
                 return true
             }
 
-            override fun getResponseHeaders(response: CefResponse, response_length: IntRef, redirectUrl: StringRef?) {
-
+            override fun getResponseHeaders(response: CefResponse, responseLength: IntRef, redirectUrl: StringRef?) {
                 if (uri.path.endsWith(".html")) {
                     response.mimeType = "text/html"
                 } else if (uri.path.endsWith(".js")) {
@@ -44,28 +53,49 @@ class SchemeHandlerFactory(val getStream: (uri: URI) -> InputStream?) : CefSchem
                 }
             }
 
-            override fun readResponse(data_out: ByteArray, bytes_to_read: Int, bytes_read: IntRef, callback: CefCallback): Boolean {
+            override fun read(dataOut: ByteArray, bytesToRead: Int, bytesRead: IntRef, callback: CefResourceReadCallback): Boolean {
+                return doRead(dataOut, bytesToRead, bytesRead)
+            }
+
+            @Deprecated("Use read()", replaceWith = ReplaceWith("read"))
+            override fun readResponse(dataOut: ByteArray, bytesToRead: Int, bytesRead: IntRef, callback: CefCallback): Boolean {
+                return doRead(dataOut, bytesToRead, bytesRead)
+            }
+
+            private fun doRead(dataOut: ByteArray, bytesToRead: Int, bytesRead: IntRef): Boolean {
                 if (myStream === null) {
-                    bytes_read.set(0)
+                    bytesRead.set(0)
                     return false
                 }
                 try {
                     val availableSize = myStream.available()
                     return if (availableSize > 0) {
-                        bytes_read.set(myStream.read(data_out, 0, bytes_to_read.coerceAtMost(availableSize)))
+                        bytesRead.set(myStream.read(dataOut, 0, bytesToRead.coerceAtMost(availableSize)))
                         true
                     } else {
-                        bytes_read.set(0)
+                        bytesRead.set(0)
                         try {
                             myStream.close()
-                        } catch (ex: IOException) {
-
+                        } catch (_: IOException) {
                         }
-
                         false
                     }
-                } catch (ex: IOException) {
+                } catch (_: IOException) {
+                    return false
+                }
+            }
 
+            override fun skip(bytesToSkip: Long, bytesSkipped: LongRef, callback: CefResourceSkipCallback): Boolean {
+                if (myStream === null) {
+                    bytesSkipped.set(-2)
+                    return false
+                }
+                try {
+                    val skipped = myStream.skip(bytesToSkip)
+                    bytesSkipped.set(skipped)
+                    return skipped > 0
+                } catch (_: IOException) {
+                    bytesSkipped.set(-2)
                     return false
                 }
             }

@@ -36,8 +36,11 @@ repositories {
 }
 dependencies {
     intellijPlatform {
-        // https://github.com/JetBrains/intellij-platform-gradle-plugin/issues/1693
-        intellijIdeaCommunity(properties("platformVersion"), useInstaller = false)
+        create(providers.gradleProperty("platformType"), providers.gradleProperty("platformVersion"))
+
+        bundledPlugins(listOf(
+            "com.intellij.modules.jcef"
+        ))
 
         // Needed when I download EAP versions which are only available on Maven.
         // https://github.com/JetBrains/intellij-platform-gradle-plugin/issues/1638#issuecomment-2151527333
@@ -103,7 +106,7 @@ intellijPlatform {
             // Configure IDE versions for verification - required on CI
             val ideVersions = properties("pluginVerifierIdeVersions").get()
             if (ideVersions.isNotBlank()) {
-                ides( ideVersions.split(',').map { it.trim() }.filter { it.isNotEmpty() } )
+                create(provider { ideVersions.split(',') })
             }
             // Note: If empty, verifyPlugin task is skipped via onlyIf condition below
         }

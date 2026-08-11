@@ -32,8 +32,10 @@
        Displayed in the "Plugins" settings dialog and the plugin repository Web interface.  -->
     <version>(filled automatically by the build plugin)</version>
     <depends>com.intellij.modules.platform</depends>
+    <!-- JCEF is a module alias of the core IDE up to 2026.1, and a separate plugin starting with 2026.2 (#406) -->
+    <depends>com.intellij.modules.jcef</depends>
     <!-- Minimum and maximum build of IDE compatible with the plugin -->
-    <idea-version since-build="231" />
+    <idea-version since-build="262" />
     <extensions defaultExtensionNs="com.intellij">
         <fileType name="Diagrams.net Diagram" implementationClass="de.docs_as_co.intellij.plugin.drawio.DiagramsNetFileType"
                   fieldName="INSTANCE" language="Diagrams.net" extensions="drawio;drawio.svg;drawio.png;drawio.xml;dio;dio.svg;dio.png;dio.xml"/>

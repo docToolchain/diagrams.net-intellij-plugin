@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- Fix compatibility with Intellij 2026.2 (#406)
+
 ### Added
 
 - MCP (Model Context Protocol) server integration for AI assistant interaction
