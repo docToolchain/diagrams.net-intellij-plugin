@@ -51,7 +51,7 @@ dependencies {
     implementation("org.nanohttpd:nanohttpd:2.3.1")
 
     // Gson for JSON serialization (used by MCP server)
-    implementation("com.google.code.gson:gson:2.10.1")
+    implementation("com.google.code.gson:gson:2.14.0")
 
     // Jackson for browser communication (diagram editor)
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.16.1") {
