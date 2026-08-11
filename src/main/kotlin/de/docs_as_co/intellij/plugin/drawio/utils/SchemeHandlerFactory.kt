@@ -5,6 +5,7 @@ import org.cef.browser.CefFrame
 import org.cef.callback.CefCallback
 import org.cef.callback.CefSchemeHandlerFactory
 import org.cef.handler.CefResourceHandler
+import org.cef.handler.CefResourceHandlerAdapter
 import org.cef.misc.IntRef
 import org.cef.misc.StringRef
 import org.cef.network.CefRequest
@@ -19,7 +20,7 @@ class SchemeHandlerFactory(val getStream: (uri: URI) -> InputStream?) : CefSchem
 
         val myStream = getStream(uri)
 
-        return object : CefResourceHandler {
+        return object : CefResourceHandlerAdapter() {
             override fun processRequest(req: CefRequest, callback: CefCallback): Boolean {
                 callback.Continue()
                 return true

@@ -41,12 +41,12 @@ jobs:
       artifact: ${{ steps.properties.outputs.artifact }}
     steps:
 
-      # Setup Java 11 environment for the next steps
+      # IDEA 2026.2 platform classes require Java 25 during instrumentation.
       - name: Setup Java
         uses: actions/setup-java@v5.3.0
         with:
-          java-version: 21
-          distribution: 'corretto'
+          java-version: 25
+          distribution: 'temurin'
 
       # Setup Gradle
       - name: Setup Gradle

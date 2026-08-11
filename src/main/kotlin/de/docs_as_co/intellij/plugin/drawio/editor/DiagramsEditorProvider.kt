@@ -8,6 +8,7 @@ import com.intellij.openapi.fileEditor.FileEditorProvider
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.ui.jcef.JBCefApp
 import de.docs_as_co.intellij.plugin.drawio.DiagramsFileUtil
 import java.io.IOException
 import java.net.InetAddress
@@ -25,7 +26,7 @@ class DiagramsEditorProvider : FileEditorProvider, DumbAware {
      * if accept return true, IntelliJ will open an instance of this editor
      */
     override fun accept(project: Project, file: VirtualFile): Boolean {
-        return DiagramsFileUtil.isDiagramsFile(file)
+        return JBCefApp.isSupported() && DiagramsFileUtil.isDiagramsFile(file)
     }
 
     init {
