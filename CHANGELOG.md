@@ -4,7 +4,7 @@
 
 ### Fixed
 
-- Support IntelliJ IDEA 2026.2.0.1, including its JCEF module and resource handler API.
+- Support IntelliJ IDEA 2026.2.0.1, including its JCEF module and resource handler API (thanks to @wuyunYRX).
 
 ### Added
 
