@@ -99,7 +99,7 @@ intellijPlatform {
     }
 
     pluginVerification {
-        failureLevel = listOf(VerifyPluginTask.FailureLevel.INVALID_PLUGIN, VerifyPluginTask.FailureLevel.COMPATIBILITY_PROBLEMS, VerifyPluginTask.FailureLevel.NOT_DYNAMIC)
+        failureLevel = listOf(VerifyPluginTask.FailureLevel.INVALID_PLUGIN, VerifyPluginTask.FailureLevel.COMPATIBILITY_PROBLEMS, VerifyPluginTask.FailureLevel.NOT_DYNAMIC, VerifyPluginTask.FailureLevel.INTERNAL_API_USAGES)
         freeArgs = listOf("-mute", "TemplateWordInPluginId")
         ides {
             // recommended()

@@ -4,15 +4,14 @@ import com.intellij.CommonBundle
 import com.intellij.ide.plugins.MultiPanel
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.invokeLater
-import com.intellij.openapi.editor.EditorBundle
 import com.intellij.openapi.util.Disposer
-import com.intellij.openapi.util.SystemInfoRt
 import com.intellij.openapi.util.registry.Registry
 import com.intellij.ui.components.JBLoadingPanel
 import com.intellij.ui.jcef.JBCefApp
 import com.intellij.ui.jcef.JBCefBrowserBase
 import com.intellij.ui.jcef.JCEFHtmlPanel
 import com.intellij.util.Alarm
+import de.docs_as_co.intellij.plugin.drawio.DiagramsNetBundle
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
 import org.cef.handler.CefLoadHandlerAdapter
@@ -22,7 +21,7 @@ import javax.swing.JComponent
 
 class LoadableJCEFHtmlPanel(
     url: String? = null, html: String? = null,
-    var timeoutCallback: String? = EditorBundle.message("message.html.editor.timeout")
+    var timeoutCallback: String? = DiagramsNetBundle.message("diagrams.editor.timeout")
 ) : Disposable {
     private val htmlPanelComponent = JCEFHtmlPanel(
         JBCefApp.isOffScreenRenderingModeEnabled(),
