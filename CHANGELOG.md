@@ -4,11 +4,11 @@
 
 ### Fixed
 
-- Support IntelliJ IDEA 2026.2.0.1, including its JCEF module and resource handler API (thanks to @wuyunYRX).
+- Support IntelliJ IDEA 2026.2.0.1, including its JCEF module and resource handler API (thanks to @wuyunYRX in #407).
 
 ### Added
 
-- MCP (Model Context Protocol) server integration for AI assistant interaction
+- MCP (Model Context Protocol) server integration for AI assistant interaction (thanks to @ascheman in #382)
   - `list_diagrams` tool to list all open diagrams
   - `get_diagram_by_id` tool to retrieve diagram content with decoded XML
   - `update_diagram` tool to modify diagrams programmatically
