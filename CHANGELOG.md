@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- Avoid usage of internal JetBrains APIs so plugin can be released to the marketplace.
+
 ## 0.2.7 - 2026-08-14
 
 ### Fixed
