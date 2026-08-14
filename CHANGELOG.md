@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.2.7 - 2026-08-14
+
 ### Fixed
 
 - Support IntelliJ IDEA 2026.2.0.1, including its JCEF module and resource handler API (thanks to @wuyunYRX in #407).
