@@ -3,6 +3,7 @@ package de.docs_as_co.intellij.plugin.drawio.utils
 import com.intellij.CommonBundle
 import com.intellij.ide.plugins.MultiPanel
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.EDT
 import com.intellij.openapi.application.invokeLater
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.registry.Registry
@@ -10,8 +11,8 @@ import com.intellij.ui.components.JBLoadingPanel
 import com.intellij.ui.jcef.JBCefApp
 import com.intellij.ui.jcef.JBCefBrowserBase
 import com.intellij.ui.jcef.JCEFHtmlPanel
-import com.intellij.util.Alarm
 import de.docs_as_co.intellij.plugin.drawio.DiagramsNetBundle
+import kotlinx.coroutines.*
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
 import org.cef.handler.CefLoadHandlerAdapter
@@ -31,7 +32,8 @@ class LoadableJCEFHtmlPanel(
     // Create a local Disposable parent for loadingPanel to avoid registering with ROOT_DISPOSABLE
     private val loadingPanelDisposable = Disposer.newDisposable()
     private val loadingPanel = JBLoadingPanel(BorderLayout(), loadingPanelDisposable).apply { setLoadingText(CommonBundle.getLoadingTreeNodeText()) }
-    private val alarm = Alarm()
+    private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.EDT)
+    private var timeoutJob: Job? = null
 
     val browser: JBCefBrowserBase get() = htmlPanelComponent
 
@@ -61,11 +63,15 @@ class LoadableJCEFHtmlPanel(
     init {
         htmlPanelComponent.jbCefClient.addLoadHandler(object : CefLoadHandlerAdapter() {
             override fun onLoadStart(browser: CefBrowser?, frame: CefFrame?, transitionType: CefRequest.TransitionType?) {
-                alarm.addRequest({ htmlPanelComponent.setHtml(timeoutCallback!!) }, Registry.intValue("html.editor.timeout", 10000))
+                timeoutJob?.cancel()
+                timeoutJob = coroutineScope.launch {
+                    delay(Registry.intValue("html.editor.timeout", 10000).toLong())
+                    htmlPanelComponent.setHtml(timeoutCallback!!)
+                }
             }
 
             override fun onLoadEnd(browser: CefBrowser?, frame: CefFrame?, httpStatusCode: Int) {
-                alarm.cancelAllRequests()
+                timeoutJob?.cancel()
             }
 
             override fun onLoadingStateChange(browser: CefBrowser?, isLoading: Boolean, canGoBack: Boolean, canGoForward: Boolean) {
@@ -85,7 +91,7 @@ class LoadableJCEFHtmlPanel(
     }
 
     override fun dispose() {
-        alarm.dispose()
+        coroutineScope.cancel()
         loadingPanel.stopLoading()
         Disposer.dispose(loadingPanelDisposable)  // Dispose the loading panel and its children
         htmlPanelComponent.dispose()
