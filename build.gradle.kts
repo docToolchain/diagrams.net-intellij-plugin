@@ -54,7 +54,7 @@ dependencies {
     implementation("com.google.code.gson:gson:2.14.0")
 
     // Jackson for browser communication (diagram editor)
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.22.2") {
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.22.3") {
         exclude(group = "org.jetbrains.kotlin")
     }
     implementation("com.fasterxml.jackson.core:jackson-databind:2.22.2")
