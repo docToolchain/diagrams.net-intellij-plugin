@@ -57,7 +57,7 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.22.2") {
         exclude(group = "org.jetbrains.kotlin")
     }
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.22.2")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.22.3")
 
     // JUnit 4 for unit testing (required by IntelliJ Platform test framework)
     testImplementation("junit:junit:4.13.2")
