@@ -10,6 +10,7 @@ import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiFile
 import com.intellij.util.IncorrectOperationException
 import de.docs_as_co.intellij.plugin.drawio.DiagramsNetIcon
+import org.jetbrains.annotations.VisibleForTesting
 
 @Suppress("DialogTitleCapitalization")
 class DiagramCreateFileAction : CreateFileFromTemplateAction("diagrams.net File", "Create new diagrams.net file", DiagramsNetIcon.FILE), DumbAware {
@@ -26,7 +27,8 @@ class DiagramCreateFileAction : CreateFileFromTemplateAction("diagrams.net File"
         return "diagrams.net File"
     }
 
-    override fun createFile(name: String, templateName: String, directory: PsiDirectory): PsiFile? {
+    @VisibleForTesting
+    public override fun createFile(name: String, templateName: String, directory: PsiDirectory): PsiFile? {
         if (templateName == "editable-png") {
             // PNG is a binary file, use extra logic to create binary file from template
             // inspired by: DefaultCreateFromTemplateHandler#createFromTemplate
